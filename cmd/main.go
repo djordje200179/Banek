@@ -23,6 +23,6 @@ func main() {
 			break
 		}
 
-		fmt.Printf("%+v\n", token)
+		fmt.Println(token)
 	}
 }
