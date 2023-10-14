@@ -96,3 +96,35 @@ func (parser *Parser) parseBlockStatement() (ast.Statement, error) {
 
 	return blockStatement, err
 }
+
+func (parser *Parser) parseFunctionStatement() (ast.Statement, error) {
+	var function statements.FunctionStatement
+	var err error
+
+	err = parser.expectNextToken(tokens.Identifier)
+	if err != nil {
+		return nil, err
+	}
+
+	nameIdentifier, err := parser.parseIdentifier()
+	if err != nil {
+		return nil, err
+	}
+
+	function.Name = nameIdentifier.(expressions.Identifier)
+	parser.fetchToken()
+
+	function.Parameters, err = parser.parseFunctionParameters()
+	if err != nil {
+		return nil, err
+	}
+
+	bodyStatement, err := parser.parseStatement()
+	if err != nil {
+		return nil, err
+	}
+
+	function.Body = bodyStatement.(statements.BlockStatement)
+
+	return function, nil
+}

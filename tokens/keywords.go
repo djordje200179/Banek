@@ -2,6 +2,7 @@ package tokens
 
 var keywords = map[string]TokenType{
 	"function": Function,
+	"fn":       LambdaFunction,
 	"let":      Let,
 	"return":   Return,
 	"if":       If,

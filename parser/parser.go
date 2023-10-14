@@ -41,8 +41,8 @@ func New(lexer *lexer.Lexer) *Parser {
 
 		tokens.LeftParenthesis: parser.parseGroupedExpression,
 
-		tokens.If:       parser.parseIfExpression,
-		tokens.Function: parser.parseFunctionLiteral,
+		tokens.If:             parser.parseIfExpression,
+		tokens.LambdaFunction: parser.parseFunctionLiteral,
 	}
 
 	parser.infixParsers = map[tokens.TokenType]infixParser{
@@ -64,6 +64,7 @@ func New(lexer *lexer.Lexer) *Parser {
 		tokens.Let:       parser.parseLetStatement,
 		tokens.Return:    parser.parseReturnStatement,
 		tokens.LeftBrace: parser.parseBlockStatement,
+		tokens.Function:  parser.parseFunctionStatement,
 	}
 
 	return parser

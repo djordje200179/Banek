@@ -16,7 +16,7 @@ func (literal FunctionLiteral) ExpressionNode() {}
 func (literal FunctionLiteral) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.Function.String())
+	sb.WriteString(tokens.LambdaFunction.String())
 
 	sb.WriteByte('(')
 	for i, param := range literal.Parameters {

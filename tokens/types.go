@@ -35,6 +35,8 @@ const (
 	RightBrace
 
 	Function
+	LambdaFunction
+
 	Let
 	Return
 	If
@@ -100,6 +102,8 @@ func (tokenType TokenType) String() string {
 
 	case Function:
 		return "function"
+	case LambdaFunction:
+		return "fn"
 	case Let:
 		return "let"
 	case Return:
