@@ -107,6 +107,8 @@ func (parser *Parser) parseGroupedExpression() (ast.Expression, error) {
 		return nil, err
 	}
 
+	parser.fetchToken()
+
 	return expression, nil
 }
 
