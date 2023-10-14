@@ -6,13 +6,13 @@ import (
 	"strings"
 )
 
-type ReturnStatement struct {
+type Return struct {
 	Value ast.Expression
 }
 
-func (statement ReturnStatement) StatementNode() {}
+func (statement Return) StatementNode() {}
 
-func (statement ReturnStatement) String() string {
+func (statement Return) String() string {
 	var sb strings.Builder
 
 	sb.WriteString(tokens.Return.String())

@@ -6,19 +6,19 @@ import (
 	"strings"
 )
 
-type PrefixedExpression struct {
+type PrefixOperation struct {
 	Operator tokens.Token
-	Wrapped  ast.Expression
+	Operand  ast.Expression
 }
 
-func (expression PrefixedExpression) ExpressionNode() {}
+func (expression PrefixOperation) ExpressionNode() {}
 
-func (expression PrefixedExpression) String() string {
+func (expression PrefixOperation) String() string {
 	var sb strings.Builder
 
 	sb.WriteByte('(')
 	sb.WriteString(expression.Operator.String())
-	sb.WriteString(expression.Wrapped.String())
+	sb.WriteString(expression.Operand.String())
 	sb.WriteByte(')')
 
 	return sb.String()

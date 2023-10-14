@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-type VariableDeclarationStatement struct {
+type VariableDeclaration struct {
 	Name  expressions.Identifier
 	Value ast.Expression
 
 	Const bool
 }
 
-func (statement VariableDeclarationStatement) StatementNode() {}
+func (statement VariableDeclaration) StatementNode() {}
 
-func (statement VariableDeclarationStatement) String() string {
+func (statement VariableDeclaration) String() string {
 	var sb strings.Builder
 
 	if statement.Const {

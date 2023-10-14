@@ -29,8 +29,8 @@ func New() *Parser {
 		tokens.Integer:    parser.parseIntegerLiteral,
 		tokens.Boolean:    parser.parseBooleanLiteral,
 
-		tokens.Minus: parser.parsePrefixedExpression,
-		tokens.Bang:  parser.parsePrefixedExpression,
+		tokens.Minus: parser.parsePrefixOperation,
+		tokens.Bang:  parser.parsePrefixOperation,
 
 		tokens.LeftParenthesis: parser.parseGroupedExpression,
 
@@ -39,16 +39,16 @@ func New() *Parser {
 	}
 
 	parser.infixParsers = map[tokens.TokenType]infixParser{
-		tokens.Equals:              parser.parseInfixExpression,
-		tokens.NotEquals:           parser.parseInfixExpression,
-		tokens.LessThan:            parser.parseInfixExpression,
-		tokens.GreaterThan:         parser.parseInfixExpression,
-		tokens.LessThanOrEquals:    parser.parseInfixExpression,
-		tokens.GreaterThanOrEquals: parser.parseInfixExpression,
-		tokens.Plus:                parser.parseInfixExpression,
-		tokens.Minus:               parser.parseInfixExpression,
-		tokens.Asterisk:            parser.parseInfixExpression,
-		tokens.Slash:               parser.parseInfixExpression,
+		tokens.Equals:              parser.parseInfixOperation,
+		tokens.NotEquals:           parser.parseInfixOperation,
+		tokens.LessThan:            parser.parseInfixOperation,
+		tokens.GreaterThan:         parser.parseInfixOperation,
+		tokens.LessThanOrEquals:    parser.parseInfixOperation,
+		tokens.GreaterThanOrEquals: parser.parseInfixOperation,
+		tokens.Plus:                parser.parseInfixOperation,
+		tokens.Minus:               parser.parseInfixOperation,
+		tokens.Asterisk:            parser.parseInfixOperation,
+		tokens.Slash:               parser.parseInfixOperation,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
 	}
@@ -72,6 +72,15 @@ func (parser *Parser) fetchToken() {
 	}
 
 	parser.currentToken, parser.nextToken = parser.nextToken, <-parser.tokenChannel
+}
+
+func (parser *Parser) expectCurrentToken(tokenType tokens.TokenType) error {
+	if parser.currentToken.Type != tokenType {
+		return UnexpectedTokenError{Expected: tokenType, Got: parser.currentToken.Type}
+	}
+
+	parser.fetchToken()
+	return nil
 }
 
 func (parser *Parser) expectNextToken(tokenType tokens.TokenType) error {

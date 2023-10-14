@@ -4,12 +4,12 @@ import (
 	"banek/ast"
 )
 
-type ExpressionStatement struct {
+type Expression struct {
 	Expression ast.Expression
 }
 
-func (statement ExpressionStatement) StatementNode() {}
+func (statement Expression) StatementNode() {}
 
-func (statement ExpressionStatement) String() string {
+func (statement Expression) String() string {
 	return statement.Expression.String()
 }

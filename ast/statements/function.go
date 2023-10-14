@@ -6,23 +6,23 @@ import (
 	"strings"
 )
 
-type FunctionStatement struct {
+type Function struct {
 	Name       expressions.Identifier
 	Parameters []expressions.Identifier
-	Body       BlockStatement
+	Body       Block
 }
 
-func (function FunctionStatement) StatementNode() {}
+func (statement Function) StatementNode() {}
 
-func (function FunctionStatement) String() string {
+func (statement Function) String() string {
 	var sb strings.Builder
 
 	sb.WriteString(tokens.Function.String())
 	sb.WriteByte(' ')
-	sb.WriteString(function.Name.String())
+	sb.WriteString(statement.Name.String())
 
 	sb.WriteByte('(')
-	for i, param := range function.Parameters {
+	for i, param := range statement.Parameters {
 		if i != 0 {
 			sb.WriteString(", ")
 		}
@@ -30,7 +30,7 @@ func (function FunctionStatement) String() string {
 		sb.WriteString(param.String())
 	}
 	sb.WriteString(") {\n")
-	sb.WriteString(function.Body.String())
+	sb.WriteString(statement.Body.String())
 	sb.WriteString("\n}")
 
 	return sb.String()

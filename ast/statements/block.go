@@ -5,16 +5,16 @@ import (
 	"strings"
 )
 
-type BlockStatement struct {
+type Block struct {
 	Statements []ast.Statement
 }
 
-func (block BlockStatement) StatementNode() {}
+func (statement Block) StatementNode() {}
 
-func (block BlockStatement) String() string {
+func (statement Block) String() string {
 	var sb strings.Builder
 
-	for i, statement := range block.Statements {
+	for i, statement := range statement.Statements {
 		if i != 0 {
 			sb.WriteByte('\n')
 		}
