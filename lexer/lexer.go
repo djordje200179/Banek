@@ -20,7 +20,27 @@ func New(reader io.Reader) *Lexer {
 	return lexer
 }
 
-func (lexer *Lexer) NextToken() tokens.Token {
+func (lexer *Lexer) Tokenize(bufferSize int) <-chan tokens.Token {
+	tokenChannel := make(chan tokens.Token, bufferSize)
+
+	go lexer.lexingThread(tokenChannel)
+
+	return tokenChannel
+}
+
+func (lexer *Lexer) lexingThread(ch chan<- tokens.Token) {
+	for {
+		token := lexer.nextToken()
+		ch <- token
+
+		if token.Type == tokens.EOF {
+			close(ch)
+			return
+		}
+	}
+}
+
+func (lexer *Lexer) nextToken() tokens.Token {
 	lexer.skipWhitespace()
 
 	nextChar := lexer.nextChar()

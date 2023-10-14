@@ -11,17 +11,17 @@ import (
 const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
-	l := lexer.New(in)
+	tokenChannel := lexer.New(in).Tokenize(100)
+	statementChannel := parser.New().Parse(tokenChannel, 100)
 
-	p := parser.New(l)
+	for statement := range statementChannel {
+		if statement.Error != nil {
+			fmt.Println(statement.Error)
+			continue
+		}
 
-	program, err := p.Parse()
-	if err != nil {
-		fmt.Println(err)
-		return
+		fmt.Println(statement.Statement.String())
 	}
-
-	fmt.Println(program.String())
 }
 
 func main() {

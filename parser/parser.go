@@ -2,9 +2,7 @@ package parser
 
 import (
 	"banek/ast"
-	"banek/lexer"
 	"banek/tokens"
-	"errors"
 )
 
 type (
@@ -14,7 +12,7 @@ type (
 )
 
 type Parser struct {
-	lexer *lexer.Lexer
+	tokenChannel <-chan tokens.Token
 
 	currentToken, nextToken tokens.Token
 
@@ -23,13 +21,8 @@ type Parser struct {
 	statementParsers map[tokens.TokenType]statementParser
 }
 
-func New(lexer *lexer.Lexer) *Parser {
-	parser := &Parser{
-		lexer: lexer,
-	}
-
-	parser.fetchToken()
-	parser.fetchToken()
+func New() *Parser {
+	parser := new(Parser)
 
 	parser.prefixParsers = map[tokens.TokenType]prefixParser{
 		tokens.Identifier: parser.parseIdentifier,
@@ -73,7 +66,12 @@ func New(lexer *lexer.Lexer) *Parser {
 }
 
 func (parser *Parser) fetchToken() {
-	parser.currentToken, parser.nextToken = parser.nextToken, parser.lexer.NextToken()
+	if parser.nextToken.Type == tokens.EOF {
+		parser.currentToken = tokens.Token{Type: tokens.EOF}
+		return
+	}
+
+	parser.currentToken, parser.nextToken = parser.nextToken, <-parser.tokenChannel
 }
 
 func (parser *Parser) expectNextToken(tokenType tokens.TokenType) error {
@@ -85,19 +83,34 @@ func (parser *Parser) expectNextToken(tokenType tokens.TokenType) error {
 	return nil
 }
 
-func (parser *Parser) Parse() (*ast.Program, error) {
-	program := &ast.Program{}
-	var wrappedErrors error
+type ParsedStatement struct {
+	Statement ast.Statement
+	Error     error
+}
 
+func (parser *Parser) Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ParsedStatement {
+	parser.tokenChannel = tokenChannel
+
+	parser.fetchToken()
+	parser.fetchToken()
+
+	statementChannel := make(chan ParsedStatement, bufferSize)
+
+	go parser.parsingThread(statementChannel)
+
+	return statementChannel
+}
+
+func (parser *Parser) parsingThread(ch chan<- ParsedStatement) {
 	for ; parser.currentToken.Type != tokens.EOF; parser.fetchToken() {
 		statement, err := parser.parseStatement()
 		if err != nil {
-			wrappedErrors = errors.Join(wrappedErrors, err)
+			ch <- ParsedStatement{Error: err}
 			continue
 		}
 
-		program.Statements = append(program.Statements, statement)
+		ch <- ParsedStatement{Statement: statement}
 	}
 
-	return program, wrappedErrors
+	close(ch)
 }
