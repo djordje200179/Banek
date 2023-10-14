@@ -8,13 +8,14 @@ const (
 
 	Identifier
 	Integer
+	Boolean
 
 	Assign
 
 	Plus
 	Minus
-	Multiply
-	Divide
+	Asterisk
+	Slash
 
 	Bang
 
@@ -28,71 +29,87 @@ const (
 	Comma
 	SemiColon
 
-	LeftParen
-	RightParen
+	LeftParenthesis
+	RightParenthesis
 	LeftBrace
 	RightBrace
 
 	Function
 	Let
+	Return
+	If
+	Else
+	While
 )
 
 func (tokenType TokenType) String() string {
 	switch tokenType {
 	case Illegal:
-		return "Illegal"
+		return "illegal"
 	case EOF:
 		return "EOF"
 
 	case Identifier:
-		return "Identifier"
+		return "identifier"
 	case Integer:
-		return "Integer"
+		return "integer"
+	case Boolean:
+		return "boolean"
 
 	case Assign:
-		return "Assign"
+		return "="
 
 	case Plus:
-		return "Plus"
+		return "+"
 	case Minus:
-		return "Minus"
-	case Multiply:
-		return "Multiply"
-	case Divide:
-		return "Divide"
+		return "-"
+	case Asterisk:
+		return "*"
+	case Slash:
+		return "/"
 
 	case Bang:
-		return "Bang"
+		return "!"
 
 	case Equals:
-		return "Equals"
+		return "=="
 	case NotEquals:
-		return "NotEquals"
+		return "!="
 	case LessThan:
-		return "LessThan"
+		return "<"
 	case GreaterThan:
-		return "GreaterThan"
+		return ">"
 	case LessThanOrEquals:
-		return "LessThanOrEquals"
+		return "<="
+	case GreaterThanOrEquals:
+		return ">="
 
 	case Comma:
-		return "Comma"
+		return ","
 	case SemiColon:
-		return "SemiColon"
+		return ";"
 
-	case LeftParen:
-		return "LeftParen"
-	case RightParen:
-		return "RightParen"
+	case LeftParenthesis:
+		return "("
+	case RightParenthesis:
+		return ")"
 	case LeftBrace:
-		return "LeftBrace"
+		return "{"
 	case RightBrace:
-		return "RightBrace"
+		return "}"
 
 	case Function:
-		return "Function"
+		return "function"
 	case Let:
-		return "Let"
+		return "let"
+	case Return:
+		return "return"
+	case If:
+		return "if"
+	case Else:
+		return "else"
+	case While:
+		return "while"
 
 	default:
 		return "UNKNOWN"

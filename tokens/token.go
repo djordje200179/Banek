@@ -13,9 +13,9 @@ func (token Token) String() string {
 		var sb strings.Builder
 
 		sb.WriteString(token.Type.String())
-		sb.WriteRune('(')
+		sb.WriteByte('(')
 		sb.WriteString(token.Literal)
-		sb.WriteRune(')')
+		sb.WriteByte(')')
 
 		return sb.String()
 	default:

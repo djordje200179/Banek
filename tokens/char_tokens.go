@@ -3,16 +3,16 @@ package tokens
 var CharTokens = map[string]TokenType{
 	"+": Plus,
 	"-": Minus,
-	"*": Multiply,
-	"/": Divide,
+	"*": Asterisk,
+	"/": Slash,
 
 	"!": Bang,
 
 	",": Comma,
 	";": SemiColon,
 
-	"(": LeftParen,
-	")": RightParen,
+	"(": LeftParenthesis,
+	")": RightParenthesis,
 	"{": LeftBrace,
 	"}": RightBrace,
 
