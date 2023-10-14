@@ -54,7 +54,7 @@ func New() *Parser {
 	}
 
 	parser.statementParsers = map[tokens.TokenType]statementParser{
-		tokens.Var:   parser.parseVariableDeclarationStatement,
+		tokens.Let:   parser.parseVariableDeclarationStatement,
 		tokens.Const: parser.parseVariableDeclarationStatement,
 
 		tokens.Return:    parser.parseReturnStatement,

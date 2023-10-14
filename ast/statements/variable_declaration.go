@@ -22,7 +22,7 @@ func (statement VariableDeclarationStatement) String() string {
 	if statement.Const {
 		sb.WriteString(tokens.Const.String())
 	} else {
-		sb.WriteString(tokens.Var.String())
+		sb.WriteString(tokens.Let.String())
 	}
 	sb.WriteByte(' ')
 	sb.WriteString(statement.Name.String())

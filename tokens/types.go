@@ -37,7 +37,7 @@ const (
 	Function
 	LambdaFunction
 
-	Var
+	Let
 	Const
 
 	Return
@@ -107,8 +107,8 @@ func (tokenType TokenType) String() string {
 	case LambdaFunction:
 		return "fn"
 
-	case Var:
-		return "var"
+	case Let:
+		return "let"
 	case Const:
 		return "const"
 
