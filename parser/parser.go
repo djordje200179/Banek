@@ -61,7 +61,9 @@ func New(lexer *lexer.Lexer) *Parser {
 	}
 
 	parser.statementParsers = map[tokens.TokenType]statementParser{
-		tokens.Let:       parser.parseLetStatement,
+		tokens.Var:   parser.parseVariableDeclarationStatement,
+		tokens.Const: parser.parseVariableDeclarationStatement,
+
 		tokens.Return:    parser.parseReturnStatement,
 		tokens.LeftBrace: parser.parseBlockStatement,
 		tokens.Function:  parser.parseFunctionStatement,

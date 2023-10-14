@@ -16,9 +16,11 @@ func (parser *Parser) parseStatement() (ast.Statement, error) {
 	return statementParser()
 }
 
-func (parser *Parser) parseLetStatement() (ast.Statement, error) {
-	var statement statements.LetStatement
+func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error) {
+	var statement statements.VariableDeclarationStatement
 	var err error
+
+	statement.Const = parser.currentToken.Type == tokens.Const
 
 	err = parser.expectNextToken(tokens.Identifier)
 	if err != nil {

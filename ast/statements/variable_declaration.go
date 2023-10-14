@@ -7,17 +7,23 @@ import (
 	"strings"
 )
 
-type LetStatement struct {
+type VariableDeclarationStatement struct {
 	Name  expressions.Identifier
 	Value ast.Expression
+
+	Const bool
 }
 
-func (statement LetStatement) StatementNode() {}
+func (statement VariableDeclarationStatement) StatementNode() {}
 
-func (statement LetStatement) String() string {
+func (statement VariableDeclarationStatement) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.Let.String())
+	if statement.Const {
+		sb.WriteString(tokens.Const.String())
+	} else {
+		sb.WriteString(tokens.Var.String())
+	}
 	sb.WriteByte(' ')
 	sb.WriteString(statement.Name.String())
 	sb.WriteString(" = ")
