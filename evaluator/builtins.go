@@ -11,11 +11,13 @@ var builtins = map[string]BuiltinFunction{
 			return nil, IncorrectArgumentCountError{Expected: 1, Got: len(args)}
 		}
 
-		str, ok := args[0].(String)
-		if !ok {
+		switch arg := args[0].(type) {
+		case String:
+			return Integer(len(arg)), nil
+		case Array:
+			return Integer(len(arg)), nil
+		default:
 			return Null{}, nil
 		}
-
-		return Integer(len(str)), nil
 	},
 }
