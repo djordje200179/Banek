@@ -1,8 +1,8 @@
 package interpreter
 
 import (
+	"banek/ast"
 	"banek/interpreter/results"
-	"banek/parser"
 	"fmt"
 )
 
@@ -22,7 +22,7 @@ type Result interface {
 	fmt.Stringer
 }
 
-func (interpreter *Interpreter) Eval(statementsChan <-chan parser.ParsedStatement, bufferSize int) <-chan Result {
+func (interpreter *Interpreter) Eval(statementsChan <-chan ast.Statement, bufferSize int) <-chan Result {
 	resultsChan := make(chan Result, bufferSize)
 
 	go interpreter.evalThread(statementsChan, resultsChan)
@@ -30,14 +30,9 @@ func (interpreter *Interpreter) Eval(statementsChan <-chan parser.ParsedStatemen
 	return resultsChan
 }
 
-func (interpreter *Interpreter) evalThread(statementsChan <-chan parser.ParsedStatement, resultsChan chan<- Result) {
+func (interpreter *Interpreter) evalThread(statementsChan <-chan ast.Statement, resultsChan chan<- Result) {
 	for statement := range statementsChan {
-		if statement.Error != nil {
-			resultsChan <- results.Error{Err: statement.Error}
-			continue
-		}
-
-		result, err := interpreter.evalStatement(interpreter.globalEnv, statement.Statement)
+		result, err := interpreter.evalStatement(interpreter.globalEnv, statement)
 		if err != nil {
 			resultsChan <- results.Error{Err: err}
 			continue

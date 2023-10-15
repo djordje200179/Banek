@@ -3,6 +3,8 @@ package parser
 import (
 	"banek/ast"
 	"banek/tokens"
+	"fmt"
+	"os"
 )
 
 type (
@@ -89,33 +91,28 @@ func (parser *Parser) assertToken(tokenType tokens.TokenType) error {
 	return nil
 }
 
-type ParsedStatement struct {
-	Statement ast.Statement
-	Error     error
-}
-
-func (parser *Parser) Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ParsedStatement {
+func (parser *Parser) Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
 	parser.tokenChannel = tokenChannel
 
 	parser.fetchToken()
 	parser.fetchToken()
 
-	statementChannel := make(chan ParsedStatement, bufferSize)
+	statementChannel := make(chan ast.Statement, bufferSize)
 
 	go parser.parsingThread(statementChannel)
 
 	return statementChannel
 }
 
-func (parser *Parser) parsingThread(ch chan<- ParsedStatement) {
+func (parser *Parser) parsingThread(ch chan<- ast.Statement) {
 	for parser.currentToken.Type != tokens.EOF {
 		statement, err := parser.parseStatement()
 		if err != nil {
-			ch <- ParsedStatement{Error: err}
+			_, _ = fmt.Fprintln(os.Stderr, err)
 			continue
 		}
 
-		ch <- ParsedStatement{Statement: statement}
+		ch <- statement
 	}
 
 	close(ch)
