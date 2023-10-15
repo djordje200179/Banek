@@ -4,12 +4,7 @@ import (
 	"strconv"
 )
 
-type IntegerLiteral struct {
-	Value int64
-}
+type IntegerLiteral int
 
 func (literal IntegerLiteral) ExpressionNode() {}
-
-func (literal IntegerLiteral) String() string {
-	return strconv.Itoa(int(literal.Value))
-}
+func (literal IntegerLiteral) String() string  { return strconv.Itoa(int(literal)) }

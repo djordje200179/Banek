@@ -38,7 +38,7 @@ func (parser *Parser) parseIdentifier() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.Identifier{Name: literal}, nil
+	return expressions.Identifier(literal), nil
 }
 
 func (parser *Parser) parseIntegerLiteral() (ast.Expression, error) {
@@ -49,7 +49,7 @@ func (parser *Parser) parseIntegerLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.IntegerLiteral{Value: value}, nil
+	return expressions.IntegerLiteral(value), nil
 }
 
 func (parser *Parser) parseBooleanLiteral() (ast.Expression, error) {
@@ -60,7 +60,7 @@ func (parser *Parser) parseBooleanLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.BooleanLiteral{Value: value}, nil
+	return expressions.BooleanLiteral(value), nil
 }
 
 func (parser *Parser) parseStringLiteral() (ast.Expression, error) {

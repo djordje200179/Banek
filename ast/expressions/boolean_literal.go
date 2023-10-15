@@ -4,12 +4,10 @@ import (
 	"strconv"
 )
 
-type BooleanLiteral struct {
-	Value bool
-}
+type BooleanLiteral bool
 
 func (literal BooleanLiteral) ExpressionNode() {}
 
 func (literal BooleanLiteral) String() string {
-	return strconv.FormatBool(literal.Value)
+	return strconv.FormatBool(bool(literal))
 }

@@ -15,7 +15,7 @@ func (assignment VariableAssignment) ExpressionNode() {}
 func (assignment VariableAssignment) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(assignment.Variable.Name)
+	sb.WriteString(assignment.Variable.String())
 	sb.WriteString(" = ")
 	sb.WriteString(assignment.Value.String())
 

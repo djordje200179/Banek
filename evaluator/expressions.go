@@ -9,9 +9,9 @@ import (
 func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.Expression) (Object, error) {
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
-		return Integer(expression.Value), nil
+		return Integer(expression), nil
 	case expressions.BooleanLiteral:
-		return Boolean(expression.Value), nil
+		return Boolean(expression), nil
 	case expressions.StringLiteral:
 		return String(expression), nil
 	case expressions.ArrayLiteral:
@@ -69,14 +69,14 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 			return evaluator.evaluateExpression(env, expression.Alternative)
 		}
 	case expressions.Identifier:
-		value, err := env.Get(expression.Name)
+		value, err := env.Get(expression.String())
 		if err == nil {
 			return value, nil
 		}
 
 		var identifierNotDefinedError IdentifierNotDefinedError
 		if errors.As(err, &identifierNotDefinedError) {
-			builtin, ok := builtins[expression.Name]
+			builtin, ok := builtins[expression.String()]
 			if !ok {
 				return nil, err
 			}
@@ -106,7 +106,7 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 
 			functionEnv := newEnvironment(function.Env)
 			for i, param := range function.Parameters {
-				err = functionEnv.Define(param.Name, args[i], true)
+				err = functionEnv.Define(param.String(), args[i], true)
 				if err != nil {
 					return nil, err
 				}
