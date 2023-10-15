@@ -63,6 +63,14 @@ func (parser *Parser) parseBooleanLiteral() (ast.Expression, error) {
 	return expressions.BooleanLiteral{Value: value}, nil
 }
 
+func (parser *Parser) parseStringLiteral() (ast.Expression, error) {
+	literal := parser.currentToken.Literal
+
+	parser.fetchToken()
+
+	return expressions.StringLiteral(literal), nil
+}
+
 func (parser *Parser) parsePrefixOperation() (ast.Expression, error) {
 	operator := parser.currentToken
 

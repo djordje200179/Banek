@@ -61,6 +61,8 @@ func (lexer *Lexer) nextToken() tokens.Token {
 
 		number := lexer.readNumber()
 		return tokens.Token{Type: tokens.Integer, Literal: number}
+	case nextChar == '"':
+		return lexer.readString()
 	}
 
 	var possibleCharTokens []string
@@ -132,6 +134,23 @@ func (lexer *Lexer) readNumber() string {
 	}
 
 	return sb.String()
+}
+
+func (lexer *Lexer) readString() tokens.Token {
+	var sb strings.Builder
+
+	for {
+		ch := lexer.nextChar()
+		if ch == '"' {
+			break
+		} else if ch == 0 {
+			return tokens.Token{Type: tokens.Illegal}
+		}
+
+		sb.WriteRune(ch)
+	}
+
+	return tokens.Token{Type: tokens.String, Literal: sb.String()}
 }
 
 func (lexer *Lexer) nextChar() rune {

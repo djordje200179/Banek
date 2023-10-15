@@ -26,8 +26,10 @@ func New() *Parser {
 
 	parser.prefixParsers = map[tokens.TokenType]prefixParser{
 		tokens.Identifier: parser.parseIdentifier,
-		tokens.Integer:    parser.parseIntegerLiteral,
-		tokens.Boolean:    parser.parseBooleanLiteral,
+
+		tokens.Integer: parser.parseIntegerLiteral,
+		tokens.Boolean: parser.parseBooleanLiteral,
+		tokens.String:  parser.parseStringLiteral,
 
 		tokens.Minus: parser.parsePrefixOperation,
 		tokens.Bang:  parser.parsePrefixOperation,

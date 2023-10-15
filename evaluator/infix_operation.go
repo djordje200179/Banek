@@ -29,17 +29,24 @@ func (evaluator *Evaluator) evalInfixOperation(operator tokens.Token, left, righ
 }
 
 func evalInfixPlusOperation(left, right Object) (Object, error) {
-	leftInteger, ok := left.(Integer)
-	if !ok {
+	switch left := left.(type) {
+	case Integer:
+		switch right := right.(type) {
+		case Integer:
+			return left + right, nil
+		default:
+			return nil, InvalidOperandError{tokens.Plus.String(), right}
+		}
+	case String:
+		switch right := right.(type) {
+		case String:
+			return left + right, nil
+		default:
+			return nil, InvalidOperandError{tokens.Plus.String(), right}
+		}
+	default:
 		return nil, InvalidOperandError{tokens.Plus.String(), left}
 	}
-
-	rightInteger, ok := right.(Integer)
-	if !ok {
-		return nil, InvalidOperandError{tokens.Plus.String(), right}
-	}
-
-	return leftInteger + rightInteger, nil
 }
 
 func evalInfixMinusOperation(left, right Object) (Object, error) {
@@ -93,31 +100,45 @@ func evalInfixNotEqualsOperation(left, right Object) (Object, error) {
 }
 
 func evalInfixLessThanOperation(left, right Object) (Object, error) {
-	leftInteger, ok := left.(Integer)
-	if !ok {
+	switch left := left.(type) {
+	case Integer:
+		switch right := right.(type) {
+		case Integer:
+			return Boolean(left < right), nil
+		default:
+			return nil, InvalidOperandError{tokens.LessThan.String(), right}
+		}
+	case String:
+		switch right := right.(type) {
+		case String:
+			return Boolean(left < right), nil
+		default:
+			return nil, InvalidOperandError{tokens.LessThan.String(), right}
+		}
+	default:
 		return nil, InvalidOperandError{tokens.LessThan.String(), left}
 	}
-
-	rightInteger, ok := right.(Integer)
-	if !ok {
-		return nil, InvalidOperandError{tokens.LessThan.String(), right}
-	}
-
-	return Boolean(leftInteger < rightInteger), nil
 }
 
 func evalInfixGreaterThanOperation(left, right Object) (Object, error) {
-	leftInteger, ok := left.(Integer)
-	if !ok {
-		return nil, InvalidOperandError{tokens.GreaterThan.String(), left}
+	switch left := left.(type) {
+	case Integer:
+		switch right := right.(type) {
+		case Integer:
+			return Boolean(left > right), nil
+		default:
+			return nil, InvalidOperandError{tokens.LessThan.String(), right}
+		}
+	case String:
+		switch right := right.(type) {
+		case String:
+			return Boolean(left > right), nil
+		default:
+			return nil, InvalidOperandError{tokens.LessThan.String(), right}
+		}
+	default:
+		return nil, InvalidOperandError{tokens.LessThan.String(), left}
 	}
-
-	rightInteger, ok := right.(Integer)
-	if !ok {
-		return nil, InvalidOperandError{tokens.GreaterThan.String(), right}
-	}
-
-	return Boolean(leftInteger > rightInteger), nil
 }
 
 func evalInfixLessThanOrEqualsOperation(left, right Object) (Object, error) {

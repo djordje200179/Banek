@@ -11,6 +11,8 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		return Integer(expression.Value), nil
 	case expressions.BooleanLiteral:
 		return Boolean(expression.Value), nil
+	case expressions.StringLiteral:
+		return String(expression), nil
 	case expressions.VariableAssignment:
 		value, err := evaluator.evaluateExpression(env, expression.Value)
 		if err != nil {

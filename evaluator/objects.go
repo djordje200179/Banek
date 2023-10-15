@@ -47,3 +47,8 @@ func (function Function) String() string {
 
 	return sb.String()
 }
+
+type String string
+
+func (str String) Type() string   { return "string" }
+func (str String) String() string { return string(str) }

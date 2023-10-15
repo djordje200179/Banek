@@ -9,6 +9,7 @@ const (
 	Identifier
 	Integer
 	Boolean
+	String
 
 	Assign
 
@@ -62,6 +63,8 @@ func (tokenType TokenType) String() string {
 		return "integer"
 	case Boolean:
 		return "boolean"
+	case String:
+		return "string"
 
 	case Assign:
 		return "="
