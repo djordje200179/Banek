@@ -130,14 +130,15 @@ func (parser *Parser) parseIfExpression() (ast.Expression, error) {
 		return nil, err
 	}
 
-	var alternative ast.Expression
-	if parser.currentToken.Type == tokens.Else {
-		parser.fetchToken()
+	if err := parser.assertToken(tokens.Else); err != nil {
+		return nil, err
+	}
 
-		alternative, err = parser.parseExpression(Lowest)
-		if err != nil {
-			return nil, err
-		}
+	parser.fetchToken()
+
+	alternative, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
 	}
 
 	return expressions.If{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
