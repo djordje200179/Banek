@@ -60,5 +60,14 @@ type InvalidOperandError struct {
 }
 
 func (err InvalidOperandError) Error() string {
-	return fmt.Sprintf("invalid operand of type %s for operator %s", err.Operand.Type(), err.Operator)
+	return fmt.Sprintf("invalid operand: expected %s, got %s", err.Operator, err.Operand.Type())
+}
+
+type IncorrectArgumentCountError struct {
+	Expected int
+	Got      int
+}
+
+func (err IncorrectArgumentCountError) Error() string {
+	return fmt.Sprintf("incorrect number of arguments: expected %d, got %d", err.Expected, err.Got)
 }

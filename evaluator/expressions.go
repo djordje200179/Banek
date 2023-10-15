@@ -3,6 +3,7 @@ package evaluator
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"errors"
 )
 
 func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.Expression) (Object, error) {
@@ -57,11 +58,21 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		}
 	case expressions.Identifier:
 		value, err := env.Get(expression.Name)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			return value, nil
 		}
 
-		return value, nil
+		var identifierNotDefinedError IdentifierNotDefinedError
+		if errors.As(err, &identifierNotDefinedError) {
+			builtin, ok := builtins[expression.Name]
+			if !ok {
+				return nil, err
+			}
+
+			return builtin, nil
+		}
+
+		return nil, err
 	case expressions.FunctionLiteral:
 		return Function{
 			Parameters: expression.Parameters,
@@ -74,37 +85,57 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 			return nil, err
 		}
 
-		function, ok := functionObject.(Function)
-		if !ok {
-			return nil, InvalidOperandError{"function call", functionObject}
-		}
-
-		functionEnv := newEnvironment(function.Env)
-		for i, param := range function.Parameters {
-			argExpression := expression.Arguments[i]
-			arg, err := evaluator.evaluateExpression(env, argExpression)
+		switch function := functionObject.(type) {
+		case Function:
+			args, err := evaluator.calculateFunctionArguments(env, expression.Arguments)
 			if err != nil {
 				return nil, err
 			}
 
-			err = functionEnv.Define(param.Name, arg, true)
+			functionEnv := newEnvironment(function.Env)
+			for i, param := range function.Parameters {
+				err = functionEnv.Define(param.Name, args[i], true)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			result, err := evaluator.evaluateStatement(functionEnv, function.Body)
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		result, err := evaluator.evaluateStatement(functionEnv, function.Body)
-		if err != nil {
-			return nil, err
-		}
+			switch result := result.(type) {
+			case Return:
+				return result.Value, nil
+			default:
+				return Null{}, nil
+			}
+		case BuiltinFunction:
+			args, err := evaluator.calculateFunctionArguments(env, expression.Arguments)
+			if err != nil {
+				return nil, err
+			}
 
-		switch result := result.(type) {
-		case Return:
-			return result.Value, nil
+			return function(args...)
 		default:
-			return Null{}, nil
+			return nil, InvalidOperandError{"function call", functionObject}
 		}
 	default:
 		return nil, UnknownExpressionError{expression}
 	}
+}
+
+func (evaluator *Evaluator) calculateFunctionArguments(env *environment, rawArgs []ast.Expression) ([]Object, error) {
+	args := make([]Object, len(rawArgs))
+	for i, rawArg := range rawArgs {
+		arg, err := evaluator.evaluateExpression(env, rawArg)
+		if err != nil {
+			return nil, err
+		}
+
+		args[i] = arg
+	}
+
+	return args, nil
 }
