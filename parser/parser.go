@@ -38,6 +38,8 @@ func New() *Parser {
 
 		tokens.If:             parser.parseIfExpression,
 		tokens.LambdaFunction: parser.parseFunctionLiteral,
+
+		tokens.LeftBracket: parser.parseArrayLiteral,
 	}
 
 	parser.infixParsers = map[tokens.TokenType]infixParser{

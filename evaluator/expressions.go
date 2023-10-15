@@ -14,6 +14,18 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		return Boolean(expression.Value), nil
 	case expressions.StringLiteral:
 		return String(expression), nil
+	case expressions.ArrayLiteral:
+		elements := make([]Object, len(expression))
+		for i, element := range expression {
+			evaluatedElement, err := evaluator.evaluateExpression(env, element)
+			if err != nil {
+				return nil, err
+			}
+
+			elements[i] = evaluatedElement
+		}
+
+		return Array(elements), nil
 	case expressions.VariableAssignment:
 		value, err := evaluator.evaluateExpression(env, expression.Value)
 		if err != nil {

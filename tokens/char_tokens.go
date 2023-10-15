@@ -15,6 +15,8 @@ var CharTokens = map[string]TokenType{
 	")": RightParenthesis,
 	"{": LeftBrace,
 	"}": RightBrace,
+	"[": LeftBracket,
+	"]": RightBracket,
 
 	"==": Equals,
 	"!=": NotEquals,

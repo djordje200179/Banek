@@ -71,6 +71,43 @@ func (parser *Parser) parseStringLiteral() (ast.Expression, error) {
 	return expressions.StringLiteral(literal), nil
 }
 
+func (parser *Parser) parseArrayLiteral() (ast.Expression, error) {
+	parser.fetchToken()
+
+	if parser.currentToken.Type == tokens.RightBracket {
+		parser.fetchToken()
+		return nil, nil
+	}
+
+	var elements []ast.Expression
+
+	argument, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	elements = append(elements, argument)
+
+	for parser.currentToken.Type == tokens.Comma {
+		parser.fetchToken()
+
+		argument, err = parser.parseExpression(Lowest)
+		if err != nil {
+			return nil, err
+		}
+
+		elements = append(elements, argument)
+	}
+
+	if err := parser.assertToken(tokens.RightBracket); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	return expressions.ArrayLiteral(elements), nil
+}
+
 func (parser *Parser) parsePrefixOperation() (ast.Expression, error) {
 	operator := parser.currentToken
 

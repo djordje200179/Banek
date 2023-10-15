@@ -34,6 +34,8 @@ const (
 	RightParenthesis
 	LeftBrace
 	RightBrace
+	LeftBracket
+	RightBracket
 
 	Function
 	LambdaFunction
@@ -107,6 +109,10 @@ func (tokenType TokenType) String() string {
 		return "{"
 	case RightBrace:
 		return "}"
+	case LeftBracket:
+		return "["
+	case RightBracket:
+		return "]"
 
 	case Function:
 		return "function"
