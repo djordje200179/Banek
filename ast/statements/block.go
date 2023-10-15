@@ -9,17 +9,17 @@ type Block struct {
 	Statements []ast.Statement
 }
 
-func (statement Block) StatementNode() {}
+func (block Block) StatementNode() {}
 
-func (statement Block) String() string {
+func (block Block) String() string {
 	var sb strings.Builder
 
-	for i, statement := range statement.Statements {
+	for i, singleStatement := range block.Statements {
 		if i != 0 {
 			sb.WriteByte('\n')
 		}
 
-		sb.WriteString(statement.String())
+		sb.WriteString(singleStatement.String())
 	}
 
 	return sb.String()

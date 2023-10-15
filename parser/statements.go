@@ -19,7 +19,9 @@ func (parser *Parser) parseStatement() (ast.Statement, error) {
 func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error) {
 	isConst := parser.currentToken.Type == tokens.Const
 
-	if err := parser.expectNextToken(tokens.Identifier); err != nil {
+	parser.fetchToken()
+
+	if err := parser.assertToken(tokens.Identifier); err != nil {
 		return nil, err
 	}
 
@@ -28,7 +30,7 @@ func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error)
 		return nil, err
 	}
 
-	if err := parser.expectNextToken(tokens.Assign); err != nil {
+	if err := parser.assertToken(tokens.Assign); err != nil {
 		return nil, err
 	}
 
@@ -39,9 +41,11 @@ func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error)
 		return nil, err
 	}
 
-	for parser.currentToken.Type != tokens.SemiColon {
-		parser.fetchToken()
+	if err := parser.assertToken(tokens.SemiColon); err != nil {
+		return nil, err
 	}
+
+	parser.fetchToken()
 
 	return statements.VariableDeclaration{Const: isConst, Name: name.(expressions.Identifier), Value: value}, nil
 }
@@ -54,9 +58,11 @@ func (parser *Parser) parseReturnStatement() (ast.Statement, error) {
 		return nil, err
 	}
 
-	for parser.currentToken.Type != tokens.SemiColon {
-		parser.fetchToken()
+	if err := parser.assertToken(tokens.SemiColon); err != nil {
+		return nil, err
 	}
+
+	parser.fetchToken()
 
 	return statements.Return{Value: value}, nil
 }
@@ -67,7 +73,7 @@ func (parser *Parser) parseExpressionStatement() (ast.Statement, error) {
 		return nil, err
 	}
 
-	for parser.currentToken.Type != tokens.SemiColon {
+	if parser.currentToken.Type == tokens.SemiColon {
 		parser.fetchToken()
 	}
 
@@ -85,15 +91,21 @@ func (parser *Parser) parseBlockStatement() (ast.Statement, error) {
 		}
 
 		containedStatements = append(containedStatements, singleStatement)
-
-		parser.fetchToken()
 	}
+
+	if err := parser.assertToken(tokens.RightBrace); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
 
 	return statements.Block{Statements: containedStatements}, nil
 }
 
 func (parser *Parser) parseFunctionStatement() (ast.Statement, error) {
-	if err := parser.expectNextToken(tokens.Identifier); err != nil {
+	parser.fetchToken()
+
+	if err := parser.assertToken(tokens.Identifier); err != nil {
 		return nil, err
 	}
 
@@ -102,17 +114,51 @@ func (parser *Parser) parseFunctionStatement() (ast.Statement, error) {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	if err := parser.assertToken(tokens.LeftParenthesis); err != nil {
+		return nil, err
+	}
 
 	parameters, err := parser.parseFunctionParameters()
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := parser.parseStatement()
+	body, err := parser.parseBlockStatement()
 	if err != nil {
 		return nil, err
 	}
 
 	return statements.Function{Name: name.(expressions.Identifier), Parameters: parameters, Body: body.(statements.Block)}, nil
+}
+
+func (parser *Parser) parseIfStatement() (ast.Statement, error) {
+	parser.fetchToken()
+
+	condition, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := parser.assertToken(tokens.Then); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	consequence, err := parser.parseStatement()
+	if err != nil {
+		return nil, err
+	}
+
+	var alternative ast.Statement
+	if parser.currentToken.Type == tokens.Else {
+		parser.fetchToken()
+
+		alternative, err = parser.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return statements.If{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
 }

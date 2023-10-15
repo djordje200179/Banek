@@ -8,8 +8,8 @@ import (
 )
 
 func (parser *Parser) parseExpression(precedence OperatorPrecedence) (ast.Expression, error) {
-	expressionParser, ok := parser.prefixParsers[parser.currentToken.Type]
-	if !ok {
+	expressionParser := parser.prefixParsers[parser.currentToken.Type]
+	if expressionParser == nil {
 		return nil, UnknownTokenError{TokenType: parser.currentToken.Type}
 	}
 
@@ -18,13 +18,11 @@ func (parser *Parser) parseExpression(precedence OperatorPrecedence) (ast.Expres
 		return nil, err
 	}
 
-	for parser.nextToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[parser.nextToken.Type] {
-		expressionParser, ok := parser.infixParsers[parser.nextToken.Type]
-		if !ok {
+	for parser.currentToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[parser.currentToken.Type] {
+		expressionParser := parser.infixParsers[parser.currentToken.Type]
+		if expressionParser == nil {
 			return leftExpression, nil
 		}
-
-		parser.fetchToken()
 
 		leftExpression, err = expressionParser(leftExpression)
 		if err != nil {
@@ -36,7 +34,11 @@ func (parser *Parser) parseExpression(precedence OperatorPrecedence) (ast.Expres
 }
 
 func (parser *Parser) parseIdentifier() (ast.Expression, error) {
-	return expressions.Identifier{Name: parser.currentToken.Literal}, nil
+	literal := parser.currentToken.Literal
+
+	parser.fetchToken()
+
+	return expressions.Identifier{Name: literal}, nil
 }
 
 func (parser *Parser) parseIntegerLiteral() (ast.Expression, error) {
@@ -44,6 +46,8 @@ func (parser *Parser) parseIntegerLiteral() (ast.Expression, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	parser.fetchToken()
 
 	return expressions.IntegerLiteral{Value: value}, nil
 }
@@ -53,6 +57,8 @@ func (parser *Parser) parseBooleanLiteral() (ast.Expression, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	parser.fetchToken()
 
 	return expressions.BooleanLiteral{Value: value}, nil
 }
@@ -73,9 +79,9 @@ func (parser *Parser) parsePrefixOperation() (ast.Expression, error) {
 func (parser *Parser) parseInfixOperation(left ast.Expression) (ast.Expression, error) {
 	operator := parser.currentToken
 
-	precedence, ok := infixOperatorPrecedences[parser.currentToken.Type]
+	precedence, ok := infixOperatorPrecedences[operator.Type]
 	if !ok {
-		return nil, UnknownTokenError{TokenType: parser.currentToken.Type}
+		return nil, UnknownTokenError{TokenType: operator.Type}
 	}
 
 	parser.fetchToken()
@@ -96,7 +102,7 @@ func (parser *Parser) parseGroupedExpression() (ast.Expression, error) {
 		return nil, err
 	}
 
-	if err = parser.expectNextToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
 		return nil, err
 	}
 
@@ -106,10 +112,6 @@ func (parser *Parser) parseGroupedExpression() (ast.Expression, error) {
 }
 
 func (parser *Parser) parseIfExpression() (ast.Expression, error) {
-	if err := parser.expectNextToken(tokens.LeftParenthesis); err != nil {
-		return nil, err
-	}
-
 	parser.fetchToken()
 
 	condition, err := parser.parseExpression(Lowest)
@@ -117,33 +119,34 @@ func (parser *Parser) parseIfExpression() (ast.Expression, error) {
 		return nil, err
 	}
 
-	if err := parser.expectNextToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.Then); err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	consequence, err := parser.parseStatement()
+	consequence, err := parser.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	var alternative ast.Statement
-	if parser.nextToken.Type == tokens.Else {
-		parser.fetchToken()
+	var alternative ast.Expression
+	if parser.currentToken.Type == tokens.Else {
 		parser.fetchToken()
 
-		alternative, err = parser.parseStatement()
+		alternative, err = parser.parseExpression(Lowest)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return expressions.IfExpression{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
+	return expressions.If{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
 }
 
 func (parser *Parser) parseFunctionLiteral() (ast.Expression, error) {
-	if err := parser.expectNextToken(tokens.LeftParenthesis); err != nil {
+	parser.fetchToken()
+
+	if err := parser.assertToken(tokens.LeftParenthesis); err != nil {
 		return nil, err
 	}
 
@@ -174,10 +177,10 @@ func (parser *Parser) parseFunctionParameters() ([]expressions.Identifier, error
 	if err != nil {
 		return nil, err
 	}
+
 	parameters = append(parameters, identifier.(expressions.Identifier))
 
-	for parser.nextToken.Type == tokens.Comma {
-		parser.fetchToken()
+	for parser.currentToken.Type == tokens.Comma {
 		parser.fetchToken()
 
 		identifier, err = parser.parseIdentifier()
@@ -188,7 +191,7 @@ func (parser *Parser) parseFunctionParameters() ([]expressions.Identifier, error
 		parameters = append(parameters, identifier.(expressions.Identifier))
 	}
 
-	if err := parser.expectNextToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
 		return nil, err
 	}
 
@@ -220,10 +223,10 @@ func (parser *Parser) parseCallArguments() ([]ast.Expression, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	arguments = append(arguments, argument)
 
-	for parser.nextToken.Type == tokens.Comma {
-		parser.fetchToken()
+	for parser.currentToken.Type == tokens.Comma {
 		parser.fetchToken()
 
 		argument, err = parser.parseExpression(Lowest)
@@ -234,7 +237,7 @@ func (parser *Parser) parseCallArguments() ([]ast.Expression, error) {
 		arguments = append(arguments, argument)
 	}
 
-	if err = parser.expectNextToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
 		return nil, err
 	}
 

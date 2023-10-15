@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-type IfExpression struct {
+type If struct {
 	Condition ast.Expression
 
-	Consequence, Alternative ast.Statement
+	Consequence, Alternative ast.Expression
 }
 
-func (expression IfExpression) ExpressionNode() {}
+func (expression If) ExpressionNode() {}
 
-func (expression IfExpression) String() string {
+func (expression If) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("if")

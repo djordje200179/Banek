@@ -8,11 +8,14 @@ var keywords = map[string]TokenType{
 	"const": Const,
 
 	"return": Return,
-	"if":     If,
-	"else":   Else,
-	"while":  While,
-	"true":   Boolean,
-	"false":  Boolean,
+
+	"if":   If,
+	"else": Else,
+	"then": Then,
+
+	"while": While,
+	"true":  Boolean,
+	"false": Boolean,
 }
 
 func LookupIdentifier(identifier string) TokenType {

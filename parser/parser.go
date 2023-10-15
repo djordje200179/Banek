@@ -49,6 +49,7 @@ func New() *Parser {
 		tokens.Minus:               parser.parseInfixOperation,
 		tokens.Asterisk:            parser.parseInfixOperation,
 		tokens.Slash:               parser.parseInfixOperation,
+		tokens.Assign:              parser.parseInfixOperation,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
 	}
@@ -60,6 +61,7 @@ func New() *Parser {
 		tokens.Return:    parser.parseReturnStatement,
 		tokens.LeftBrace: parser.parseBlockStatement,
 		tokens.Function:  parser.parseFunctionStatement,
+		tokens.If:        parser.parseIfStatement,
 	}
 
 	return parser
@@ -74,21 +76,11 @@ func (parser *Parser) fetchToken() {
 	parser.currentToken, parser.nextToken = parser.nextToken, <-parser.tokenChannel
 }
 
-func (parser *Parser) expectCurrentToken(tokenType tokens.TokenType) error {
+func (parser *Parser) assertToken(tokenType tokens.TokenType) error {
 	if parser.currentToken.Type != tokenType {
 		return UnexpectedTokenError{Expected: tokenType, Got: parser.currentToken.Type}
 	}
 
-	parser.fetchToken()
-	return nil
-}
-
-func (parser *Parser) expectNextToken(tokenType tokens.TokenType) error {
-	if parser.nextToken.Type != tokenType {
-		return UnexpectedTokenError{Expected: tokenType, Got: parser.nextToken.Type}
-	}
-
-	parser.fetchToken()
 	return nil
 }
 
@@ -111,7 +103,7 @@ func (parser *Parser) Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-
 }
 
 func (parser *Parser) parsingThread(ch chan<- ParsedStatement) {
-	for ; parser.currentToken.Type != tokens.EOF; parser.fetchToken() {
+	for parser.currentToken.Type != tokens.EOF {
 		statement, err := parser.parseStatement()
 		if err != nil {
 			ch <- ParsedStatement{Error: err}

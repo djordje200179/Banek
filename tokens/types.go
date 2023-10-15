@@ -41,8 +41,11 @@ const (
 	Const
 
 	Return
+
 	If
 	Else
+	Then
+
 	While
 )
 
@@ -114,10 +117,14 @@ func (tokenType TokenType) String() string {
 
 	case Return:
 		return "return"
+
 	case If:
 		return "if"
 	case Else:
 		return "else"
+	case Then:
+		return "then"
+
 	case While:
 		return "while"
 

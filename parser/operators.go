@@ -7,6 +7,7 @@ type OperatorPrecedence int
 const (
 	_ OperatorPrecedence = iota
 	Lowest
+	Assignment
 	Comparison
 	Sum
 	Product
@@ -29,4 +30,6 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 	tokens.Slash:    Product,
 
 	tokens.LeftParenthesis: Call,
+
+	tokens.Assign: Assignment,
 }
