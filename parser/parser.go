@@ -53,8 +53,7 @@ func New() *Parser {
 		tokens.Minus:               parser.parseInfixOperation,
 		tokens.Asterisk:            parser.parseInfixOperation,
 		tokens.Slash:               parser.parseInfixOperation,
-
-		tokens.Assign: parser.parseVariableAssignment,
+		tokens.Assign:              parser.parseInfixOperation,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
 		tokens.LeftBracket:     parser.parseIndexExpression,

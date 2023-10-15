@@ -17,7 +17,7 @@ var builtins = map[string]BuiltinFunction{
 		case Array:
 			return Integer(len(arg)), nil
 		default:
-			return Null{}, nil
+			return Undefined{}, nil
 		}
 	},
 }

@@ -71,3 +71,12 @@ type IncorrectArgumentCountError struct {
 func (err IncorrectArgumentCountError) Error() string {
 	return fmt.Sprintf("incorrect number of arguments: expected %d, got %d", err.Expected, err.Got)
 }
+
+type IndexOutOfBoundsError struct {
+	Index int
+	Size  int
+}
+
+func (err IndexOutOfBoundsError) Error() string {
+	return fmt.Sprintf("index out of bounds: index %d, size %d", err.Index, err.Size)
+}

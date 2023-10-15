@@ -17,10 +17,10 @@ type Integer int
 func (integer Integer) Type() string   { return "integer" }
 func (integer Integer) String() string { return strconv.Itoa(int(integer)) }
 
-type Null struct{}
+type Undefined struct{}
 
-func (null Null) Type() string   { return "null" }
-func (null Null) String() string { return "null" }
+func (undefined Undefined) Type() string   { return "undefined" }
+func (undefined Undefined) String() string { return "undefined" }
 
 type Function struct {
 	Parameters []expressions.Identifier

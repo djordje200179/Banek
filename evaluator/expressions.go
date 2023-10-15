@@ -3,6 +3,7 @@ package evaluator
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/tokens"
 	"errors"
 )
 
@@ -26,18 +27,6 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		}
 
 		return Array(elements), nil
-	case expressions.VariableAssignment:
-		value, err := evaluator.evaluateExpression(env, expression.Value)
-		if err != nil {
-			return nil, err
-		}
-
-		err = env.Set(expression.Variable.String(), value)
-		if err != nil {
-			return nil, err
-		}
-
-		return value, nil
 	case expressions.PrefixOperation:
 		operand, err := evaluator.evaluateExpression(env, expression.Operand)
 		if err != nil {
@@ -46,17 +35,63 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 
 		return evaluator.evalPrefixOperation(expression.Operator, operand)
 	case expressions.InfixOperation:
-		left, err := evaluator.evaluateExpression(env, expression.Left)
-		if err != nil {
-			return nil, err
-		}
-
 		right, err := evaluator.evaluateExpression(env, expression.Right)
 		if err != nil {
 			return nil, err
 		}
 
-		return evaluator.evalInfixOperation(expression.Operator, left, right)
+		switch expression.Operator.Type {
+		case tokens.Assign:
+			switch variable := expression.Left.(type) {
+			case expressions.Identifier:
+				err = env.Set(variable.String(), right)
+				if err != nil {
+					return nil, err
+				}
+			case expressions.CollectionIndex:
+				collectionObject, err := evaluator.evaluateExpression(env, variable.Collection)
+				if err != nil {
+					return nil, err
+				}
+
+				switch collection := collectionObject.(type) {
+				case Array:
+					indexObject, err := evaluator.evaluateExpression(env, variable.Index)
+					if err != nil {
+						return nil, err
+					}
+
+					index, ok := indexObject.(Integer)
+					if !ok {
+						return nil, InvalidOperandError{"array index", indexObject}
+					}
+
+					if index < 0 {
+						index = Integer(len(collection)) + index
+					}
+
+					if index < 0 || index >= Integer(len(collection)) {
+						return Undefined{}, IndexOutOfBoundsError{int(index), len(collection)}
+					}
+
+					collection[index] = right
+
+					return right, nil
+				default:
+					return nil, InvalidOperandError{"collection index", collectionObject}
+				}
+			}
+
+			return right, nil
+		default:
+			left, err := evaluator.evaluateExpression(env, expression.Left)
+			if err != nil {
+				return nil, err
+			}
+
+			return evaluator.evalInfixOperation(expression.Operator, left, right)
+		}
+
 	case expressions.If:
 		condition, err := evaluator.evaluateExpression(env, expression.Condition)
 		if err != nil {
@@ -121,7 +156,7 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 			case Return:
 				return result.Value, nil
 			default:
-				return Null{}, nil
+				return Undefined{}, nil
 			}
 		case BuiltinFunction:
 			args, err := evaluator.calculateFunctionArguments(env, expression.Arguments)
@@ -156,7 +191,7 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 			}
 
 			if index < 0 || index >= Integer(len(collection)) {
-				return Null{}, nil
+				return Undefined{}, IndexOutOfBoundsError{int(index), len(collection)}
 			}
 
 			return collection[index], nil
