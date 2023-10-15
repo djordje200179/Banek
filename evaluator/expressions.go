@@ -11,6 +11,18 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		return Integer(expression.Value), nil
 	case expressions.BooleanLiteral:
 		return Boolean(expression.Value), nil
+	case expressions.VariableAssignment:
+		value, err := evaluator.evaluateExpression(env, expression.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		err = env.Set(expression.Variable.String(), value)
+		if err != nil {
+			return nil, err
+		}
+
+		return value, nil
 	case expressions.PrefixOperation:
 		operand, err := evaluator.evaluateExpression(env, expression.Operand)
 		if err != nil {
@@ -42,9 +54,9 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 			return evaluator.evaluateExpression(env, expression.Alternative)
 		}
 	case expressions.Identifier:
-		value, ok := env.Get(expression.String())
-		if !ok {
-			return nil, IdentifierNotDefinedError{expression}
+		value, err := env.Get(expression.Name)
+		if err != nil {
+			return nil, err
 		}
 
 		return value, nil
@@ -73,7 +85,10 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 				return nil, err
 			}
 
-			functionEnv.Set(param.Name, arg)
+			err = functionEnv.Define(param.Name, arg, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		result, err := evaluator.evaluateStatement(functionEnv, function.Body)

@@ -10,36 +10,59 @@ type Object interface {
 	fmt.Stringer
 }
 
+type Variable struct {
+	Object
+	Mutable bool
+}
+
 type environment struct {
-	values map[string]Object
+	values map[string]Variable
 
 	outer *environment
 }
 
 func newEnvironment(outer *environment) *environment {
 	return &environment{
-		values: map[string]Object{},
+		values: map[string]Variable{},
 		outer:  outer,
 	}
 }
 
-func (env *environment) Get(name string) (Object, bool) {
+func (env *environment) Get(name string) (Object, error) {
 	obj, ok := env.values[name]
-	if !ok && env.outer != nil {
+	if ok {
+		return obj.Object, nil
+	} else if env.outer != nil {
 		return env.outer.Get(name)
+	} else {
+		return nil, IdentifierNotDefinedError{name}
+	}
+}
+
+func (env *environment) Define(name string, value Object, mutable bool) error {
+	if _, ok := env.values[name]; ok {
+		return IdentifierAlreadyDefinedError{name}
 	}
 
-	return obj, ok
+	env.values[name] = Variable{value, mutable}
+
+	return nil
 }
 
-func (env *environment) Set(name string, value Object) {
-	env.values[name] = value
-}
+func (env *environment) Set(name string, value Object) error {
+	if variable, ok := env.values[name]; ok {
+		if !variable.Mutable {
+			return IdentifierNotMutableError{name}
+		}
 
-func (env *environment) IsDefined(name string) bool {
-	_, ok := env.values[name]
+		env.values[name] = Variable{value, true}
 
-	return ok
+		return nil
+	} else if env.outer != nil {
+		return env.outer.Set(name, value)
+	} else {
+		return IdentifierNotDefinedError{name}
+	}
 }
 
 func (env *environment) Delete(name string) {

@@ -56,11 +56,10 @@ func (evaluator *Evaluator) evaluateStatement(env *environment, statement ast.St
 			return nil, err
 		}
 
-		if env.IsDefined(statement.Name.String()) {
-			return nil, IdentifierAlreadyDefinedError{statement.Name}
+		err = env.Define(statement.Name.String(), value, !statement.Const)
+		if err != nil {
+			return nil, err
 		}
-
-		env.Set(statement.Name.String(), value)
 
 		return None{}, nil
 	case statements.Function:
@@ -70,7 +69,10 @@ func (evaluator *Evaluator) evaluateStatement(env *environment, statement ast.St
 			Env:        newEnvironment(env),
 		}
 
-		env.Set(statement.Name.String(), value)
+		err := env.Define(statement.Name.String(), value, false)
+		if err != nil {
+			return nil, err
+		}
 
 		return None{}, nil
 	default:

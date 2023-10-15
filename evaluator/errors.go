@@ -2,7 +2,6 @@ package evaluator
 
 import (
 	"banek/ast"
-	"banek/ast/expressions"
 	"banek/tokens"
 	"fmt"
 )
@@ -16,11 +15,27 @@ func (err UnknownStatementError) Error() string {
 }
 
 type IdentifierAlreadyDefinedError struct {
-	Identifier expressions.Identifier
+	Identifier string
 }
 
 func (err IdentifierAlreadyDefinedError) Error() string {
-	return "identifier already defined: " + err.Identifier.String()
+	return "identifier already defined: " + err.Identifier
+}
+
+type IdentifierNotDefinedError struct {
+	Identifier string
+}
+
+func (err IdentifierNotDefinedError) Error() string {
+	return "identifier not defined: " + err.Identifier
+}
+
+type IdentifierNotMutableError struct {
+	Identifier string
+}
+
+func (err IdentifierNotMutableError) Error() string {
+	return "identifier not mutable: " + err.Identifier
 }
 
 type UnknownOperatorError struct {
@@ -46,12 +61,4 @@ type InvalidOperandError struct {
 
 func (err InvalidOperandError) Error() string {
 	return fmt.Sprintf("invalid operand of type %s for operator %s", err.Operand.Type(), err.Operator)
-}
-
-type IdentifierNotDefinedError struct {
-	Identifier expressions.Identifier
-}
-
-func (err IdentifierNotDefinedError) Error() string {
-	return "identifier not defined: " + err.Identifier.String()
 }

@@ -76,6 +76,17 @@ func (parser *Parser) parsePrefixOperation() (ast.Expression, error) {
 	return expressions.PrefixOperation{Operator: operator, Operand: operand}, nil
 }
 
+func (parser *Parser) parseVariableAssignment(left ast.Expression) (ast.Expression, error) {
+	parser.fetchToken()
+
+	right, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	return expressions.VariableAssignment{Variable: left.(expressions.Identifier), Value: right}, nil
+}
+
 func (parser *Parser) parseInfixOperation(left ast.Expression) (ast.Expression, error) {
 	operator := parser.currentToken
 
