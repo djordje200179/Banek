@@ -21,6 +21,11 @@ func main() {
 	objectsChannel := evaluator.New().Evaluate(statementChannel, 100)
 
 	for object := range objectsChannel {
-		fmt.Println(object.String())
+		switch object := object.(type) {
+		case evaluator.Error:
+			_, _ = fmt.Fprintln(os.Stderr, object.Error())
+		case evaluator.Object:
+			_, _ = fmt.Fprintln(os.Stdout, object.String())
+		}
 	}
 }
