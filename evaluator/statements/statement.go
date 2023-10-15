@@ -3,30 +3,33 @@ package statements
 import (
 	"banek/ast"
 	"banek/ast/statements"
+	"banek/evaluator/environment"
 	"banek/evaluator/expressions"
 	"banek/evaluator/objects"
 )
 
-func EvalStatement(statement ast.Statement) (objects.Object, error) {
+func EvalStatement(env *environment.Environment, statement ast.Statement) (objects.Object, error) {
 	switch statement := statement.(type) {
 	case statements.Expression:
-		return expressions.EvalExpression(statement.Expression)
+		return expressions.EvalExpression(env, statement.Expression)
 	case statements.If:
-		condition, err := expressions.EvalExpression(statement.Condition)
+		condition, err := expressions.EvalExpression(env, statement.Condition)
 		if err != nil {
 			return nil, err
 		}
 
 		if condition == objects.Boolean(true) {
-			return EvalStatement(statement.Consequence)
+			return EvalStatement(env, statement.Consequence)
 		} else if statement.Alternative != nil {
-			return EvalStatement(statement.Alternative)
+			return EvalStatement(env, statement.Alternative)
 		} else {
 			return objects.None{}, nil
 		}
 	case statements.Block:
+		blockEnv := environment.New(env)
+
 		for _, statement := range statement.Statements {
-			result, err := EvalStatement(statement)
+			result, err := EvalStatement(blockEnv, statement)
 			if err != nil {
 				return nil, err
 			}
@@ -38,12 +41,25 @@ func EvalStatement(statement ast.Statement) (objects.Object, error) {
 
 		return objects.None{}, nil
 	case statements.Return:
-		value, err := expressions.EvalExpression(statement.Value)
+		value, err := expressions.EvalExpression(env, statement.Value)
 		if err != nil {
 			return nil, err
 		}
 
 		return objects.Return{Value: value}, nil
+	case statements.VariableDeclaration:
+		value, err := expressions.EvalExpression(env, statement.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		if env.IsDefined(statement.Name.String()) {
+			return nil, IdentifierAlreadyDefinedError{statement.Name}
+		}
+
+		env.Set(statement.Name.String(), value)
+
+		return objects.None{}, nil
 	default:
 		return nil, UnknownStatementError{statement}
 	}
