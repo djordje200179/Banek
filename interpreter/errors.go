@@ -1,7 +1,8 @@
-package evaluator
+package interpreter
 
 import (
 	"banek/ast"
+	"banek/interpreter/objects"
 	"banek/tokens"
 	"fmt"
 )
@@ -56,20 +57,11 @@ func (err UnknownExpressionError) Error() string {
 
 type InvalidOperandError struct {
 	Operator string
-	Operand  Object
+	Operand  objects.Object
 }
 
 func (err InvalidOperandError) Error() string {
 	return fmt.Sprintf("invalid operand: expected %s, got %s", err.Operator, err.Operand.Type())
-}
-
-type IncorrectArgumentCountError struct {
-	Expected int
-	Got      int
-}
-
-func (err IncorrectArgumentCountError) Error() string {
-	return fmt.Sprintf("incorrect number of arguments: expected %d, got %d", err.Expected, err.Got)
 }
 
 type IndexOutOfBoundsError struct {

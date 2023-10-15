@@ -1,7 +1,9 @@
 package main
 
 import (
-	"banek/evaluator"
+	"banek/interpreter"
+	"banek/interpreter/objects"
+	"banek/interpreter/results"
 	"banek/lexer"
 	"banek/parser"
 	"fmt"
@@ -18,13 +20,13 @@ func main() {
 
 	tokenChannel := lexer.New(file).Tokenize(100)
 	statementChannel := parser.New().Parse(tokenChannel, 100)
-	objectsChannel := evaluator.New().Evaluate(statementChannel, 100)
+	objectsChannel := interpreter.New().Eval(statementChannel, 100)
 
 	for object := range objectsChannel {
 		switch object := object.(type) {
-		case evaluator.Error:
+		case results.Error:
 			_, _ = fmt.Fprintln(os.Stderr, object.Error())
-		case evaluator.Object:
+		case objects.Object:
 			_, _ = fmt.Fprintln(os.Stdout, object.String())
 		}
 	}

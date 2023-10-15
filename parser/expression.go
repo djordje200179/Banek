@@ -269,7 +269,7 @@ func (parser *Parser) parseIndexExpression(collection ast.Expression) (ast.Expre
 
 	parser.fetchToken()
 
-	return expressions.CollectionIndex{Collection: collection, Index: index}, nil
+	return expressions.CollectionAccess{Collection: collection, Key: index}, nil
 }
 
 func (parser *Parser) parseCallArguments() ([]ast.Expression, error) {

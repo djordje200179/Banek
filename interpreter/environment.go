@@ -1,34 +1,28 @@
-package evaluator
+package interpreter
 
 import (
-	"fmt"
+	"banek/interpreter/objects"
 )
 
-type Object interface {
-	Type() string
-
-	fmt.Stringer
-}
-
-type Variable struct {
-	Object
+type variable struct {
+	objects.Object
 	Mutable bool
 }
 
 type environment struct {
-	values map[string]Variable
+	values map[string]variable
 
 	outer *environment
 }
 
 func newEnvironment(outer *environment) *environment {
 	return &environment{
-		values: map[string]Variable{},
+		values: map[string]variable{},
 		outer:  outer,
 	}
 }
 
-func (env *environment) Get(name string) (Object, error) {
+func (env *environment) Get(name string) (objects.Object, error) {
 	obj, ok := env.values[name]
 	if ok {
 		return obj.Object, nil
@@ -39,23 +33,23 @@ func (env *environment) Get(name string) (Object, error) {
 	}
 }
 
-func (env *environment) Define(name string, value Object, mutable bool) error {
+func (env *environment) Define(name string, value objects.Object, mutable bool) error {
 	if _, ok := env.values[name]; ok {
 		return IdentifierAlreadyDefinedError{name}
 	}
 
-	env.values[name] = Variable{value, mutable}
+	env.values[name] = variable{value, mutable}
 
 	return nil
 }
 
-func (env *environment) Set(name string, value Object) error {
-	if variable, ok := env.values[name]; ok {
-		if !variable.Mutable {
+func (env *environment) Set(name string, value objects.Object) error {
+	if varEntry, ok := env.values[name]; ok {
+		if !varEntry.Mutable {
 			return IdentifierNotMutableError{name}
 		}
 
-		env.values[name] = Variable{value, true}
+		env.values[name] = variable{value, true}
 
 		return nil
 	} else if env.outer != nil {
