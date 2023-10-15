@@ -1,12 +1,27 @@
-package expressions
+package evaluator
 
 import (
 	"banek/ast"
 	"banek/ast/expressions"
-	"banek/evaluator/objects"
 	"banek/tokens"
 	"fmt"
 )
+
+type UnknownStatementError struct {
+	Statement ast.Statement
+}
+
+func (err UnknownStatementError) Error() string {
+	return "unknown statement: " + err.Statement.String()
+}
+
+type IdentifierAlreadyDefinedError struct {
+	Identifier expressions.Identifier
+}
+
+func (err IdentifierAlreadyDefinedError) Error() string {
+	return "identifier already defined: " + err.Identifier.String()
+}
 
 type UnknownOperatorError struct {
 	Operator tokens.TokenType
@@ -26,7 +41,7 @@ func (err UnknownExpressionError) Error() string {
 
 type InvalidOperandError struct {
 	Operator string
-	Operand  objects.Object
+	Operand  Object
 }
 
 func (err InvalidOperandError) Error() string {

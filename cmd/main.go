@@ -18,7 +18,7 @@ func main() {
 
 	tokenChannel := lexer.New(file).Tokenize(100)
 	statementChannel := parser.New().Parse(tokenChannel, 100)
-	objectsChannel := evaluator.EvalStatements(statementChannel, 100)
+	objectsChannel := evaluator.New().Evaluate(statementChannel, 100)
 
 	for object := range objectsChannel {
 		fmt.Println(object.String())
