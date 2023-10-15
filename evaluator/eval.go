@@ -28,13 +28,24 @@ func evalStatement(statement ast.Statement) (objects.Object, error) {
 		}
 	case statements.Block:
 		for _, statement := range statement.Statements {
-			_, err := evalStatement(statement)
+			result, err := evalStatement(statement)
 			if err != nil {
 				return nil, err
+			}
+
+			if result != nil && result.Type() == objects.ReturnType {
+				return result, nil
 			}
 		}
 
 		return objects.None{}, nil
+	case statements.Return:
+		value, err := expressions.EvalExpression(statement.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		return objects.Return{Value: value}, nil
 	default:
 		return nil, nil
 	}
