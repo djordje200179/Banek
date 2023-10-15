@@ -18,9 +18,9 @@ func main() {
 	}
 	defer file.Close()
 
-	tokenChannel := lexer.New(file).Tokenize(100)
-	statementChannel := parser.New().Parse(tokenChannel, 100)
-	objectsChannel := interpreter.New().Eval(statementChannel, 100)
+	tokenChannel := lexer.New(file).Tokenize(50)
+	statementChannel := parser.New().Parse(tokenChannel, 5)
+	objectsChannel := interpreter.New().Eval(statementChannel, 2)
 
 	for object := range objectsChannel {
 		switch object := object.(type) {
