@@ -133,6 +133,37 @@ func (evaluator *Evaluator) evaluateExpression(env *environment, expression ast.
 		default:
 			return nil, InvalidOperandError{"function call", functionObject}
 		}
+	case expressions.CollectionIndex:
+		collectionObject, err := evaluator.evaluateExpression(env, expression.Collection)
+		if err != nil {
+			return nil, err
+		}
+
+		switch collection := collectionObject.(type) {
+		case Array:
+			indexObject, err := evaluator.evaluateExpression(env, expression.Index)
+			if err != nil {
+				return nil, err
+			}
+
+			index, ok := indexObject.(Integer)
+			if !ok {
+				return nil, InvalidOperandError{"array index", indexObject}
+			}
+
+			if index < 0 {
+				index = Integer(len(collection)) + index
+			}
+
+			if index < 0 || index >= Integer(len(collection)) {
+				return Null{}, nil
+			}
+
+			return collection[index], nil
+		default:
+			return nil, InvalidOperandError{"collection index", collectionObject}
+		}
+
 	default:
 		return nil, UnknownExpressionError{expression}
 	}

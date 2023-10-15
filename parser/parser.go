@@ -57,6 +57,7 @@ func New() *Parser {
 		tokens.Assign: parser.parseVariableAssignment,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
+		tokens.LeftBracket:     parser.parseIndexExpression,
 	}
 
 	parser.statementParsers = map[tokens.TokenType]statementParser{

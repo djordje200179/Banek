@@ -266,6 +266,23 @@ func (parser *Parser) parseCallExpression(function ast.Expression) (ast.Expressi
 	return expressions.FunctionCall{Function: function, Arguments: arguments}, nil
 }
 
+func (parser *Parser) parseIndexExpression(collection ast.Expression) (ast.Expression, error) {
+	parser.fetchToken()
+
+	index, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := parser.assertToken(tokens.RightBracket); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	return expressions.CollectionIndex{Collection: collection, Index: index}, nil
+}
+
 func (parser *Parser) parseCallArguments() ([]ast.Expression, error) {
 	parser.fetchToken()
 

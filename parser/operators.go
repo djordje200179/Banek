@@ -30,6 +30,7 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 	tokens.Slash:    Product,
 
 	tokens.LeftParenthesis: Call,
+	tokens.LeftBracket:     Call,
 
 	tokens.Assign: Assignment,
 }
