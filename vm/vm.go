@@ -41,8 +41,28 @@ func (vm *vm) run() error {
 			if err != nil {
 				return err
 			}
+		case bytecode.Pop:
+			err := vm.opPop()
+			if err != nil {
+				return err
+			}
 		case bytecode.Add:
 			err := vm.opAdd()
+			if err != nil {
+				return err
+			}
+		case bytecode.Subtract:
+			err := vm.opSubtract()
+			if err != nil {
+				return err
+			}
+		case bytecode.Multiply:
+			err := vm.opMultiply()
+			if err != nil {
+				return err
+			}
+		case bytecode.Divide:
+			err := vm.opDivide()
 			if err != nil {
 				return err
 			}

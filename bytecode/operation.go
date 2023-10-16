@@ -6,8 +6,12 @@ const (
 	Invalid Operation = iota
 
 	PushConst
+	Pop
 
 	Add
+	Subtract
+	Multiply
+	Divide
 )
 
 func (operation Operation) String() string {
@@ -37,9 +41,13 @@ func (opInfo OperationInfo) OperandsSize() int {
 }
 
 var operationInfos = []OperationInfo{
-	Invalid: {"Invalid", []int{}},
+	Invalid: {"INVALID", []int{}},
 
-	PushConst: {"PushConst", []int{2}},
+	PushConst: {"PUSH.C", []int{2}},
+	Pop:       {"POP", []int{}},
 
-	Add: {"Add", []int{}},
+	Add:      {"ADD", []int{}},
+	Subtract: {"SUB", []int{}},
+	Multiply: {"MUL", []int{}},
+	Divide:   {"DIV", []int{}},
 }

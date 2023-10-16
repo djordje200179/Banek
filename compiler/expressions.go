@@ -31,6 +31,12 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		switch operator {
 		case tokens.Plus:
 			compiler.emitInstruction(bytecode.Add)
+		case tokens.Minus:
+			compiler.emitInstruction(bytecode.Subtract)
+		case tokens.Asterisk:
+			compiler.emitInstruction(bytecode.Multiply)
+		case tokens.Slash:
+			compiler.emitInstruction(bytecode.Divide)
 		default:
 			return errors.UnknownOperatorError{Operator: operator}
 		}
