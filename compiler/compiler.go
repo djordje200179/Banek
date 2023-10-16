@@ -26,8 +26,14 @@ func Compile(statementsChannel <-chan ast.Statement) (*bytecode.Executable, erro
 }
 
 func (compiler *compiler) addConstant(object objects.Object) int {
-	index := len(compiler.executable.Constants)
-	compiler.executable.Constants = append(compiler.executable.Constants, object)
+	for index, constant := range compiler.executable.ConstantsPool {
+		if constant == object {
+			return index
+		}
+	}
+
+	index := len(compiler.executable.ConstantsPool)
+	compiler.executable.ConstantsPool = append(compiler.executable.ConstantsPool, object)
 	return index
 }
 

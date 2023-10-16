@@ -5,8 +5,9 @@ import (
 )
 
 type Executable struct {
-	Code      Code
-	Constants []objects.Object
+	Code Code
+
+	ConstantsPool []objects.Object
 }
 
 func (executable *Executable) String() string {

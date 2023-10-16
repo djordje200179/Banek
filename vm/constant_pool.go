@@ -14,9 +14,9 @@ func (err UndefinedConstantError) Error() string {
 }
 
 func (vm *vm) getConstant(index uint16) (objects.Object, error) {
-	if int(index) >= len(vm.program.Constants) {
+	if int(index) >= len(vm.program.ConstantsPool) {
 		return nil, UndefinedConstantError{index}
 	}
 
-	return vm.program.Constants[index], nil
+	return vm.program.ConstantsPool[index], nil
 }
