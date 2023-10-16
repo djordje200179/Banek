@@ -1,7 +1,7 @@
 package interpreter
 
 import (
-	errors2 "banek/exec/errors"
+	"banek/exec/errors"
 	"banek/exec/objects"
 )
 
@@ -30,13 +30,13 @@ func (env *environment) Get(name string) (objects.Object, error) {
 	} else if env.outer != nil {
 		return env.outer.Get(name)
 	} else {
-		return nil, errors2.IdentifierNotDefinedError{Identifier: name}
+		return nil, errors.IdentifierNotDefinedError{Identifier: name}
 	}
 }
 
 func (env *environment) Define(name string, value objects.Object, mutable bool) error {
 	if _, ok := env.values[name]; ok {
-		return errors2.IdentifierAlreadyDefinedError{Identifier: name}
+		return errors.IdentifierAlreadyDefinedError{Identifier: name}
 	}
 
 	env.values[name] = variable{value, mutable}
@@ -47,7 +47,7 @@ func (env *environment) Define(name string, value objects.Object, mutable bool) 
 func (env *environment) Set(name string, value objects.Object) error {
 	if varEntry, ok := env.values[name]; ok {
 		if !varEntry.Mutable {
-			return errors2.IdentifierNotMutableError{Identifier: name}
+			return errors.IdentifierNotMutableError{Identifier: name}
 		}
 
 		env.values[name] = variable{value, true}
@@ -56,7 +56,7 @@ func (env *environment) Set(name string, value objects.Object) error {
 	} else if env.outer != nil {
 		return env.outer.Set(name, value)
 	} else {
-		return errors2.IdentifierNotDefinedError{Identifier: name}
+		return errors.IdentifierNotDefinedError{Identifier: name}
 	}
 }
 

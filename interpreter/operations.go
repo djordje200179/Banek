@@ -3,7 +3,7 @@ package interpreter
 import (
 	"banek/ast/expressions"
 	"banek/exec/objects"
-	"banek/interpreter/operations"
+	"banek/exec/operations"
 	"banek/tokens"
 )
 

@@ -1,7 +1,8 @@
 package vm
 
 import (
-	"banek/exec/objects"
+	"banek/exec/operations"
+	"banek/tokens"
 	"encoding/binary"
 )
 
@@ -37,10 +38,11 @@ func (vm *vm) opAdd() error {
 		return err
 	}
 
-	leftValue := left.(objects.Integer)
-	rightValue := right.(objects.Integer)
+	result, err := operations.EvalInfixOperation(left, right, tokens.Plus)
+	if err != nil {
+		return err
+	}
 
-	result := leftValue + rightValue
 	_ = vm.push(result)
 
 	return nil
@@ -57,10 +59,11 @@ func (vm *vm) opSubtract() error {
 		return err
 	}
 
-	leftValue := left.(objects.Integer)
-	rightValue := right.(objects.Integer)
+	result, err := operations.EvalInfixOperation(left, right, tokens.Minus)
+	if err != nil {
+		return err
+	}
 
-	result := leftValue - rightValue
 	_ = vm.push(result)
 
 	return nil
@@ -77,10 +80,11 @@ func (vm *vm) opMultiply() error {
 		return err
 	}
 
-	leftValue := left.(objects.Integer)
-	rightValue := right.(objects.Integer)
+	result, err := operations.EvalInfixOperation(left, right, tokens.Asterisk)
+	if err != nil {
+		return err
+	}
 
-	result := leftValue * rightValue
 	_ = vm.push(result)
 
 	return nil
@@ -97,10 +101,11 @@ func (vm *vm) opDivide() error {
 		return err
 	}
 
-	leftValue := left.(objects.Integer)
-	rightValue := right.(objects.Integer)
+	result, err := operations.EvalInfixOperation(left, right, tokens.Slash)
+	if err != nil {
+		return err
+	}
 
-	result := leftValue / rightValue
 	_ = vm.push(result)
 
 	return nil

@@ -3,20 +3,20 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/expressions"
-	errors2 "banek/exec/errors"
-	objects2 "banek/exec/objects"
+	"banek/exec/errors"
+	"banek/exec/objects"
 	"banek/interpreter/results"
 	stdErrors "errors"
 )
 
-func (interpreter *Interpreter) evalExpression(env *environment, expression ast.Expression) (objects2.Object, error) {
+func (interpreter *Interpreter) evalExpression(env *environment, expression ast.Expression) (objects.Object, error) {
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
-		return objects2.Integer(expression), nil
+		return objects.Integer(expression), nil
 	case expressions.BooleanLiteral:
-		return objects2.Boolean(expression), nil
+		return objects.Boolean(expression), nil
 	case expressions.StringLiteral:
-		return objects2.String(expression), nil
+		return objects.String(expression), nil
 	case expressions.ArrayLiteral:
 		return interpreter.evalArrayLiteral(env, expression)
 	case expressions.PrefixOperation:
@@ -29,7 +29,7 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 			return nil, err
 		}
 
-		if condition == objects2.Boolean(true) {
+		if condition == objects.Boolean(true) {
 			return interpreter.evalExpression(env, expression.Consequence)
 		} else {
 			return interpreter.evalExpression(env, expression.Alternative)
@@ -37,7 +37,7 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 	case expressions.Identifier:
 		return interpreter.evalIdentifier(env, expression)
 	case expressions.FunctionLiteral:
-		return objects2.Function{
+		return objects.Function{
 			Parameters: expression.Parameters,
 			Body:       expression.Body,
 			Env:        newEnvironment(env),
@@ -47,19 +47,19 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 	case expressions.CollectionAccess:
 		return interpreter.evalCollectionAccess(env, expression)
 	default:
-		return nil, errors2.UnknownExpressionError{Expression: expression}
+		return nil, errors.UnknownExpressionError{Expression: expression}
 	}
 }
 
-func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expressions.Identifier) (objects2.Object, error) {
+func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expressions.Identifier) (objects.Object, error) {
 	value, err := env.Get(identifier.String())
 	if err == nil {
 		return value, nil
 	}
 
-	var identifierNotDefinedError errors2.IdentifierNotDefinedError
+	var identifierNotDefinedError errors.IdentifierNotDefinedError
 	if stdErrors.As(err, &identifierNotDefinedError) {
-		builtin, ok := objects2.Builtins[identifier.String()]
+		builtin, ok := objects.Builtins[identifier.String()]
 		if !ok {
 			return nil, err
 		}
@@ -70,14 +70,14 @@ func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expr
 	return nil, err
 }
 
-func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall expressions.FunctionCall) (objects2.Object, error) {
+func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall expressions.FunctionCall) (objects.Object, error) {
 	functionObject, err := interpreter.evalExpression(env, functionCall.Function)
 	if err != nil {
 		return nil, err
 	}
 
 	switch function := functionObject.(type) {
-	case objects2.Function:
+	case objects.Function:
 		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
 		if err != nil {
 			return nil, err
@@ -100,9 +100,9 @@ func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall 
 		case results.Return:
 			return result.Value, nil
 		default:
-			return objects2.Undefined{}, nil
+			return objects.Undefined{}, nil
 		}
-	case objects2.BuiltinFunction:
+	case objects.BuiltinFunction:
 		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
 		if err != nil {
 			return nil, err
@@ -110,12 +110,12 @@ func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall 
 
 		return function(args...)
 	default:
-		return nil, errors2.InvalidOperandError{Operator: "function call", Operand: functionObject}
+		return nil, errors.InvalidOperandError{Operator: "function call", Operand: functionObject}
 	}
 }
 
-func (interpreter *Interpreter) evalFunctionArguments(env *environment, expressions []ast.Expression) ([]objects2.Object, error) {
-	args := make([]objects2.Object, len(expressions))
+func (interpreter *Interpreter) evalFunctionArguments(env *environment, expressions []ast.Expression) ([]objects.Object, error) {
+	args := make([]objects.Object, len(expressions))
 	for i, rawArg := range expressions {
 		arg, err := interpreter.evalExpression(env, rawArg)
 		if err != nil {
@@ -128,8 +128,8 @@ func (interpreter *Interpreter) evalFunctionArguments(env *environment, expressi
 	return args, nil
 }
 
-func (interpreter *Interpreter) evalArrayLiteral(env *environment, expression expressions.ArrayLiteral) (objects2.Array, error) {
-	elements := make([]objects2.Object, len(expression))
+func (interpreter *Interpreter) evalArrayLiteral(env *environment, expression expressions.ArrayLiteral) (objects.Array, error) {
+	elements := make([]objects.Object, len(expression))
 	for i, elementExpression := range expression {
 		element, err := interpreter.evalExpression(env, elementExpression)
 		if err != nil {
@@ -142,7 +142,7 @@ func (interpreter *Interpreter) evalArrayLiteral(env *environment, expression ex
 	return elements, nil
 }
 
-func (interpreter *Interpreter) evalCollectionAccess(env *environment, expression expressions.CollectionAccess) (objects2.Object, error) {
+func (interpreter *Interpreter) evalCollectionAccess(env *environment, expression expressions.CollectionAccess) (objects.Object, error) {
 	collectionObject, err := interpreter.evalExpression(env, expression.Collection)
 	if err != nil {
 		return nil, err
@@ -154,25 +154,25 @@ func (interpreter *Interpreter) evalCollectionAccess(env *environment, expressio
 	}
 
 	switch collection := collectionObject.(type) {
-	case objects2.Array:
+	case objects.Array:
 		return interpreter.evalArrayAccess(collection, key)
 	default:
-		return nil, errors2.InvalidOperandError{Operator: "collection key", Operand: collectionObject}
+		return nil, errors.InvalidOperandError{Operator: "collection key", Operand: collectionObject}
 	}
 }
 
-func (interpreter *Interpreter) evalArrayAccess(array objects2.Array, indexObject objects2.Object) (objects2.Object, error) {
-	index, ok := indexObject.(objects2.Integer)
+func (interpreter *Interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
+	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return nil, errors2.InvalidOperandError{Operator: "array index", Operand: indexObject}
+		return nil, errors.InvalidOperandError{Operator: "array index", Operand: indexObject}
 	}
 
 	if index < 0 {
-		index = objects2.Integer(len(array)) + index
+		index = objects.Integer(len(array)) + index
 	}
 
-	if index < 0 || index >= objects2.Integer(len(array)) {
-		return objects2.Undefined{}, objects2.IndexOutOfBoundsError{Index: int(index), Size: len(array)}
+	if index < 0 || index >= objects.Integer(len(array)) {
+		return objects.Undefined{}, objects.IndexOutOfBoundsError{Index: int(index), Size: len(array)}
 	}
 
 	return array[index], nil
