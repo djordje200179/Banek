@@ -13,7 +13,7 @@ type (
 	statementParser func() (ast.Statement, error)
 )
 
-type Parser struct {
+type parser struct {
 	tokenChannel <-chan tokens.Token
 
 	currentToken, nextToken tokens.Token
@@ -23,9 +23,35 @@ type Parser struct {
 	statementParsers map[tokens.TokenType]statementParser
 }
 
-func New() *Parser {
-	parser := new(Parser)
+func Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
+	statementChannel := make(chan ast.Statement, bufferSize)
 
+	go parsingThread(tokenChannel, statementChannel)
+
+	return statementChannel
+}
+
+func parsingThread(tokenChannel <-chan tokens.Token, statementChannel chan<- ast.Statement) {
+	parser := &parser{tokenChannel: tokenChannel}
+	parser.initSubParsers()
+
+	parser.fetchToken()
+	parser.fetchToken()
+
+	for parser.currentToken.Type != tokens.EOF {
+		statement, err := parser.parseStatement()
+		if err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err)
+			continue
+		}
+
+		statementChannel <- statement
+	}
+
+	close(statementChannel)
+}
+
+func (parser *parser) initSubParsers() {
 	parser.prefixParsers = map[tokens.TokenType]prefixParser{
 		tokens.Identifier: parser.parseIdentifier,
 
@@ -70,50 +96,4 @@ func New() *Parser {
 		tokens.Function:  parser.parseFunctionStatement,
 		tokens.If:        parser.parseIfStatement,
 	}
-
-	return parser
-}
-
-func (parser *Parser) fetchToken() {
-	if parser.nextToken.Type == tokens.EOF {
-		parser.currentToken = tokens.Token{Type: tokens.EOF}
-		return
-	}
-
-	parser.currentToken, parser.nextToken = parser.nextToken, <-parser.tokenChannel
-}
-
-func (parser *Parser) assertToken(tokenType tokens.TokenType) error {
-	if parser.currentToken.Type != tokenType {
-		return UnexpectedTokenError{Expected: tokenType, Got: parser.currentToken.Type}
-	}
-
-	return nil
-}
-
-func (parser *Parser) Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
-	parser.tokenChannel = tokenChannel
-
-	parser.fetchToken()
-	parser.fetchToken()
-
-	statementChannel := make(chan ast.Statement, bufferSize)
-
-	go parser.parsingThread(statementChannel)
-
-	return statementChannel
-}
-
-func (parser *Parser) parsingThread(ch chan<- ast.Statement) {
-	for parser.currentToken.Type != tokens.EOF {
-		statement, err := parser.parseStatement()
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			continue
-		}
-
-		ch <- statement
-	}
-
-	close(ch)
 }

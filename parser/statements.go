@@ -7,7 +7,7 @@ import (
 	"banek/tokens"
 )
 
-func (parser *Parser) parseStatement() (ast.Statement, error) {
+func (parser *parser) parseStatement() (ast.Statement, error) {
 	statementParser := parser.statementParsers[parser.currentToken.Type]
 	if statementParser == nil {
 		statementParser = parser.parseExpressionStatement
@@ -16,7 +16,7 @@ func (parser *Parser) parseStatement() (ast.Statement, error) {
 	return statementParser()
 }
 
-func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error) {
+func (parser *parser) parseVariableDeclarationStatement() (ast.Statement, error) {
 	isConst := parser.currentToken.Type == tokens.Const
 
 	parser.fetchToken()
@@ -50,7 +50,7 @@ func (parser *Parser) parseVariableDeclarationStatement() (ast.Statement, error)
 	return statements.VariableDeclaration{Const: isConst, Name: name.(expressions.Identifier), Value: value}, nil
 }
 
-func (parser *Parser) parseReturnStatement() (ast.Statement, error) {
+func (parser *parser) parseReturnStatement() (ast.Statement, error) {
 	parser.fetchToken()
 
 	value, err := parser.parseExpression(Lowest)
@@ -67,7 +67,7 @@ func (parser *Parser) parseReturnStatement() (ast.Statement, error) {
 	return statements.Return{Value: value}, nil
 }
 
-func (parser *Parser) parseExpressionStatement() (ast.Statement, error) {
+func (parser *parser) parseExpressionStatement() (ast.Statement, error) {
 	expression, err := parser.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (parser *Parser) parseExpressionStatement() (ast.Statement, error) {
 	return statements.Expression{Expression: expression}, nil
 }
 
-func (parser *Parser) parseBlockStatement() (ast.Statement, error) {
+func (parser *parser) parseBlockStatement() (ast.Statement, error) {
 	parser.fetchToken()
 
 	var containedStatements []ast.Statement
@@ -102,7 +102,7 @@ func (parser *Parser) parseBlockStatement() (ast.Statement, error) {
 	return statements.Block{Statements: containedStatements}, nil
 }
 
-func (parser *Parser) parseFunctionStatement() (ast.Statement, error) {
+func (parser *parser) parseFunctionStatement() (ast.Statement, error) {
 	parser.fetchToken()
 
 	if err := parser.assertToken(tokens.Identifier); err != nil {
@@ -131,7 +131,7 @@ func (parser *Parser) parseFunctionStatement() (ast.Statement, error) {
 	return statements.Function{Name: name.(expressions.Identifier), Parameters: parameters, Body: body.(statements.Block)}, nil
 }
 
-func (parser *Parser) parseIfStatement() (ast.Statement, error) {
+func (parser *parser) parseIfStatement() (ast.Statement, error) {
 	parser.fetchToken()
 
 	condition, err := parser.parseExpression(Lowest)
