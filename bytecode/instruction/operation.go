@@ -1,4 +1,4 @@
-package bytecode
+package instruction
 
 type Operation byte
 
@@ -34,20 +34,6 @@ func (operation Operation) Info() OperationInfo {
 
 	return operationInfos[operation]
 }
-
-type OperandType int
-
-const (
-	Constant OperandType = iota
-	Literal
-)
-
-type OperandInfo struct {
-	Width int
-	Type  OperandType
-}
-
-var constantPoolOperand = OperandInfo{2, Constant}
 
 type OperationInfo struct {
 	Name     string

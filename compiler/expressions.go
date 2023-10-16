@@ -3,7 +3,7 @@ package compiler
 import (
 	"banek/ast"
 	"banek/ast/expressions"
-	"banek/bytecode"
+	"banek/bytecode/instruction"
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/tokens"
@@ -13,15 +13,15 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
 		integer := objects.Integer(expression)
-		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(integer))
+		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(integer))
 		return nil
 	case expressions.BooleanLiteral:
 		boolean := objects.Boolean(expression)
-		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(boolean))
+		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(boolean))
 		return nil
 	case expressions.StringLiteral:
 		str := objects.String(expression)
-		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(str))
+		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(str))
 		return nil
 	case expressions.InfixOperation:
 		reverseOperands := false
@@ -71,21 +71,21 @@ func (compiler *compiler) compileInfixOperation(expression expressions.InfixOper
 
 	switch operator {
 	case tokens.Plus:
-		compiler.emitInstruction(bytecode.Add)
+		compiler.emitInstruction(instruction.Add)
 	case tokens.Minus:
-		compiler.emitInstruction(bytecode.Subtract)
+		compiler.emitInstruction(instruction.Subtract)
 	case tokens.Asterisk:
-		compiler.emitInstruction(bytecode.Multiply)
+		compiler.emitInstruction(instruction.Multiply)
 	case tokens.Slash:
-		compiler.emitInstruction(bytecode.Divide)
+		compiler.emitInstruction(instruction.Divide)
 	case tokens.Equals:
-		compiler.emitInstruction(bytecode.Equals)
+		compiler.emitInstruction(instruction.Equals)
 	case tokens.NotEquals:
-		compiler.emitInstruction(bytecode.NotEquals)
+		compiler.emitInstruction(instruction.NotEquals)
 	case tokens.LessThan, tokens.GreaterThan:
-		compiler.emitInstruction(bytecode.LessThan)
+		compiler.emitInstruction(instruction.LessThan)
 	case tokens.LessThanOrEquals, tokens.GreaterThanOrEquals:
-		compiler.emitInstruction(bytecode.LessThanOrEquals)
+		compiler.emitInstruction(instruction.LessThanOrEquals)
 	default:
 		return errors.UnknownOperatorError{Operator: operator}
 	}
@@ -103,9 +103,9 @@ func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOp
 
 	switch operator {
 	case tokens.Minus:
-		compiler.emitInstruction(bytecode.Negate)
+		compiler.emitInstruction(instruction.Negate)
 	case tokens.Bang:
-		compiler.emitInstruction(bytecode.Negate)
+		compiler.emitInstruction(instruction.Negate)
 	default:
 		return errors.UnknownOperatorError{Operator: operator}
 	}

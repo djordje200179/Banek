@@ -3,7 +3,7 @@ package compiler
 import (
 	"banek/ast"
 	"banek/ast/statements"
-	"banek/bytecode"
+	"banek/bytecode/instruction"
 	"banek/exec/errors"
 )
 
@@ -15,7 +15,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		compiler.emitInstruction(bytecode.Pop)
+		compiler.emitInstruction(instruction.Pop)
 	case statements.If:
 		err := compiler.compileExpression(statement.Condition)
 		if err != nil {
@@ -23,7 +23,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 		}
 
 		firstPatchAddress := compiler.currentAddress()
-		compiler.emitInstruction(bytecode.BranchIfFalse, 0)
+		compiler.emitInstruction(instruction.BranchIfFalse, 0)
 
 		err = compiler.compileStatement(statement.Consequence)
 		if err != nil {
@@ -34,8 +34,8 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 
 		if statement.Alternative != nil {
 			secondPatchAddress := compiler.currentAddress()
-			compiler.emitInstruction(bytecode.Branch, 0)
-			elseAddress += bytecode.Branch.Info().Size()
+			compiler.emitInstruction(instruction.Branch, 0)
+			elseAddress += instruction.Branch.Info().Size()
 
 			err = compiler.compileStatement(statement.Alternative)
 			if err != nil {
@@ -43,10 +43,10 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			}
 
 			outAddress := compiler.currentAddress()
-			compiler.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-bytecode.Branch.Info().Size())
+			compiler.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-instruction.Branch.Info().Size())
 		}
 
-		compiler.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-bytecode.BranchIfFalse.Info().Size())
+		compiler.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
 
 	case statements.Block:
 		for _, statement := range statement.Statements {

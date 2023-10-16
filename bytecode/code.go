@@ -1,6 +1,7 @@
 package bytecode
 
 import (
+	"banek/bytecode/instruction"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ func (code Code) String() string {
 	var sb strings.Builder
 
 	for pc := 0; pc < len(code); {
-		operation, operandValues, width := ReadInstruction(code[pc:])
+		operation, operandValues, width := instruction.ReadInstruction(code[pc:])
 		opInfo := operation.Info()
 
 		operandsStr := make([]string, len(operandValues))
@@ -20,9 +21,9 @@ func (code Code) String() string {
 			operand := opInfo.Operands[i]
 
 			switch operand.Type {
-			case Constant:
+			case instruction.Constant:
 				operandsStr[i] = "=" + strconv.Itoa(operandValue)
-			case Literal:
+			case instruction.Literal:
 				operandsStr[i] = strconv.Itoa(operandValue)
 			}
 		}

@@ -3,6 +3,7 @@ package compiler
 import (
 	"banek/ast"
 	"banek/bytecode"
+	"banek/bytecode/instruction"
 	"banek/exec/objects"
 )
 
@@ -37,13 +38,13 @@ func (compiler *compiler) addConstant(object objects.Object) int {
 	return index
 }
 
-func (compiler *compiler) emitInstruction(operation bytecode.Operation, operands ...int) {
-	instruction := bytecode.MakeInstruction(operation, operands...)
-	compiler.executable.Code = append(compiler.executable.Code, instruction...)
+func (compiler *compiler) emitInstruction(operation instruction.Operation, operands ...int) {
+	instr := instruction.MakeInstruction(operation, operands...)
+	compiler.executable.Code = append(compiler.executable.Code, instr...)
 }
 
 func (compiler *compiler) patchInstructionOperand(address int, operandIndex int, newValue int) {
-	operation := bytecode.Operation(compiler.executable.Code[address])
+	operation := instruction.Operation(compiler.executable.Code[address])
 	opInfo := operation.Info()
 
 	instructionCode := compiler.executable.Code[address : address+opInfo.Size()]
@@ -51,7 +52,7 @@ func (compiler *compiler) patchInstructionOperand(address int, operandIndex int,
 	operandWidth := opInfo.Operands[operandIndex].Width
 	operandOffset := opInfo.OperandOffset(operandIndex)
 
-	copy(instructionCode[operandOffset:], bytecode.MakeOperand(newValue, operandWidth))
+	copy(instructionCode[operandOffset:], instruction.MakeOperandValue(newValue, operandWidth))
 }
 
 func (compiler *compiler) currentAddress() int {
