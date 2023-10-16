@@ -40,12 +40,10 @@ var infixOperations = map[bytecode.Operation]tokens.TokenType{
 	bytecode.Multiply: tokens.Asterisk,
 	bytecode.Divide:   tokens.Slash,
 
-	bytecode.Equals:              tokens.Equals,
-	bytecode.NotEquals:           tokens.NotEquals,
-	bytecode.GreaterThan:         tokens.GreaterThan,
-	bytecode.LessThan:            tokens.LessThan,
-	bytecode.GreaterThanOrEquals: tokens.GreaterThanOrEquals,
-	bytecode.LessThanOrEquals:    tokens.LessThanOrEquals,
+	bytecode.Equals:           tokens.Equals,
+	bytecode.NotEquals:        tokens.NotEquals,
+	bytecode.LessThan:         tokens.LessThan,
+	bytecode.LessThanOrEquals: tokens.LessThanOrEquals,
 }
 
 func (vm *vm) run() error {
@@ -63,8 +61,8 @@ func (vm *vm) run() error {
 				return err
 			}
 		case bytecode.Add, bytecode.Subtract, bytecode.Multiply, bytecode.Divide,
-			bytecode.Equals, bytecode.NotEquals, bytecode.GreaterThan, bytecode.LessThan,
-			bytecode.GreaterThanOrEquals, bytecode.LessThanOrEquals:
+			bytecode.Equals, bytecode.NotEquals,
+			bytecode.LessThan, bytecode.LessThanOrEquals:
 			err := vm.opInfixOperation(infixOperations[operation])
 			if err != nil {
 				return err

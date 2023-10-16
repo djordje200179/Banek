@@ -24,7 +24,13 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(str))
 		return nil
 	case expressions.InfixOperation:
-		return compiler.compileInfixOperation(expression)
+		reverseOperands := false
+		switch expression.Operator.Type {
+		case tokens.GreaterThan, tokens.GreaterThanOrEquals:
+			reverseOperands = true
+		}
+
+		return compiler.compileInfixOperation(expression, reverseOperands)
 	case expressions.PrefixOperation:
 		return compiler.compilePrefixOperation(expression)
 	default:
@@ -32,13 +38,22 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	}
 }
 
-func (compiler *compiler) compileInfixOperation(expression expressions.InfixOperation) error {
-	err := compiler.compileExpression(expression.Left)
+func (compiler *compiler) compileInfixOperation(expression expressions.InfixOperation, reverseOperands bool) error {
+	var firstOperand, secondOperand ast.Expression
+	if reverseOperands {
+		firstOperand = expression.Right
+		secondOperand = expression.Left
+	} else {
+		firstOperand = expression.Left
+		secondOperand = expression.Right
+	}
+
+	err := compiler.compileExpression(firstOperand)
 	if err != nil {
 		return err
 	}
 
-	err = compiler.compileExpression(expression.Right)
+	err = compiler.compileExpression(secondOperand)
 	if err != nil {
 		return err
 	}
@@ -58,14 +73,10 @@ func (compiler *compiler) compileInfixOperation(expression expressions.InfixOper
 		compiler.emitInstruction(bytecode.Equals)
 	case tokens.NotEquals:
 		compiler.emitInstruction(bytecode.NotEquals)
-	case tokens.LessThan:
+	case tokens.LessThan, tokens.GreaterThan:
 		compiler.emitInstruction(bytecode.LessThan)
-	case tokens.GreaterThan:
-		compiler.emitInstruction(bytecode.GreaterThan)
-	case tokens.LessThanOrEquals:
+	case tokens.LessThanOrEquals, tokens.GreaterThanOrEquals:
 		compiler.emitInstruction(bytecode.LessThanOrEquals)
-	case tokens.GreaterThanOrEquals:
-		compiler.emitInstruction(bytecode.GreaterThanOrEquals)
 	default:
 		return errors.UnknownOperatorError{Operator: operator}
 	}

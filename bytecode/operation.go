@@ -18,8 +18,6 @@ const (
 	NotEquals
 	LessThan
 	LessThanOrEquals
-	GreaterThan
-	GreaterThanOrEquals
 )
 
 func (operation Operation) String() string {
@@ -60,10 +58,8 @@ var operationInfos = []OperationInfo{
 	Multiply: {"MUL", []int{}},
 	Divide:   {"DIV", []int{}},
 
-	Equals:              {"EQ", []int{}},
-	NotEquals:           {"NEQ", []int{}},
-	LessThan:            {"LT", []int{}},
-	LessThanOrEquals:    {"LTE", []int{}},
-	GreaterThan:         {"GT", []int{}},
-	GreaterThanOrEquals: {"GTE", []int{}},
+	Equals:           {"EQ", []int{}},
+	NotEquals:        {"NEQ", []int{}},
+	LessThan:         {"LT", []int{}},
+	LessThanOrEquals: {"LTE", []int{}},
 }
