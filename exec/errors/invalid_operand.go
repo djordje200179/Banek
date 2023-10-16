@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"banek/interpreter/objects"
+	"banek/exec/objects"
 	"fmt"
 )
 

@@ -3,8 +3,8 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/statements"
-	"banek/interpreter/errors"
-	"banek/interpreter/objects"
+	"banek/exec/errors"
+	objects2 "banek/exec/objects"
 	"banek/interpreter/results"
 )
 
@@ -23,7 +23,7 @@ func (interpreter *Interpreter) evalStatement(env *environment, statement ast.St
 			return nil, err
 		}
 
-		if condition == objects.Boolean(true) {
+		if condition == objects2.Boolean(true) {
 			return interpreter.evalStatement(env, statement.Consequence)
 		} else if statement.Alternative != nil {
 			return interpreter.evalStatement(env, statement.Alternative)
@@ -66,7 +66,7 @@ func (interpreter *Interpreter) evalStatement(env *environment, statement ast.St
 
 		return results.None{}, nil
 	case statements.Function:
-		value := objects.Function{
+		value := objects2.Function{
 			Parameters: statement.Parameters,
 			Body:       statement.Body,
 			Env:        newEnvironment(env),

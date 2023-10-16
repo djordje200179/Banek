@@ -1,6 +1,8 @@
 package results
 
-import "banek/interpreter/objects"
+import (
+	"banek/exec/objects"
+)
 
 type Return struct {
 	Value objects.Object
