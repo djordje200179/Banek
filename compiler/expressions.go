@@ -15,6 +15,14 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		integer := objects.Integer(expression)
 		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(integer))
 		return nil
+	case expressions.BooleanLiteral:
+		boolean := objects.Boolean(expression)
+		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(boolean))
+		return nil
+	case expressions.StringLiteral:
+		str := objects.String(expression)
+		compiler.emitInstruction(bytecode.PushConst, compiler.addConstant(str))
+		return nil
 	case expressions.InfixOperation:
 		err := compiler.compileExpression(expression.Left)
 		if err != nil {
