@@ -78,6 +78,8 @@ func (interpreter *Interpreter) evalStatement(env *environment, statement ast.St
 		}
 
 		return results.None{}, nil
+	case statements.Error:
+		return nil, results.Error{Err: statement.Err}
 	default:
 		return nil, errors.UnknownStatementError{Statement: statement}
 	}

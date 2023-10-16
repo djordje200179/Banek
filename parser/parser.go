@@ -2,9 +2,8 @@ package parser
 
 import (
 	"banek/ast"
+	"banek/ast/statements"
 	"banek/tokens"
-	"fmt"
-	"os"
 )
 
 type (
@@ -41,8 +40,7 @@ func parsingThread(tokenChannel <-chan tokens.Token, statementChannel chan<- ast
 	for parser.currentToken.Type != tokens.EOF {
 		statement, err := parser.parseStatement()
 		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			continue
+			statement = statements.Error{Err: err}
 		}
 
 		statementChannel <- statement
