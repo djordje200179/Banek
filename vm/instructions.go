@@ -1,6 +1,8 @@
 package vm
 
 import (
+	"banek/exec/errors"
+	"banek/exec/objects"
 	"banek/exec/operations"
 	"banek/tokens"
 	"encoding/binary"
@@ -60,6 +62,29 @@ func (vm *vm) opPrefixOperation(operation tokens.TokenType) error {
 	}
 
 	_ = vm.push(result)
+
+	return nil
+}
+
+func (vm *vm) opBranch() {
+	offset := binary.LittleEndian.Uint16(vm.program.Code[vm.pc+1:])
+	vm.pc += int(offset)
+}
+
+func (vm *vm) opBranchIfFalse() error {
+	operand, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	boolOperand, ok := operand.(objects.Boolean)
+	if !ok {
+		return errors.InvalidOperandError{Operand: boolOperand}
+	}
+
+	if !boolOperand {
+		vm.opBranch()
+	}
 
 	return nil
 }

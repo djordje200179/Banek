@@ -47,7 +47,7 @@ var infixOperations = map[bytecode.Operation]tokens.TokenType{
 }
 
 func (vm *vm) run() error {
-	for vm.pc = 0; vm.pc < len(vm.program.Code); vm.pc++ {
+	for vm.pc = 0; vm.pc < len(vm.program.Code); {
 		operation := bytecode.Operation(vm.program.Code[vm.pc])
 		switch operation {
 		case bytecode.PushConst:
@@ -72,11 +72,18 @@ func (vm *vm) run() error {
 			if err != nil {
 				return err
 			}
+		case bytecode.Branch:
+			vm.opBranch()
+		case bytecode.BranchIfFalse:
+			err := vm.opBranchIfFalse()
+			if err != nil {
+				return err
+			}
 		default:
 			return UnknownOperationError{Operation: operation}
 		}
 
-		vm.pc += operation.Info().OperandsSize()
+		vm.pc += operation.Info().Size()
 	}
 
 	return nil

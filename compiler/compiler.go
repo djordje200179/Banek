@@ -41,3 +41,19 @@ func (compiler *compiler) emitInstruction(operation bytecode.Operation, operands
 	instruction := bytecode.MakeInstruction(operation, operands...)
 	compiler.executable.Code = append(compiler.executable.Code, instruction...)
 }
+
+func (compiler *compiler) patchInstructionOperand(address int, operandIndex int, newValue int) {
+	operation := bytecode.Operation(compiler.executable.Code[address])
+	opInfo := operation.Info()
+
+	instructionCode := compiler.executable.Code[address : address+opInfo.Size()]
+
+	operandWidth := opInfo.Operands[operandIndex].Width
+	operandOffset := opInfo.OperandOffset(operandIndex)
+
+	copy(instructionCode[operandOffset:], bytecode.MakeOperand(newValue, operandWidth))
+}
+
+func (compiler *compiler) currentAddress() int {
+	return len(compiler.executable.Code)
+}

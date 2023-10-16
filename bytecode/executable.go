@@ -17,7 +17,7 @@ func (executable *Executable) String() string {
 
 	replacePairs := make([]string, len(executable.ConstantsPool)*2)
 	for i, constant := range executable.ConstantsPool {
-		replacePairs[i*2] = "#" + strconv.Itoa(i)
+		replacePairs[i*2] = "=" + strconv.Itoa(i)
 		replacePairs[i*2+1] = constant.String()
 	}
 

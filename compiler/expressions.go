@@ -33,6 +33,15 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		return compiler.compileInfixOperation(expression, reverseOperands)
 	case expressions.PrefixOperation:
 		return compiler.compilePrefixOperation(expression)
+	case expressions.If:
+		err := compiler.compileExpression(expression.Condition)
+		if err != nil {
+			return err
+		}
+
+		return nil
+
+		// TODO: Add support for else branch
 	default:
 		return errors.UnknownExpressionError{Expression: expression}
 	}

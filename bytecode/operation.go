@@ -18,6 +18,9 @@ const (
 	NotEquals
 	LessThan
 	LessThanOrEquals
+
+	Branch
+	BranchIfFalse
 )
 
 func (operation Operation) String() string {
@@ -32,34 +35,61 @@ func (operation Operation) Info() OperationInfo {
 	return operationInfos[operation]
 }
 
-type OperationInfo struct {
-	Name          string
-	OperandWidths []int
+type OperandType int
+
+const (
+	Constant OperandType = iota
+	Literal
+)
+
+type OperandInfo struct {
+	Width int
+	Type  OperandType
 }
 
-func (opInfo OperationInfo) OperandsSize() int {
-	size := 0
-	for _, width := range opInfo.OperandWidths {
-		size += width
+var constantPoolOperand = OperandInfo{2, Constant}
+
+type OperationInfo struct {
+	Name     string
+	Operands []OperandInfo
+}
+
+func (opInfo OperationInfo) Size() int {
+	size := 1
+
+	for _, operand := range opInfo.Operands {
+		size += operand.Width
 	}
 
 	return size
 }
 
+func (opInfo OperationInfo) OperandOffset(index int) int {
+	offset := 1
+	for i := 0; i < index; i++ {
+		offset += opInfo.Operands[i].Width
+	}
+
+	return offset
+}
+
 var operationInfos = []OperationInfo{
-	Invalid: {"INVALID", []int{}},
+	Invalid: {"INVALID", []OperandInfo{}},
 
-	PushConst: {"PUSH.C", []int{2}},
-	Pop:       {"POP", []int{}},
+	PushConst: {"PUSH.C", []OperandInfo{constantPoolOperand}},
+	Pop:       {"POP", []OperandInfo{}},
 
-	Negate:   {"NEG", []int{}},
-	Add:      {"ADD", []int{}},
-	Subtract: {"SUB", []int{}},
-	Multiply: {"MUL", []int{}},
-	Divide:   {"DIV", []int{}},
+	Negate:   {"NEG", []OperandInfo{}},
+	Add:      {"ADD", []OperandInfo{}},
+	Subtract: {"SUB", []OperandInfo{}},
+	Multiply: {"MUL", []OperandInfo{}},
+	Divide:   {"DIV", []OperandInfo{}},
 
-	Equals:           {"EQ", []int{}},
-	NotEquals:        {"NEQ", []int{}},
-	LessThan:         {"LT", []int{}},
-	LessThanOrEquals: {"LTE", []int{}},
+	Equals:           {"EQ", []OperandInfo{}},
+	NotEquals:        {"NEQ", []OperandInfo{}},
+	LessThan:         {"LT", []OperandInfo{}},
+	LessThanOrEquals: {"LTE", []OperandInfo{}},
+
+	Branch:        {"BR", []OperandInfo{{2, Literal}}},
+	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},
 }
