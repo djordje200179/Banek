@@ -33,9 +33,11 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 		elseAddress := compiler.currentAddress()
 
 		if statement.Alternative != nil {
-			secondPatchAddress := compiler.currentAddress()
+			branchSize := instruction.Branch.Info().Size()
+
+			secondPatchAddress := elseAddress
 			compiler.emitInstruction(instruction.Branch, 0)
-			elseAddress += instruction.Branch.Info().Size()
+			elseAddress += branchSize
 
 			err = compiler.compileStatement(statement.Alternative)
 			if err != nil {
@@ -43,7 +45,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			}
 
 			outAddress := compiler.currentAddress()
-			compiler.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-instruction.Branch.Info().Size())
+			compiler.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
 		}
 
 		compiler.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
