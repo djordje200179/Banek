@@ -10,8 +10,6 @@ type FunctionCall struct {
 	Arguments []ast.Expression
 }
 
-func (call FunctionCall) ExpressionNode() {}
-
 func (call FunctionCall) String() string {
 	var sb strings.Builder
 
@@ -27,4 +25,14 @@ func (call FunctionCall) String() string {
 	sb.WriteByte(')')
 
 	return sb.String()
+}
+
+func (call FunctionCall) IsConstant() bool {
+	for _, arg := range call.Arguments {
+		if !arg.IsConstant() {
+			return false
+		}
+	}
+
+	return call.Function.IsConstant()
 }

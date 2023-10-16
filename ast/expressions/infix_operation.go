@@ -11,8 +11,6 @@ type InfixOperation struct {
 	Operator    tokens.Token
 }
 
-func (operation InfixOperation) ExpressionNode() {}
-
 func (operation InfixOperation) String() string {
 	var sb strings.Builder
 
@@ -25,4 +23,8 @@ func (operation InfixOperation) String() string {
 	sb.WriteByte(')')
 
 	return sb.String()
+}
+
+func (operation InfixOperation) IsConstant() bool {
+	return operation.Left.IsConstant() && operation.Right.IsConstant()
 }

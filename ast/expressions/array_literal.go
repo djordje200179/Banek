@@ -7,7 +7,6 @@ import (
 
 type ArrayLiteral []ast.Expression
 
-func (literal ArrayLiteral) ExpressionNode() {}
 func (literal ArrayLiteral) String() string {
 	var sb strings.Builder
 
@@ -21,4 +20,14 @@ func (literal ArrayLiteral) String() string {
 	sb.WriteByte(']')
 
 	return sb.String()
+}
+
+func (literal ArrayLiteral) IsConstant() bool {
+	for _, element := range literal {
+		if !element.IsConstant() {
+			return false
+		}
+	}
+
+	return true
 }

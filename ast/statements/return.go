@@ -10,8 +10,6 @@ type Return struct {
 	Value ast.Expression
 }
 
-func (statement Return) StatementNode() {}
-
 func (statement Return) String() string {
 	var sb strings.Builder
 
@@ -20,4 +18,8 @@ func (statement Return) String() string {
 	sb.WriteString(statement.Value.String())
 
 	return sb.String()
+}
+
+func (statement Return) HasSideEffects() bool {
+	return !statement.Value.IsConstant()
 }

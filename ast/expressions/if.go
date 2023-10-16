@@ -11,8 +11,6 @@ type If struct {
 	Consequence, Alternative ast.Expression
 }
 
-func (expression If) ExpressionNode() {}
-
 func (expression If) String() string {
 	var sb strings.Builder
 
@@ -28,4 +26,8 @@ func (expression If) String() string {
 	}
 
 	return sb.String()
+}
+
+func (expression If) IsConstant() bool {
+	return expression.Condition.IsConstant() && expression.Consequence.IsConstant() && expression.Alternative.IsConstant()
 }

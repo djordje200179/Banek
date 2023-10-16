@@ -12,8 +12,6 @@ type Function struct {
 	Body       Block
 }
 
-func (statement Function) StatementNode() {}
-
 func (statement Function) String() string {
 	var sb strings.Builder
 
@@ -34,4 +32,8 @@ func (statement Function) String() string {
 	sb.WriteString("\n}")
 
 	return sb.String()
+}
+
+func (statement Function) HasSideEffects() bool {
+	return true
 }

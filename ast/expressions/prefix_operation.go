@@ -11,8 +11,6 @@ type PrefixOperation struct {
 	Operand  ast.Expression
 }
 
-func (expression PrefixOperation) ExpressionNode() {}
-
 func (expression PrefixOperation) String() string {
 	var sb strings.Builder
 
@@ -22,4 +20,8 @@ func (expression PrefixOperation) String() string {
 	sb.WriteByte(')')
 
 	return sb.String()
+}
+
+func (expression PrefixOperation) IsConstant() bool {
+	return expression.Operand.IsConstant()
 }

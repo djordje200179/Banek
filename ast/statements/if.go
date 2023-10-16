@@ -11,8 +11,6 @@ type If struct {
 	Consequence, Alternative ast.Statement
 }
 
-func (statement If) StatementNode() {}
-
 func (statement If) String() string {
 	var sb strings.Builder
 
@@ -28,4 +26,12 @@ func (statement If) String() string {
 	}
 
 	return sb.String()
+}
+
+func (statement If) HasSideEffects() bool {
+	if !statement.Condition.IsConstant() {
+		return true
+	}
+
+	return statement.Consequence.HasSideEffects() || statement.Alternative.HasSideEffects()
 }

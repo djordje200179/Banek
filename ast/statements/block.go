@@ -9,8 +9,6 @@ type Block struct {
 	Statements []ast.Statement
 }
 
-func (block Block) StatementNode() {}
-
 func (block Block) String() string {
 	var sb strings.Builder
 
@@ -23,4 +21,14 @@ func (block Block) String() string {
 	}
 
 	return sb.String()
+}
+
+func (block Block) HasSideEffects() bool {
+	for _, singleStatement := range block.Statements {
+		if singleStatement.HasSideEffects() {
+			return true
+		}
+	}
+
+	return false
 }

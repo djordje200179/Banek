@@ -14,8 +14,6 @@ type VariableDeclaration struct {
 	Const bool
 }
 
-func (statement VariableDeclaration) StatementNode() {}
-
 func (statement VariableDeclaration) String() string {
 	var sb strings.Builder
 
@@ -30,4 +28,8 @@ func (statement VariableDeclaration) String() string {
 	sb.WriteString(statement.Value.String())
 
 	return sb.String()
+}
+
+func (statement VariableDeclaration) HasSideEffects() bool {
+	return !statement.Value.IsConstant()
 }

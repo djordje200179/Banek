@@ -10,7 +10,6 @@ type CollectionAccess struct {
 	Key        ast.Expression
 }
 
-func (expression CollectionAccess) ExpressionNode() {}
 func (expression CollectionAccess) String() string {
 	var sb strings.Builder
 
@@ -20,4 +19,8 @@ func (expression CollectionAccess) String() string {
 	sb.WriteByte(']')
 
 	return sb.String()
+}
+
+func (expression CollectionAccess) IsConstant() bool {
+	return expression.Collection.IsConstant() && expression.Key.IsConstant()
 }

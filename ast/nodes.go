@@ -8,10 +8,12 @@ type Node interface {
 
 type Statement interface {
 	Node
-	StatementNode()
+
+	HasSideEffects() bool
 }
 
 type Expression interface {
 	Node
-	ExpressionNode()
+
+	IsConstant() bool
 }

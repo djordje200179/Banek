@@ -8,8 +8,10 @@ type Expression struct {
 	Expression ast.Expression
 }
 
-func (statement Expression) StatementNode() {}
-
 func (statement Expression) String() string {
 	return statement.Expression.String()
+}
+
+func (statement Expression) HasSideEffects() bool {
+	return true
 }

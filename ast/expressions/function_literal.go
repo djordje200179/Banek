@@ -11,8 +11,6 @@ type FunctionLiteral struct {
 	Body       ast.Statement
 }
 
-func (literal FunctionLiteral) ExpressionNode() {}
-
 func (literal FunctionLiteral) String() string {
 	var sb strings.Builder
 
@@ -32,3 +30,5 @@ func (literal FunctionLiteral) String() string {
 
 	return sb.String()
 }
+
+func (literal FunctionLiteral) IsConstant() bool { return false }
