@@ -18,7 +18,7 @@ func main() {
 	}
 	defer file.Close()
 
-	tokenChannel := lexer.New(file).Tokenize(50)
+	tokenChannel := lexer.Tokenize(file, 50)
 	statementChannel := parser.New().Parse(tokenChannel, 5)
 	objectsChannel := interpreter.New().Eval(statementChannel, 2)
 
