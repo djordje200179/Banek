@@ -3,9 +3,10 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/interpreter/errors"
 	"banek/interpreter/objects"
 	"banek/interpreter/results"
-	"errors"
+	stdErrors "errors"
 )
 
 func (interpreter *Interpreter) evalExpression(env *environment, expression ast.Expression) (objects.Object, error) {
@@ -46,7 +47,7 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 	case expressions.CollectionAccess:
 		return interpreter.evalCollectionAccess(env, expression)
 	default:
-		return nil, UnknownExpressionError{expression}
+		return nil, errors.UnknownExpressionError{Expression: expression}
 	}
 }
 
@@ -56,8 +57,8 @@ func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expr
 		return value, nil
 	}
 
-	var identifierNotDefinedError IdentifierNotDefinedError
-	if errors.As(err, &identifierNotDefinedError) {
+	var identifierNotDefinedError errors.IdentifierNotDefinedError
+	if stdErrors.As(err, &identifierNotDefinedError) {
 		builtin, ok := objects.Builtins[identifier.String()]
 		if !ok {
 			return nil, err
@@ -109,7 +110,7 @@ func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall 
 
 		return function(args...)
 	default:
-		return nil, InvalidOperandError{"function call", functionObject}
+		return nil, errors.InvalidOperandError{Operator: "function call", Operand: functionObject}
 	}
 }
 
@@ -156,14 +157,14 @@ func (interpreter *Interpreter) evalCollectionAccess(env *environment, expressio
 	case objects.Array:
 		return interpreter.evalArrayAccess(collection, key)
 	default:
-		return nil, InvalidOperandError{"collection key", collectionObject}
+		return nil, errors.InvalidOperandError{Operator: "collection key", Operand: collectionObject}
 	}
 }
 
 func (interpreter *Interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return nil, InvalidOperandError{"array index", indexObject}
+		return nil, errors.InvalidOperandError{Operator: "array index", Operand: indexObject}
 	}
 
 	if index < 0 {
@@ -171,7 +172,7 @@ func (interpreter *Interpreter) evalArrayAccess(array objects.Array, indexObject
 	}
 
 	if index < 0 || index >= objects.Integer(len(array)) {
-		return objects.Undefined{}, IndexOutOfBoundsError{int(index), len(array)}
+		return objects.Undefined{}, objects.IndexOutOfBoundsError{Index: int(index), Size: len(array)}
 	}
 
 	return array[index], nil

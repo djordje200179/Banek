@@ -1,6 +1,9 @@
 package objects
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Array []Object
 
@@ -19,4 +22,13 @@ func (array Array) String() string {
 	sb.WriteByte(']')
 
 	return sb.String()
+}
+
+type IndexOutOfBoundsError struct {
+	Index int
+	Size  int
+}
+
+func (err IndexOutOfBoundsError) Error() string {
+	return fmt.Sprintf("index out of bounds: index %d, size %d", err.Index, err.Size)
 }

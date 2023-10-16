@@ -1,7 +1,7 @@
-package interpreter
+package operations
 
 import (
-	"banek/ast/expressions"
+	"banek/interpreter/errors"
 	"banek/interpreter/objects"
 	"banek/tokens"
 )
@@ -13,15 +13,10 @@ var prefixOperations = map[tokens.TokenType]prefixOperation{
 	tokens.Bang:  evalPrefixBangOperation,
 }
 
-func (interpreter *Interpreter) evalPrefixOperation(env *environment, expression expressions.PrefixOperation) (objects.Object, error) {
-	operand, err := interpreter.evalExpression(env, expression.Operand)
-	if err != nil {
-		return nil, err
-	}
-
-	operation := prefixOperations[expression.Operator.Type]
+func EvalPrefixOperation(operand objects.Object, operator tokens.TokenType) (objects.Object, error) {
+	operation := prefixOperations[operator]
 	if operation == nil {
-		return nil, UnknownOperatorError{expression.Operator.Type}
+		return nil, errors.UnknownOperatorError{Operator: operator}
 	}
 
 	return operation(operand)
@@ -30,7 +25,7 @@ func (interpreter *Interpreter) evalPrefixOperation(env *environment, expression
 func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 	integer, ok := operand.(objects.Integer)
 	if !ok {
-		return nil, InvalidOperandError{tokens.Minus.String(), operand}
+		return nil, errors.InvalidOperandError{Operator: tokens.Minus.String(), Operand: operand}
 	}
 
 	return -integer, nil
@@ -39,7 +34,7 @@ func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 func evalPrefixBangOperation(operand objects.Object) (objects.Object, error) {
 	boolean, ok := operand.(objects.Boolean)
 	if !ok {
-		return nil, InvalidOperandError{tokens.Bang.String(), operand}
+		return nil, errors.InvalidOperandError{Operator: tokens.Bang.String(), Operand: operand}
 	}
 
 	return !boolean, nil
