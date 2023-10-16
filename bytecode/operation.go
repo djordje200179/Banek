@@ -8,10 +8,18 @@ const (
 	PushConst
 	Pop
 
+	Negate
 	Add
 	Subtract
 	Multiply
 	Divide
+
+	Equals
+	NotEquals
+	LessThan
+	LessThanOrEquals
+	GreaterThan
+	GreaterThanOrEquals
 )
 
 func (operation Operation) String() string {
@@ -46,8 +54,16 @@ var operationInfos = []OperationInfo{
 	PushConst: {"PUSH.C", []int{2}},
 	Pop:       {"POP", []int{}},
 
+	Negate:   {"NEG", []int{}},
 	Add:      {"ADD", []int{}},
 	Subtract: {"SUB", []int{}},
 	Multiply: {"MUL", []int{}},
 	Divide:   {"DIV", []int{}},
+
+	Equals:              {"EQ", []int{}},
+	NotEquals:           {"NEQ", []int{}},
+	LessThan:            {"LT", []int{}},
+	LessThanOrEquals:    {"LTE", []int{}},
+	GreaterThan:         {"GT", []int{}},
+	GreaterThanOrEquals: {"GTE", []int{}},
 }

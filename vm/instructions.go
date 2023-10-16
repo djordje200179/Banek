@@ -27,7 +27,7 @@ func (vm *vm) opPop() error {
 	return err
 }
 
-func (vm *vm) opAdd() error {
+func (vm *vm) opInfixOperation(operation tokens.TokenType) error {
 	right, err := vm.pop()
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (vm *vm) opAdd() error {
 		return err
 	}
 
-	result, err := operations.EvalInfixOperation(left, right, tokens.Plus)
+	result, err := operations.EvalInfixOperation(left, right, operation)
 	if err != nil {
 		return err
 	}
@@ -48,60 +48,13 @@ func (vm *vm) opAdd() error {
 	return nil
 }
 
-func (vm *vm) opSubtract() error {
-	right, err := vm.pop()
+func (vm *vm) opPrefixOperation(operation tokens.TokenType) error {
+	operand, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	left, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	result, err := operations.EvalInfixOperation(left, right, tokens.Minus)
-	if err != nil {
-		return err
-	}
-
-	_ = vm.push(result)
-
-	return nil
-}
-
-func (vm *vm) opMultiply() error {
-	right, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	left, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	result, err := operations.EvalInfixOperation(left, right, tokens.Asterisk)
-	if err != nil {
-		return err
-	}
-
-	_ = vm.push(result)
-
-	return nil
-}
-
-func (vm *vm) opDivide() error {
-	right, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	left, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	result, err := operations.EvalInfixOperation(left, right, tokens.Slash)
+	result, err := operations.EvalPrefixOperation(operand, operation)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package vm
 import (
 	"banek/bytecode"
 	"banek/exec/objects"
+	"banek/tokens"
 )
 
 const stackSize = 2048
@@ -32,6 +33,21 @@ func (err UnknownOperationError) Error() string {
 	return "unknown operation: " + err.Operation.String()
 }
 
+var infixOperations = map[bytecode.Operation]tokens.TokenType{
+	bytecode.Negate:   tokens.Minus,
+	bytecode.Add:      tokens.Plus,
+	bytecode.Subtract: tokens.Minus,
+	bytecode.Multiply: tokens.Asterisk,
+	bytecode.Divide:   tokens.Slash,
+
+	bytecode.Equals:              tokens.Equals,
+	bytecode.NotEquals:           tokens.NotEquals,
+	bytecode.GreaterThan:         tokens.GreaterThan,
+	bytecode.LessThan:            tokens.LessThan,
+	bytecode.GreaterThanOrEquals: tokens.GreaterThanOrEquals,
+	bytecode.LessThanOrEquals:    tokens.LessThanOrEquals,
+}
+
 func (vm *vm) run() error {
 	for vm.pc = 0; vm.pc < len(vm.program.Code); vm.pc++ {
 		operation := bytecode.Operation(vm.program.Code[vm.pc])
@@ -46,23 +62,15 @@ func (vm *vm) run() error {
 			if err != nil {
 				return err
 			}
-		case bytecode.Add:
-			err := vm.opAdd()
+		case bytecode.Add, bytecode.Subtract, bytecode.Multiply, bytecode.Divide,
+			bytecode.Equals, bytecode.NotEquals, bytecode.GreaterThan, bytecode.LessThan,
+			bytecode.GreaterThanOrEquals, bytecode.LessThanOrEquals:
+			err := vm.opInfixOperation(infixOperations[operation])
 			if err != nil {
 				return err
 			}
-		case bytecode.Subtract:
-			err := vm.opSubtract()
-			if err != nil {
-				return err
-			}
-		case bytecode.Multiply:
-			err := vm.opMultiply()
-			if err != nil {
-				return err
-			}
-		case bytecode.Divide:
-			err := vm.opDivide()
+		case bytecode.Negate:
+			err := vm.opPrefixOperation(infixOperations[operation])
 			if err != nil {
 				return err
 			}

@@ -10,7 +10,7 @@ type prefixOperation func(operand objects.Object) (objects.Object, error)
 
 var prefixOperations = map[tokens.TokenType]prefixOperation{
 	tokens.Minus: evalPrefixMinusOperation,
-	tokens.Bang:  evalPrefixBangOperation,
+	tokens.Bang:  evalPrefixMinusOperation,
 }
 
 func EvalPrefixOperation(operand objects.Object, operator tokens.TokenType) (objects.Object, error) {
@@ -23,19 +23,12 @@ func EvalPrefixOperation(operand objects.Object, operator tokens.TokenType) (obj
 }
 
 func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
-	integer, ok := operand.(objects.Integer)
-	if !ok {
+	switch operand := operand.(type) {
+	case objects.Integer:
+		return -operand, nil
+	case objects.Boolean:
+		return !operand, nil
+	default:
 		return nil, errors.InvalidOperandError{Operator: tokens.Minus.String(), Operand: operand}
 	}
-
-	return -integer, nil
-}
-
-func evalPrefixBangOperation(operand objects.Object) (objects.Object, error) {
-	boolean, ok := operand.(objects.Boolean)
-	if !ok {
-		return nil, errors.InvalidOperandError{Operator: tokens.Bang.String(), Operand: operand}
-	}
-
-	return !boolean, nil
 }
