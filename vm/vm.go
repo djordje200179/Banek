@@ -80,6 +80,11 @@ func (vm *vm) run() error {
 			if err != nil {
 				return err
 			}
+		case instruction.NewArray:
+			err := vm.opNewArray()
+			if err != nil {
+				return err
+			}
 		default:
 			return UnknownOperationError{Operation: operation}
 		}

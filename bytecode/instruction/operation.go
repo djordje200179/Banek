@@ -21,6 +21,8 @@ const (
 
 	Branch
 	BranchIfFalse
+
+	NewArray
 )
 
 func (operation Operation) String() string {
@@ -78,4 +80,6 @@ var operationInfos = []OperationInfo{
 
 	Branch:        {"BR", []OperandInfo{{2, Literal}}},
 	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},
+
+	NewArray: {"NEW.A", []OperandInfo{{2, Literal}}},
 }

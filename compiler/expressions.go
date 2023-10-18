@@ -42,6 +42,17 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		return nil
 
 		// TODO: Add support for else branch
+	case expressions.ArrayLiteral:
+		for _, element := range expression {
+			err := compiler.compileExpression(element)
+			if err != nil {
+				return err
+			}
+		}
+
+		compiler.emitInstruction(instruction.NewArray, len(expression))
+
+		return nil
 	default:
 		return errors.UnknownExpressionError{Expression: expression}
 	}

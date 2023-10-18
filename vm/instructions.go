@@ -88,3 +88,24 @@ func (vm *vm) opBranchIfFalse() error {
 
 	return nil
 }
+
+func (vm *vm) opNewArray() error {
+	size := binary.LittleEndian.Uint16(vm.program.Code[vm.pc+1:])
+
+	array := make(objects.Array, size)
+	for i := 0; i < int(size); i++ {
+		element, err := vm.pop()
+		if err != nil {
+			return err
+		}
+
+		array[i] = element
+	}
+
+	err := vm.push(array)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
