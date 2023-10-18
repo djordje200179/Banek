@@ -101,3 +101,40 @@ func (vm *vm) opNewArray() error {
 
 	return nil
 }
+
+func (vm *vm) opCollectionAccess() error {
+	indexObject, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	collectionObject, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	var result objects.Object
+	switch collection := collectionObject.(type) {
+	case objects.Array:
+		index, ok := indexObject.(objects.Integer)
+		if !ok {
+			return errors.InvalidOperandError{Operator: "array indexObject", Operand: indexObject}
+		}
+
+		if index < 0 {
+			index = objects.Integer(len(collection)) + index
+		}
+
+		if index < 0 || index >= objects.Integer(len(collection)) {
+			return objects.IndexOutOfBoundsError{Index: int(index), Size: len(collection)}
+		}
+
+		result = collection[index]
+	default:
+		return errors.InvalidOperandError{Operator: "collectionObject key", Operand: collectionObject}
+	}
+
+	_ = vm.push(result)
+
+	return nil
+}

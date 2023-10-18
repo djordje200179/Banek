@@ -53,6 +53,20 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		compiler.emitInstruction(instruction.NewArray, len(expression))
 
 		return nil
+	case expressions.CollectionAccess:
+		err := compiler.compileExpression(expression.Collection)
+		if err != nil {
+			return err
+		}
+
+		err = compiler.compileExpression(expression.Key)
+		if err != nil {
+			return err
+		}
+
+		compiler.emitInstruction(instruction.CollectionAccess)
+
+		return nil
 	default:
 		return errors.UnknownExpressionError{Expression: expression}
 	}
