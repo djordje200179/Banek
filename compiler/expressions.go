@@ -68,7 +68,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 
 		return nil
 	default:
-		return errors.UnknownExpressionError{Expression: expression}
+		return errors.ErrUnknownExpression{Expression: expression}
 	}
 }
 
@@ -112,7 +112,7 @@ func (compiler *compiler) compileInfixOperation(expression expressions.InfixOper
 	case tokens.LessThanOrEquals, tokens.GreaterThanOrEquals:
 		compiler.emitInstruction(instruction.LessThanOrEquals)
 	default:
-		return errors.UnknownOperatorError{Operator: operator}
+		return errors.ErrUnknownOperator{Operator: operator}
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOp
 	case tokens.Bang:
 		compiler.emitInstruction(instruction.Negate)
 	default:
-		return errors.UnknownOperatorError{Operator: operator}
+		return errors.ErrUnknownOperator{Operator: operator}
 	}
 
 	return nil

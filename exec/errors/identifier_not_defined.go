@@ -1,9 +1,9 @@
 package errors
 
-type IdentifierNotDefinedError struct {
+type ErrIdentifierNotDefined struct {
 	Identifier string
 }
 
-func (err IdentifierNotDefinedError) Error() string {
+func (err ErrIdentifierNotDefined) Error() string {
 	return "identifier not defined: " + err.Identifier
 }

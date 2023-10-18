@@ -30,13 +30,13 @@ func (env *environment) Get(name string) (objects.Object, error) {
 	} else if env.outer != nil {
 		return env.outer.Get(name)
 	} else {
-		return nil, errors.IdentifierNotDefinedError{Identifier: name}
+		return nil, errors.ErrIdentifierNotDefined{Identifier: name}
 	}
 }
 
 func (env *environment) Define(name string, value objects.Object, mutable bool) error {
 	if _, ok := env.values[name]; ok {
-		return errors.IdentifierAlreadyDefinedError{Identifier: name}
+		return errors.ErrIdentifierAlreadyDefined{Identifier: name}
 	}
 
 	env.values[name] = variable{value, mutable}
@@ -47,7 +47,7 @@ func (env *environment) Define(name string, value objects.Object, mutable bool) 
 func (env *environment) Set(name string, value objects.Object) error {
 	if varEntry, ok := env.values[name]; ok {
 		if !varEntry.Mutable {
-			return errors.IdentifierNotMutableError{Identifier: name}
+			return errors.ErrIdentifierNotMutable{Identifier: name}
 		}
 
 		env.values[name] = variable{value, true}
@@ -56,7 +56,7 @@ func (env *environment) Set(name string, value objects.Object) error {
 	} else if env.outer != nil {
 		return env.outer.Set(name, value)
 	} else {
-		return errors.IdentifierNotDefinedError{Identifier: name}
+		return errors.ErrIdentifierNotDefined{Identifier: name}
 	}
 }
 

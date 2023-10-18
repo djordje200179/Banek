@@ -2,18 +2,18 @@ package parser
 
 import "banek/tokens"
 
-type UnexpectedTokenError struct {
+type ErrUnexpectedToken struct {
 	Expected, Got tokens.TokenType
 }
 
-func (err UnexpectedTokenError) Error() string {
+func (err ErrUnexpectedToken) Error() string {
 	return "expected next token to be " + err.Expected.String() + ", got " + err.Got.String() + " instead"
 }
 
-type UnknownTokenError struct {
+type ErrUnknownToken struct {
 	TokenType tokens.TokenType
 }
 
-func (err UnknownTokenError) Error() string {
+func (err ErrUnknownToken) Error() string {
 	return "unknown token type " + err.TokenType.String() + " found"
 }

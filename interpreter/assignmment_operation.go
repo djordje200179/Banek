@@ -14,7 +14,7 @@ func (interpreter *Interpreter) evalAssignment(env *environment, expression expr
 	case expressions.CollectionAccess:
 		return interpreter.evalCollectionAccessAssignment(env, variable, value)
 	default:
-		return errors.InvalidOperandError{Operator: "assignment"} // TODO: fix
+		return errors.ErrInvalidOperand{Operator: "assignment"} // TODO: fix
 	}
 }
 
@@ -32,7 +32,7 @@ func (interpreter *Interpreter) evalCollectionAccessAssignment(env *environment,
 	case objects.Array:
 		return interpreter.evalArrayAccessAssignment(env, collection, variable.Key, value)
 	default:
-		return errors.InvalidOperandError{Operator: "collection key", Operand: collectionObject}
+		return errors.ErrInvalidOperand{Operator: "collection key", Operand: collectionObject}
 	}
 }
 
@@ -44,7 +44,7 @@ func (interpreter *Interpreter) evalArrayAccessAssignment(env *environment, arra
 
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return errors.InvalidOperandError{Operator: "array index", Operand: indexObject}
+		return errors.ErrInvalidOperand{Operator: "array index", Operand: indexObject}
 	}
 
 	if index < 0 {
@@ -52,7 +52,7 @@ func (interpreter *Interpreter) evalArrayAccessAssignment(env *environment, arra
 	}
 
 	if index < 0 || index >= objects.Integer(len(array)) {
-		return objects.IndexOutOfBoundsError{Index: int(index), Size: len(array)}
+		return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(array)}
 	}
 
 	array[index] = value

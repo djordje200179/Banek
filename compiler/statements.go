@@ -58,7 +58,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			}
 		}
 	default:
-		return errors.UnknownStatementError{Statement: statement}
+		return errors.ErrUnknownStatement{Statement: statement}
 	}
 
 	return nil

@@ -2,10 +2,10 @@ package errors
 
 import "banek/ast"
 
-type UnknownExpressionError struct {
+type ErrUnknownExpression struct {
 	Expression ast.Expression
 }
 
-func (err UnknownExpressionError) Error() string {
+func (err ErrUnknownExpression) Error() string {
 	return "unknown expression: " + err.Expression.String()
 }

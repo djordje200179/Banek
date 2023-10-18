@@ -1,9 +1,9 @@
 package errors
 
-type IdentifierAlreadyDefinedError struct {
+type ErrIdentifierAlreadyDefined struct {
 	Identifier string
 }
 
-func (err IdentifierAlreadyDefinedError) Error() string {
+func (err ErrIdentifierAlreadyDefined) Error() string {
 	return "identifier already defined: " + err.Identifier
 }

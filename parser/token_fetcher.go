@@ -13,7 +13,7 @@ func (parser *parser) fetchToken() {
 
 func (parser *parser) assertToken(tokenType tokens.TokenType) error {
 	if parser.currentToken.Type != tokenType {
-		return UnexpectedTokenError{Expected: tokenType, Got: parser.currentToken.Type}
+		return ErrUnexpectedToken{Expected: tokenType, Got: parser.currentToken.Type}
 	}
 
 	return nil

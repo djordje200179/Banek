@@ -79,7 +79,7 @@ func (vm *vm) opBranchIfFalse() error {
 
 	boolOperand, ok := operand.(objects.Boolean)
 	if !ok {
-		return errors.InvalidOperandError{Operand: boolOperand}
+		return errors.ErrInvalidOperand{Operand: boolOperand}
 	}
 
 	if !boolOperand {
@@ -118,7 +118,7 @@ func (vm *vm) opCollectionAccess() error {
 	case objects.Array:
 		index, ok := indexObject.(objects.Integer)
 		if !ok {
-			return errors.InvalidOperandError{Operator: "array indexObject", Operand: indexObject}
+			return errors.ErrInvalidOperand{Operator: "array indexObject", Operand: indexObject}
 		}
 
 		if index < 0 {
@@ -126,12 +126,12 @@ func (vm *vm) opCollectionAccess() error {
 		}
 
 		if index < 0 || index >= objects.Integer(len(collection)) {
-			return objects.IndexOutOfBoundsError{Index: int(index), Size: len(collection)}
+			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
 		}
 
 		result = collection[index]
 	default:
-		return errors.InvalidOperandError{Operator: "collectionObject key", Operand: collectionObject}
+		return errors.ErrInvalidOperand{Operator: "collectionObject key", Operand: collectionObject}
 	}
 
 	_ = vm.push(result)

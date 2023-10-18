@@ -24,11 +24,11 @@ func (array Array) String() string {
 	return sb.String()
 }
 
-type IndexOutOfBoundsError struct {
+type ErrIndexOutOfBounds struct {
 	Index int
 	Size  int
 }
 
-func (err IndexOutOfBoundsError) Error() string {
+func (err ErrIndexOutOfBounds) Error() string {
 	return fmt.Sprintf("index out of bounds: index %d, size %d", err.Index, err.Size)
 }

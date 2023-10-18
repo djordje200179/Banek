@@ -16,7 +16,7 @@ var prefixOperations = map[tokens.TokenType]prefixOperation{
 func EvalPrefixOperation(operand objects.Object, operator tokens.TokenType) (objects.Object, error) {
 	operation := prefixOperations[operator]
 	if operation == nil {
-		return nil, errors.UnknownOperatorError{Operator: operator}
+		return nil, errors.ErrUnknownOperator{Operator: operator}
 	}
 
 	return operation(operand)
@@ -29,6 +29,6 @@ func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 	case objects.Boolean:
 		return !operand, nil
 	default:
-		return nil, errors.InvalidOperandError{Operator: tokens.Minus.String(), Operand: operand}
+		return nil, errors.ErrInvalidOperand{Operator: tokens.Minus.String(), Operand: operand}
 	}
 }

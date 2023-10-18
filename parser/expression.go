@@ -10,7 +10,7 @@ import (
 func (parser *parser) parseExpression(precedence OperatorPrecedence) (ast.Expression, error) {
 	expressionParser := parser.prefixParsers[parser.currentToken.Type]
 	if expressionParser == nil {
-		return nil, UnknownTokenError{TokenType: parser.currentToken.Type}
+		return nil, ErrUnknownToken{TokenType: parser.currentToken.Type}
 	}
 
 	leftExpression, err := expressionParser()
@@ -126,7 +126,7 @@ func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, 
 
 	precedence, ok := infixOperatorPrecedences[operator.Type]
 	if !ok {
-		return nil, UnknownTokenError{TokenType: operator.Type}
+		return nil, ErrUnknownToken{TokenType: operator.Type}
 	}
 
 	parser.fetchToken()

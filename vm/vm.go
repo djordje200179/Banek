@@ -26,11 +26,11 @@ func Execute(program *bytecode.Executable) error {
 	return vm.run()
 }
 
-type UnknownOperationError struct {
+type ErrUnknownOperation struct {
 	Operation instruction.Operation
 }
 
-func (err UnknownOperationError) Error() string {
+func (err ErrUnknownOperation) Error() string {
 	return "unknown operation: " + err.Operation.String()
 }
 
@@ -86,7 +86,7 @@ func (vm *vm) run() error {
 				return err
 			}
 		default:
-			return UnknownOperationError{Operation: operation}
+			return ErrUnknownOperation{Operation: operation}
 		}
 
 		vm.pc += operation.Info().Size()

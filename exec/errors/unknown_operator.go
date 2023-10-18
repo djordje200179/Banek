@@ -2,10 +2,10 @@ package errors
 
 import "banek/tokens"
 
-type UnknownOperatorError struct {
+type ErrUnknownOperator struct {
 	Operator tokens.TokenType
 }
 
-func (err UnknownOperatorError) Error() string {
+func (err ErrUnknownOperator) Error() string {
 	return "unknown operator: " + err.Operator.String()
 }

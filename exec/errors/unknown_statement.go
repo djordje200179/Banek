@@ -2,10 +2,10 @@ package errors
 
 import "banek/ast"
 
-type UnknownStatementError struct {
+type ErrUnknownStatement struct {
 	Statement ast.Statement
 }
 
-func (err UnknownStatementError) Error() string {
+func (err ErrUnknownStatement) Error() string {
 	return "unknown statement: " + err.Statement.String()
 }

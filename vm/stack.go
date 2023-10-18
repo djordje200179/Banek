@@ -4,15 +4,15 @@ import (
 	"banek/exec/objects"
 )
 
-type StackOverflowError struct{}
+type ErrStackOverflow struct{}
 
-func (err StackOverflowError) Error() string {
+func (err ErrStackOverflow) Error() string {
 	return "stack overflow"
 }
 
 func (vm *vm) push(object objects.Object) error {
 	if vm.sp >= stackSize {
-		return StackOverflowError{}
+		return ErrStackOverflow{}
 	}
 
 	vm.stack[vm.sp] = object
@@ -23,7 +23,7 @@ func (vm *vm) push(object objects.Object) error {
 
 func (vm *vm) pop() (objects.Object, error) {
 	if vm.sp <= 0 {
-		return nil, StackOverflowError{}
+		return nil, ErrStackOverflow{}
 	}
 
 	vm.sp--
@@ -34,7 +34,7 @@ func (vm *vm) pop() (objects.Object, error) {
 
 func (vm *vm) popMany(count int) ([]objects.Object, error) {
 	if vm.sp < count {
-		return nil, StackOverflowError{}
+		return nil, ErrStackOverflow{}
 	}
 
 	elements := make([]objects.Object, count)

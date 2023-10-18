@@ -1,9 +1,9 @@
 package errors
 
-type IdentifierNotMutableError struct {
+type ErrIdentifierNotMutable struct {
 	Identifier string
 }
 
-func (err IdentifierNotMutableError) Error() string {
+func (err ErrIdentifierNotMutable) Error() string {
 	return "identifier not mutable: " + err.Identifier
 }
