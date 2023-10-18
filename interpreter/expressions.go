@@ -6,7 +6,6 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/interpreter/results"
-	stdErrors "errors"
 )
 
 func (interpreter *Interpreter) evalExpression(env *environment, expression ast.Expression) (objects.Object, error) {
@@ -52,22 +51,17 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 }
 
 func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expressions.Identifier) (objects.Object, error) {
-	value, err := env.Get(identifier.String())
-	if err == nil {
-		return value, nil
-	}
-
-	var identifierNotDefinedError errors.IdentifierNotDefinedError
-	if stdErrors.As(err, &identifierNotDefinedError) {
-		builtin, ok := objects.Builtins[identifier.String()]
-		if !ok {
-			return nil, err
-		}
-
+	builtin, ok := objects.Builtins[identifier.String()]
+	if ok {
 		return builtin, nil
 	}
 
-	return nil, err
+	value, err := env.Get(identifier.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return value, nil
 }
 
 func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall expressions.FunctionCall) (objects.Object, error) {
