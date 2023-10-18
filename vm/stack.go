@@ -31,3 +31,21 @@ func (vm *vm) pop() (objects.Object, error) {
 
 	return object, nil
 }
+
+func (vm *vm) popMany(count int) ([]objects.Object, error) {
+	if vm.sp < count {
+		return nil, StackOverflowError{}
+	}
+
+	elements := make([]objects.Object, count)
+	for i := 0; i < count; i++ {
+		object, err := vm.pop()
+		if err != nil {
+			return nil, err
+		}
+
+		elements[i] = object
+	}
+
+	return elements, nil
+}
