@@ -4,6 +4,7 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/tokens"
+	"strings"
 )
 
 type infixOperation func(left, right objects.Object) (objects.Object, error)
@@ -71,17 +72,37 @@ func evalInfixMinusOperation(left, right objects.Object) (objects.Object, error)
 }
 
 func evalInfixAsteriskOperation(left, right objects.Object) (objects.Object, error) {
-	leftInteger, ok := left.(objects.Integer)
-	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
+	switch left := left.(type) {
+	case objects.Integer:
+		switch right := right.(type) {
+		case objects.Integer:
+			return left * right, nil
+		}
+	case objects.String:
+		switch right := right.(type) {
+		case objects.Integer:
+			var sb strings.Builder
+			sb.Grow(len(left) * int(right))
+
+			for i := 0; i < int(right); i++ {
+				sb.WriteString(string(left))
+			}
+
+			return objects.String(sb.String()), nil
+		}
+	case objects.Array:
+		switch right := right.(type) {
+		case objects.Integer:
+			newArray := make(objects.Array, len(left)*int(right))
+			for i := 0; i < int(right); i++ {
+				copy(newArray[i*len(left):], left)
+			}
+
+			return newArray, nil
+		}
 	}
 
-	rightInteger, ok := right.(objects.Integer)
-	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
-	}
-
-	return leftInteger * rightInteger, nil
+	return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
 }
 
 func evalInfixSlashOperation(left, right objects.Object) (objects.Object, error) {
