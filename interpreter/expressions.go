@@ -106,7 +106,7 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 
 		return function(args...)
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: "function call", Operand: functionObject}
+		return nil, errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
 	}
 }
 
@@ -153,14 +153,14 @@ func (interpreter *interpreter) evalCollectionAccess(env *environment, expressio
 	case objects.Array:
 		return interpreter.evalArrayAccess(collection, key)
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: "collection key", Operand: collectionObject}
+		return nil, errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: key}
 	}
 }
 
 func (interpreter *interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: "array index", Operand: indexObject}
+		return nil, errors.ErrInvalidOperand{Operation: "index", LeftOperand: array, RightOperand: indexObject}
 	}
 
 	if index < 0 {

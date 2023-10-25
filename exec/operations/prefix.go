@@ -29,6 +29,6 @@ func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 	case objects.Boolean:
 		return !operand, nil
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Minus.String(), Operand: operand}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), RightOperand: operand}
 	}
 }

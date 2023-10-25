@@ -37,29 +37,29 @@ func evalInfixPlusOperation(left, right objects.Object) (objects.Object, error) 
 		case objects.Integer:
 			return left + right, nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.Plus.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
 		}
 	case objects.String:
 		switch right := right.(type) {
 		case objects.String:
 			return left + right, nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.Plus.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
 		}
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Plus.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
 	}
 }
 
 func evalInfixMinusOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Minus.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	rightInteger, ok := right.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Minus.String(), Operand: right}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	return leftInteger - rightInteger, nil
@@ -68,12 +68,12 @@ func evalInfixMinusOperation(left, right objects.Object) (objects.Object, error)
 func evalInfixAsteriskOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Asterisk.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	rightInteger, ok := right.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Asterisk.String(), Operand: right}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	return leftInteger * rightInteger, nil
@@ -82,12 +82,12 @@ func evalInfixAsteriskOperation(left, right objects.Object) (objects.Object, err
 func evalInfixSlashOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Slash.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Slash.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	rightInteger, ok := right.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operator: tokens.Slash.String(), Operand: right}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Slash.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	return leftInteger / rightInteger, nil
@@ -108,17 +108,17 @@ func evalInfixLessThanOperation(left, right objects.Object) (objects.Object, err
 		case objects.Integer:
 			return objects.Boolean(left < right), nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.LessThan.String(), LeftOperand: left, RightOperand: right}
 		}
 	case objects.String:
 		switch right := right.(type) {
 		case objects.String:
 			return objects.Boolean(left < right), nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.LessThan.String(), LeftOperand: left, RightOperand: right}
 		}
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.LessThan.String(), LeftOperand: left, RightOperand: right}
 	}
 }
 
@@ -129,17 +129,17 @@ func evalInfixGreaterThanOperation(left, right objects.Object) (objects.Object, 
 		case objects.Integer:
 			return objects.Boolean(left > right), nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.GreaterThan.String(), LeftOperand: left, RightOperand: right}
 		}
 	case objects.String:
 		switch right := right.(type) {
 		case objects.String:
 			return objects.Boolean(left > right), nil
 		default:
-			return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: right}
+			return nil, errors.ErrInvalidOperand{Operation: tokens.GreaterThan.String(), LeftOperand: left, RightOperand: right}
 		}
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: tokens.LessThan.String(), Operand: left}
+		return nil, errors.ErrInvalidOperand{Operation: tokens.GreaterThan.String(), LeftOperand: left, RightOperand: right}
 	}
 }
 

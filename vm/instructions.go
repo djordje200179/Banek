@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"banek/bytecode/instruction"
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
@@ -79,7 +80,7 @@ func (vm *vm) opBranchIfFalse() error {
 
 	boolOperand, ok := operand.(objects.Boolean)
 	if !ok {
-		return errors.ErrInvalidOperand{Operand: boolOperand}
+		return errors.ErrInvalidOperand{Operation: instruction.BranchIfFalse.String(), LeftOperand: boolOperand}
 	}
 
 	if !boolOperand {
@@ -118,7 +119,7 @@ func (vm *vm) opCollectionAccess() error {
 	case objects.Array:
 		index, ok := indexObject.(objects.Integer)
 		if !ok {
-			return errors.ErrInvalidOperand{Operator: "array indexObject", Operand: indexObject}
+			return errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: indexObject}
 		}
 
 		if index < 0 {
@@ -131,7 +132,7 @@ func (vm *vm) opCollectionAccess() error {
 
 		result = collection[index]
 	default:
-		return errors.ErrInvalidOperand{Operator: "collectionObject key", Operand: collectionObject}
+		return errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: indexObject}
 	}
 
 	_ = vm.push(result)

@@ -25,7 +25,7 @@ func (interpreter *interpreter) evalAssignment(env *environment, expression expr
 			return nil, err
 		}
 	default:
-		return nil, errors.ErrInvalidOperand{Operator: "assignment"} // TODO: fix
+		return nil, errors.ErrInvalidOperand{Operation: "=", LeftOperand: objects.Unknown, RightOperand: value}
 	}
 
 	return value, nil
@@ -48,7 +48,7 @@ func (interpreter *interpreter) evalCollectionAccessAssignment(env *environment,
 			return err
 		}
 	default:
-		return errors.ErrInvalidOperand{Operator: "collection key", Operand: collectionObject}
+		return errors.ErrInvalidOperand{Operation: "=", LeftOperand: objects.Unknown, RightOperand: value}
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func (interpreter *interpreter) evalArrayAccessAssignment(env *environment, arra
 
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return errors.ErrInvalidOperand{Operator: "array index", Operand: indexObject}
+		return errors.ErrInvalidOperand{Operation: "index", LeftOperand: array, RightOperand: indexObject}
 	}
 
 	if index < 0 {

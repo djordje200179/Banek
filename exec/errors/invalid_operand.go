@@ -2,15 +2,38 @@ package errors
 
 import (
 	"banek/exec/objects"
-	"fmt"
+	"strings"
 )
 
 type ErrInvalidOperand struct {
-	// TODO: Better error structure and message
-	Operator string
-	Operand  objects.Object
+	Operation string
+
+	LeftOperand  objects.Object
+	RightOperand objects.Object
 }
 
 func (err ErrInvalidOperand) Error() string {
-	return fmt.Sprintf("invalid operand: expected %s, got %s", err.Operator, err.Operand.Type())
+	var sb strings.Builder
+
+	switch {
+	case err.LeftOperand != nil && err.RightOperand != nil:
+		sb.WriteString("invalid operands for ")
+		sb.WriteString(err.Operation)
+		sb.WriteString(": ")
+		sb.WriteString(err.LeftOperand.Type())
+		sb.WriteString(" and ")
+		sb.WriteString(err.RightOperand.Type())
+	case err.LeftOperand != nil:
+		sb.WriteString("invalid operand for ")
+		sb.WriteString(err.Operation)
+		sb.WriteString(": ")
+		sb.WriteString(err.LeftOperand.Type())
+	case err.RightOperand != nil:
+		sb.WriteString("invalid operand for ")
+		sb.WriteString(err.Operation)
+		sb.WriteString(": ")
+		sb.WriteString(err.RightOperand.Type())
+	}
+
+	return sb.String()
 }
