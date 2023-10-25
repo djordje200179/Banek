@@ -46,6 +46,17 @@ func evalInfixPlusOperation(left, right objects.Object) (objects.Object, error) 
 		default:
 			return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
 		}
+	case objects.Array:
+		switch right := right.(type) {
+		case objects.Array:
+			newArray := make(objects.Array, len(left)+len(right))
+			copy(newArray, left)
+			copy(newArray[len(left):], right)
+
+			return newArray, nil
+		default:
+			return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
+		}
 	default:
 		return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
 	}
