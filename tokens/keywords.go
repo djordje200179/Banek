@@ -14,8 +14,10 @@ var keywords = map[string]TokenType{
 	"then": Then,
 
 	"while": While,
-	"true":  Boolean,
-	"false": Boolean,
+
+	"true":      Boolean,
+	"false":     Boolean,
+	"undefined": Undefined,
 }
 
 func LookupIdentifier(identifier string) TokenType {

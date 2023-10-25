@@ -10,6 +10,7 @@ const (
 	Integer
 	Boolean
 	String
+	Undefined
 
 	Assign
 
@@ -67,6 +68,8 @@ func (tokenType TokenType) String() string {
 		return "boolean"
 	case String:
 		return "string"
+	case Undefined:
+		return "undefined"
 
 	case Assign:
 		return "="

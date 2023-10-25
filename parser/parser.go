@@ -53,9 +53,10 @@ func (parser *parser) initSubParsers() {
 	parser.prefixParsers = map[tokens.TokenType]prefixParser{
 		tokens.Identifier: parser.parseIdentifier,
 
-		tokens.Integer: parser.parseIntegerLiteral,
-		tokens.Boolean: parser.parseBooleanLiteral,
-		tokens.String:  parser.parseStringLiteral,
+		tokens.Integer:   parser.parseIntegerLiteral,
+		tokens.Boolean:   parser.parseBooleanLiteral,
+		tokens.String:    parser.parseStringLiteral,
+		tokens.Undefined: parser.parseUndefinedLiteral,
 
 		tokens.Minus: parser.parsePrefixOperation,
 		tokens.Bang:  parser.parsePrefixOperation,

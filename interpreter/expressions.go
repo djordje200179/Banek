@@ -17,6 +17,8 @@ func (interpreter *interpreter) evalExpression(env *environment, expression ast.
 		return objects.Boolean(expression), nil
 	case expressions.StringLiteral:
 		return objects.String(expression), nil
+	case expressions.UndefinedLiteral:
+		return objects.Undefined, nil
 	case expressions.ArrayLiteral:
 		return interpreter.evalArrayLiteral(env, expression)
 	case expressions.PrefixOperation:

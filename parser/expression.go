@@ -72,6 +72,12 @@ func (parser *parser) parseStringLiteral() (ast.Expression, error) {
 	return expressions.StringLiteral(literal), nil
 }
 
+func (parser *parser) parseUndefinedLiteral() (ast.Expression, error) {
+	parser.fetchToken()
+
+	return expressions.UndefinedLiteralConst, nil
+}
+
 func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
 	parser.fetchToken()
 
