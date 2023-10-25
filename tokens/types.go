@@ -54,96 +54,57 @@ const (
 	Do
 )
 
+var tokenTypeRepresentations = []string{
+	Illegal: "illegal",
+	EOF:     "EOF",
+
+	Identifier: "identifier",
+	Integer:    "integer",
+	Boolean:    "boolean",
+	String:     "string",
+	Undefined:  "undefined",
+
+	Assign: "=",
+
+	Plus:     "+",
+	Minus:    "-",
+	Asterisk: "*",
+	Slash:    "/",
+	Bang:     "!",
+
+	Equals:              "==",
+	NotEquals:           "!=",
+	LessThan:            "<",
+	GreaterThan:         ">",
+	LessThanOrEquals:    "<=",
+	GreaterThanOrEquals: ">=",
+
+	Comma:     ",",
+	SemiColon: ";",
+
+	LeftParenthesis:  "(",
+	RightParenthesis: ")",
+	LeftBrace:        "{",
+	RightBrace:       "}",
+	LeftBracket:      "[",
+	RightBracket:     "]",
+
+	Function:       "function",
+	LambdaFunction: "fn",
+
+	Let:   "let",
+	Const: "const",
+
+	Return: "return",
+
+	If:   "if",
+	Else: "else",
+	Then: "then",
+
+	While: "while",
+	Do:    "do",
+}
+
 func (tokenType TokenType) String() string {
-	switch tokenType {
-	case Illegal:
-		return "illegal"
-	case EOF:
-		return "EOF"
-
-	case Identifier:
-		return "identifier"
-	case Integer:
-		return "integer"
-	case Boolean:
-		return "boolean"
-	case String:
-		return "string"
-	case Undefined:
-		return "undefined"
-
-	case Assign:
-		return "="
-
-	case Plus:
-		return "+"
-	case Minus:
-		return "-"
-	case Asterisk:
-		return "*"
-	case Slash:
-		return "/"
-
-	case Bang:
-		return "!"
-
-	case Equals:
-		return "=="
-	case NotEquals:
-		return "!="
-	case LessThan:
-		return "<"
-	case GreaterThan:
-		return ">"
-	case LessThanOrEquals:
-		return "<="
-	case GreaterThanOrEquals:
-		return ">="
-
-	case Comma:
-		return ","
-	case SemiColon:
-		return ";"
-
-	case LeftParenthesis:
-		return "("
-	case RightParenthesis:
-		return ")"
-	case LeftBrace:
-		return "{"
-	case RightBrace:
-		return "}"
-	case LeftBracket:
-		return "["
-	case RightBracket:
-		return "]"
-
-	case Function:
-		return "function"
-	case LambdaFunction:
-		return "fn"
-
-	case Let:
-		return "let"
-	case Const:
-		return "const"
-
-	case Return:
-		return "return"
-
-	case If:
-		return "if"
-	case Else:
-		return "else"
-	case Then:
-		return "then"
-
-	case While:
-		return "while"
-	case Do:
-		return "do"
-
-	default:
-		return "UNKNOWN"
-	}
+	return tokenTypeRepresentations[tokenType]
 }
