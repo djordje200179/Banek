@@ -3,6 +3,7 @@ package parser
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/ast/statements"
 	"banek/tokens"
 	"strconv"
 )
@@ -212,12 +213,24 @@ func (parser *parser) parseFunctionLiteral() (ast.Expression, error) {
 		return nil, err
 	}
 
-	body, err := parser.parseStatement()
+	if err := parser.assertToken(tokens.Minus); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	if err := parser.assertToken(tokens.GreaterThan); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	expression, err := parser.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.FunctionLiteral{Parameters: parameters, Body: body}, nil
+	return expressions.FunctionLiteral{Parameters: parameters, Body: statements.Expression{Expression: expression}}, nil
 }
 
 func (parser *parser) parseFunctionParameters() ([]expressions.Identifier, error) {

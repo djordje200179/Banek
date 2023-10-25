@@ -24,7 +24,7 @@ type interpreter struct {
 
 func evalThread(statementsChan <-chan ast.Statement, resultsChan chan<- Result) {
 	interpreter := &interpreter{
-		globalEnv: newEnvironment(nil),
+		globalEnv: newEnvironment(nil, 0),
 	}
 
 	for statement := range statementsChan {

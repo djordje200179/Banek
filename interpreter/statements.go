@@ -31,21 +31,8 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 			return results.None{}, nil
 		}
 	case statements.Block:
-		blockEnv := newEnvironment(env)
-
-		for _, statement := range statement.Statements {
-			result, err := interpreter.evalStatement(blockEnv, statement)
-			if err != nil {
-				return nil, err
-			}
-
-			switch result := result.(type) {
-			case results.Return:
-				return result, nil
-			}
-		}
-
-		return results.None{}, nil
+		blockEnv := newEnvironment(env, 0)
+		return interpreter.evalBlockStatement(blockEnv, statement)
 	case statements.Return:
 		value, err := interpreter.evalExpression(env, statement.Value)
 		if err != nil {
@@ -69,7 +56,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 		value := objects.Function{
 			Parameters: statement.Parameters,
 			Body:       statement.Body,
-			Env:        newEnvironment(env),
+			Env:        env,
 		}
 
 		err := env.Define(statement.Name.String(), value, false)
@@ -83,4 +70,20 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 	default:
 		return nil, errors.ErrUnknownStatement{Statement: statement}
 	}
+}
+
+func (interpreter *interpreter) evalBlockStatement(env *environment, block statements.Block) (Result, error) {
+	for _, statement := range block.Statements {
+		result, err := interpreter.evalStatement(env, statement)
+		if err != nil {
+			return nil, err
+		}
+
+		switch result := result.(type) {
+		case results.Return:
+			return result, nil
+		}
+	}
+
+	return results.None{}, nil
 }

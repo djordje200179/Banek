@@ -16,9 +16,9 @@ type environment struct {
 	outer *environment
 }
 
-func newEnvironment(outer *environment) *environment {
+func newEnvironment(outer *environment, capacity int) *environment {
 	return &environment{
-		values: map[string]variable{},
+		values: make(map[string]variable, capacity),
 		outer:  outer,
 	}
 }

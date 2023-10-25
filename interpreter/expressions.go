@@ -3,6 +3,7 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/ast/statements"
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/interpreter/results"
@@ -41,7 +42,7 @@ func (interpreter *interpreter) evalExpression(env *environment, expression ast.
 		return objects.Function{
 			Parameters: expression.Parameters,
 			Body:       expression.Body,
-			Env:        newEnvironment(env),
+			Env:        env,
 		}, nil
 	case expressions.FunctionCall:
 		return interpreter.evalFunctionCall(env, expression)
@@ -79,7 +80,7 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 			return nil, err
 		}
 
-		functionEnv := newEnvironment(function.Env.(*environment))
+		functionEnv := newEnvironment(function.Env.(*environment), len(function.Parameters))
 		for i, param := range function.Parameters {
 			err = functionEnv.Define(param.String(), args[i], true)
 			if err != nil {
@@ -87,16 +88,23 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 			}
 		}
 
-		result, err := interpreter.evalStatement(functionEnv, function.Body)
-		if err != nil {
-			return nil, err
-		}
+		switch body := function.Body.(type) {
+		case statements.Expression:
+			return interpreter.evalExpression(functionEnv, body.Expression)
+		case statements.Block:
+			result, err := interpreter.evalBlockStatement(functionEnv, body)
+			if err != nil {
+				return nil, err
+			}
 
-		switch result := result.(type) {
-		case results.Return:
-			return result.Value, nil
+			returnValue, ok := result.(results.Return)
+			if !ok {
+				return objects.Undefined{}, nil
+			}
+
+			return returnValue.Value, nil
 		default:
-			return objects.Undefined{}, nil
+			return nil, errors.ErrUnknownStatement{Statement: body}
 		}
 	case objects.BuiltinFunction:
 		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
