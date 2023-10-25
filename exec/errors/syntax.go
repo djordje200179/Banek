@@ -9,3 +9,11 @@ type ErrUnknownExpression struct {
 func (err ErrUnknownExpression) Error() string {
 	return "unknown expression: " + err.Expression.String()
 }
+
+type ErrUnknownStatement struct {
+	Statement ast.Statement
+}
+
+func (err ErrUnknownStatement) Error() string {
+	return "unknown statement: " + err.Statement.String()
+}
