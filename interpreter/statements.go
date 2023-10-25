@@ -8,7 +8,7 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *Interpreter) evalStatement(env *environment, statement ast.Statement) (Result, error) {
+func (interpreter *interpreter) evalStatement(env *environment, statement ast.Statement) (Result, error) {
 	switch statement := statement.(type) {
 	case statements.Expression:
 		value, err := interpreter.evalExpression(env, statement.Expression)

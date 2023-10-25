@@ -79,7 +79,7 @@ func (parser *parser) initSubParsers() {
 		tokens.Minus:               parser.parseInfixOperation,
 		tokens.Asterisk:            parser.parseInfixOperation,
 		tokens.Slash:               parser.parseInfixOperation,
-		tokens.Assign:              parser.parseInfixOperation,
+		tokens.Assign:              parser.parseAssignment,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
 		tokens.LeftBracket:     parser.parseIndexExpression,

@@ -139,6 +139,17 @@ func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, 
 	return expressions.InfixOperation{Left: left, Operator: operator, Right: right}, nil
 }
 
+func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, error) {
+	parser.fetchToken()
+
+	value, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	return expressions.Assignment{Variable: variable, Value: value}, nil
+}
+
 func (parser *parser) parseGroupedExpression() (ast.Expression, error) {
 	parser.fetchToken()
 

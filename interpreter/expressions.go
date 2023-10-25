@@ -8,7 +8,7 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *Interpreter) evalExpression(env *environment, expression ast.Expression) (objects.Object, error) {
+func (interpreter *interpreter) evalExpression(env *environment, expression ast.Expression) (objects.Object, error) {
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
 		return objects.Integer(expression), nil
@@ -22,6 +22,8 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 		return interpreter.evalPrefixOperation(env, expression)
 	case expressions.InfixOperation:
 		return interpreter.evalInfixOperation(env, expression)
+	case expressions.Assignment:
+		return interpreter.evalAssignment(env, expression)
 	case expressions.If:
 		condition, err := interpreter.evalExpression(env, expression.Condition)
 		if err != nil {
@@ -50,7 +52,7 @@ func (interpreter *Interpreter) evalExpression(env *environment, expression ast.
 	}
 }
 
-func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expressions.Identifier) (objects.Object, error) {
+func (interpreter *interpreter) evalIdentifier(env *environment, identifier expressions.Identifier) (objects.Object, error) {
 	builtin, ok := objects.Builtins[identifier.String()]
 	if ok {
 		return builtin, nil
@@ -64,7 +66,7 @@ func (interpreter *Interpreter) evalIdentifier(env *environment, identifier expr
 	return value, nil
 }
 
-func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall expressions.FunctionCall) (objects.Object, error) {
+func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall expressions.FunctionCall) (objects.Object, error) {
 	functionObject, err := interpreter.evalExpression(env, functionCall.Function)
 	if err != nil {
 		return nil, err
@@ -108,7 +110,7 @@ func (interpreter *Interpreter) evalFunctionCall(env *environment, functionCall 
 	}
 }
 
-func (interpreter *Interpreter) evalFunctionArguments(env *environment, expressions []ast.Expression) ([]objects.Object, error) {
+func (interpreter *interpreter) evalFunctionArguments(env *environment, expressions []ast.Expression) ([]objects.Object, error) {
 	args := make([]objects.Object, len(expressions))
 	for i, rawArg := range expressions {
 		arg, err := interpreter.evalExpression(env, rawArg)
@@ -122,7 +124,7 @@ func (interpreter *Interpreter) evalFunctionArguments(env *environment, expressi
 	return args, nil
 }
 
-func (interpreter *Interpreter) evalArrayLiteral(env *environment, expression expressions.ArrayLiteral) (objects.Array, error) {
+func (interpreter *interpreter) evalArrayLiteral(env *environment, expression expressions.ArrayLiteral) (objects.Array, error) {
 	elements := make([]objects.Object, len(expression))
 	for i, elementExpression := range expression {
 		element, err := interpreter.evalExpression(env, elementExpression)
@@ -136,7 +138,7 @@ func (interpreter *Interpreter) evalArrayLiteral(env *environment, expression ex
 	return elements, nil
 }
 
-func (interpreter *Interpreter) evalCollectionAccess(env *environment, expression expressions.CollectionAccess) (objects.Object, error) {
+func (interpreter *interpreter) evalCollectionAccess(env *environment, expression expressions.CollectionAccess) (objects.Object, error) {
 	collectionObject, err := interpreter.evalExpression(env, expression.Collection)
 	if err != nil {
 		return nil, err
@@ -155,7 +157,7 @@ func (interpreter *Interpreter) evalCollectionAccess(env *environment, expressio
 	}
 }
 
-func (interpreter *Interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
+func (interpreter *interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
 		return nil, errors.ErrInvalidOperand{Operator: "array index", Operand: indexObject}
