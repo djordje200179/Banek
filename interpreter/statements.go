@@ -8,15 +8,10 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalStatement(env *environment, statement ast.Statement) (Result, error) {
+func (interpreter *interpreter) evalStatement(env *environment, statement ast.Statement) (results.Result, error) {
 	switch statement := statement.(type) {
 	case statements.Expression:
-		value, err := interpreter.evalExpression(env, statement.Expression)
-		if err != nil {
-			return nil, err
-		}
-
-		return value, nil
+		return interpreter.evalExpression(env, statement.Expression)
 	case statements.If:
 		condition, err := interpreter.evalExpression(env, statement.Condition)
 		if err != nil {
@@ -28,7 +23,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 		} else if statement.Alternative != nil {
 			return interpreter.evalStatement(env, statement.Alternative)
 		} else {
-			return results.None{}, nil
+			return results.None, nil
 		}
 	case statements.Block:
 		blockEnv := newEnvironment(env, 0)
@@ -51,7 +46,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 			return nil, err
 		}
 
-		return results.None{}, nil
+		return results.None, nil
 	case statements.Function:
 		value := &objects.Function{
 			Parameters: statement.Parameters,
@@ -64,7 +59,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 			return nil, err
 		}
 
-		return results.None{}, nil
+		return results.None, nil
 	case statements.Error:
 		return nil, results.Error{Err: statement.Err}
 	default:
@@ -72,7 +67,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 	}
 }
 
-func (interpreter *interpreter) evalBlockStatement(env *environment, block statements.Block) (Result, error) {
+func (interpreter *interpreter) evalBlockStatement(env *environment, block statements.Block) (results.Result, error) {
 	for _, statement := range block.Statements {
 		result, err := interpreter.evalStatement(env, statement)
 		if err != nil {
@@ -85,5 +80,5 @@ func (interpreter *interpreter) evalBlockStatement(env *environment, block state
 		}
 	}
 
-	return results.None{}, nil
+	return results.None, nil
 }

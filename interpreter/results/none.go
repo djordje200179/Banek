@@ -1,5 +1,7 @@
 package results
 
-type None struct{}
+type none struct{}
 
-func (none None) String() string { return "--none--" }
+func (none none) String() string { return "--none--" }
+
+var None Result = none{}

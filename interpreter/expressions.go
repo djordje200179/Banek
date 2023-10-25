@@ -73,13 +73,13 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 		return nil, err
 	}
 
+	args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
+	if err != nil {
+		return nil, err
+	}
+
 	switch function := functionObject.(type) {
 	case *objects.Function:
-		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
-		if err != nil {
-			return nil, err
-		}
-
 		functionEnv := newEnvironment(function.Env.(*environment), len(function.Parameters))
 		for i, param := range function.Parameters {
 			err = functionEnv.Define(param.String(), args[i], true)
@@ -99,7 +99,7 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 
 			returnValue, ok := result.(results.Return)
 			if !ok {
-				return objects.Undefined{}, nil
+				return objects.Undefined, nil
 			}
 
 			return returnValue.Value, nil
@@ -107,11 +107,6 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 			return nil, errors.ErrUnknownStatement{Statement: body}
 		}
 	case objects.BuiltinFunction:
-		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
-		if err != nil {
-			return nil, err
-		}
-
 		return function(args...)
 	default:
 		return nil, errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
@@ -176,7 +171,7 @@ func (interpreter *interpreter) evalArrayAccess(array objects.Array, indexObject
 	}
 
 	if index < 0 || index >= objects.Integer(len(array)) {
-		return objects.Undefined{}, objects.ErrIndexOutOfBounds{Index: int(index), Size: len(array)}
+		return nil, objects.ErrIndexOutOfBounds{Index: int(index), Size: len(array)}
 	}
 
 	return array[index], nil

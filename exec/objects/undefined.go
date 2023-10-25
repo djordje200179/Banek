@@ -1,6 +1,8 @@
 package objects
 
-type Undefined struct{}
+type undefined struct{}
 
-func (undefined Undefined) Type() string   { return "undefined" }
-func (undefined Undefined) String() string { return "undefined" }
+func (undefined undefined) Type() string   { return "undefined" }
+func (undefined undefined) String() string { return "undefined" }
+
+var Undefined Object = undefined{}

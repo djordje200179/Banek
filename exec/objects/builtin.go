@@ -31,7 +31,7 @@ var Builtins = map[string]BuiltinFunction{
 		case Array:
 			return Integer(len(arg)), nil
 		default:
-			return Undefined{}, nil
+			return Undefined, nil
 		}
 	},
 	"print": func(args ...Object) (Object, error) {
@@ -43,7 +43,7 @@ var Builtins = map[string]BuiltinFunction{
 
 		fmt.Println(sb.String())
 
-		return Undefined{}, nil
+		return Undefined, nil
 	},
 	"str": func(args ...Object) (Object, error) {
 		if len(args) != 1 {
