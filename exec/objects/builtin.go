@@ -2,6 +2,7 @@ package objects
 
 import (
 	"fmt"
+	"strings"
 )
 
 type BuiltinFunction func(args ...Object) (Object, error)
@@ -32,5 +33,23 @@ var Builtins = map[string]BuiltinFunction{
 		default:
 			return Undefined{}, nil
 		}
+	},
+	"print": func(args ...Object) (Object, error) {
+		var sb strings.Builder
+
+		for _, arg := range args {
+			sb.WriteString(arg.String())
+		}
+
+		fmt.Println(sb.String())
+
+		return Undefined{}, nil
+	},
+	"str": func(args ...Object) (Object, error) {
+		if len(args) != 1 {
+			return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+		}
+
+		return String(args[0].String()), nil
 	},
 }
