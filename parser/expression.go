@@ -75,12 +75,12 @@ func (parser *parser) parseStringLiteral() (ast.Expression, error) {
 func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
 	parser.fetchToken()
 
+	var elements expressions.ArrayLiteral
+
 	if parser.currentToken.Type == tokens.RightBracket {
 		parser.fetchToken()
-		return nil, nil
+		return elements, nil
 	}
-
-	var elements []ast.Expression
 
 	argument, err := parser.parseExpression(Lowest)
 	if err != nil {
@@ -106,7 +106,7 @@ func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.ArrayLiteral(elements), nil
+	return elements, nil
 }
 
 func (parser *parser) parsePrefixOperation() (ast.Expression, error) {
