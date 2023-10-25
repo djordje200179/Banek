@@ -14,7 +14,7 @@ type If struct {
 func (statement If) String() string {
 	var sb strings.Builder
 
-	sb.WriteString("if")
+	sb.WriteString("if ")
 	sb.WriteString(statement.Condition.String())
 	sb.WriteString(" then {\n")
 	sb.WriteString(statement.Consequence.String())
