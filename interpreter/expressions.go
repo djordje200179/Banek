@@ -39,7 +39,7 @@ func (interpreter *interpreter) evalExpression(env *environment, expression ast.
 	case expressions.Identifier:
 		return interpreter.evalIdentifier(env, expression)
 	case expressions.FunctionLiteral:
-		return objects.Function{
+		return &objects.Function{
 			Parameters: expression.Parameters,
 			Body:       expression.Body,
 			Env:        env,
@@ -74,7 +74,7 @@ func (interpreter *interpreter) evalFunctionCall(env *environment, functionCall 
 	}
 
 	switch function := functionObject.(type) {
-	case objects.Function:
+	case *objects.Function:
 		args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
 		if err != nil {
 			return nil, err

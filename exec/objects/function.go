@@ -16,9 +16,9 @@ type Function struct {
 	}
 }
 
-func (function Function) Type() string { return "function" }
+func (function *Function) Type() string { return "function" }
 
-func (function Function) String() string {
+func (function *Function) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("fn(")

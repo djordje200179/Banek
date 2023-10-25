@@ -53,7 +53,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 
 		return results.None{}, nil
 	case statements.Function:
-		value := objects.Function{
+		value := &objects.Function{
 			Parameters: statement.Parameters,
 			Body:       statement.Body,
 			Env:        env,
