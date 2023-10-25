@@ -14,6 +14,7 @@ var keywords = map[string]TokenType{
 	"then": Then,
 
 	"while": While,
+	"do":    Do,
 
 	"true":      Boolean,
 	"false":     Boolean,

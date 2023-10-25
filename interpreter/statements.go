@@ -25,6 +25,29 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 		} else {
 			return results.None, nil
 		}
+	case statements.While:
+		for {
+			condition, err := interpreter.evalExpression(env, statement.Condition)
+			if err != nil {
+				return nil, err
+			}
+
+			if condition != objects.Boolean(true) {
+				break
+			}
+
+			result, err := interpreter.evalStatement(env, statement.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			switch result := result.(type) {
+			case results.Return:
+				return result, nil
+			}
+		}
+
+		return results.None, nil
 	case statements.Block:
 		blockEnv := newEnvironment(env, 0)
 		return interpreter.evalBlockStatement(blockEnv, statement)

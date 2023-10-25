@@ -162,3 +162,25 @@ func (parser *parser) parseIfStatement() (ast.Statement, error) {
 
 	return statements.If{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
 }
+
+func (parser *parser) parseWhileStatement() (ast.Statement, error) {
+	parser.fetchToken()
+
+	condition, err := parser.parseExpression(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := parser.assertToken(tokens.Do); err != nil {
+		return nil, err
+	}
+
+	parser.fetchToken()
+
+	body, err := parser.parseStatement()
+	if err != nil {
+		return nil, err
+	}
+
+	return statements.While{Condition: condition, Body: body}, nil
+}

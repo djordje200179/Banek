@@ -94,5 +94,6 @@ func (parser *parser) initSubParsers() {
 		tokens.LeftBrace: parser.parseBlockStatement,
 		tokens.Function:  parser.parseFunctionStatement,
 		tokens.If:        parser.parseIfStatement,
+		tokens.While:     parser.parseWhileStatement,
 	}
 }

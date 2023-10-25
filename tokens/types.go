@@ -51,6 +51,7 @@ const (
 	Then
 
 	While
+	Do
 )
 
 func (tokenType TokenType) String() string {
@@ -139,6 +140,8 @@ func (tokenType TokenType) String() string {
 
 	case While:
 		return "while"
+	case Do:
+		return "do"
 
 	default:
 		return "UNKNOWN"
