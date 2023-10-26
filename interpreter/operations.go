@@ -2,9 +2,9 @@ package interpreter
 
 import (
 	"banek/ast/expressions"
-	"banek/exec/environments"
 	"banek/exec/objects"
 	"banek/exec/operations"
+	"banek/interpreter/environments"
 )
 
 func (interpreter *interpreter) evalInfixOperation(env environments.Environment, expression expressions.InfixOperation) (objects.Object, error) {

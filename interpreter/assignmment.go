@@ -3,9 +3,9 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/expressions"
-	"banek/exec/environments"
 	"banek/exec/errors"
 	"banek/exec/objects"
+	"banek/interpreter/environments"
 )
 
 func (interpreter *interpreter) evalAssignment(env environments.Environment, expression expressions.Assignment) (objects.Object, error) {

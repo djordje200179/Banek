@@ -4,9 +4,9 @@ import (
 	"banek/ast"
 	"banek/ast/expressions"
 	"banek/ast/statements"
-	"banek/exec/environments"
 	"banek/exec/errors"
 	"banek/exec/objects"
+	"banek/interpreter/environments"
 	"banek/interpreter/results"
 )
 
@@ -42,7 +42,7 @@ func (interpreter *interpreter) evalExpression(env environments.Environment, exp
 	case expressions.Identifier:
 		return interpreter.evalIdentifier(env, expression)
 	case expressions.FunctionLiteral:
-		return &objects.Function{
+		return &environments.Function{
 			Parameters: expression.Parameters,
 			Body:       expression.Body,
 			Env:        env,
@@ -82,7 +82,7 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 	}
 
 	switch function := functionObject.(type) {
-	case *objects.Function:
+	case *environments.Function:
 		functionEnv := EnvFactory(function.Env, len(function.Parameters))
 		for i, param := range function.Parameters {
 			err = functionEnv.Define(param.String(), args[i], true)

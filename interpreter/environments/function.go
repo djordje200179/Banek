@@ -1,4 +1,4 @@
-package objects
+package environments
 
 import (
 	"banek/ast"
@@ -10,12 +10,7 @@ type Function struct {
 	Parameters []expressions.Identifier
 	Body       ast.Statement
 
-	Env interface {
-		Get(name string) (Object, error)
-		Set(name string, value Object) error
-		Define(name string, value Object, mutable bool) error
-		Delete(name string) error
-	}
+	Env Environment
 }
 
 func (function *Function) Type() string { return "function" }
