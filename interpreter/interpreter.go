@@ -4,6 +4,7 @@ import (
 	"banek/ast"
 	"banek/exec/environments"
 	"banek/interpreter/results"
+	"runtime"
 )
 
 func Interpret(statementsChan <-chan ast.Statement, bufferSize int) <-chan results.Result {
@@ -21,6 +22,8 @@ type interpreter struct {
 var EnvFactory environments.EnvironmentFactory = environments.NewArrayEnvironment
 
 func evalThread(statementsChan <-chan ast.Statement, resultsChan chan<- results.Result) {
+	runtime.LockOSThread()
+
 	interpreter := &interpreter{
 		globalEnv: EnvFactory(nil, 0),
 	}

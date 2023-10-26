@@ -4,6 +4,7 @@ import (
 	"banek/tokens"
 	"bufio"
 	"io"
+	"runtime"
 )
 
 func Tokenize(reader io.Reader, bufferSize int) <-chan tokens.Token {
@@ -19,6 +20,8 @@ type lexer struct {
 }
 
 func lexingThread(reader io.Reader, ch chan<- tokens.Token) {
+	runtime.LockOSThread()
+
 	lexer := lexer{
 		reader: bufio.NewReader(reader),
 	}

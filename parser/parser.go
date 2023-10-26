@@ -4,6 +4,7 @@ import (
 	"banek/ast"
 	"banek/ast/statements"
 	"banek/tokens"
+	"runtime"
 )
 
 type (
@@ -31,6 +32,8 @@ func Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ast.Statemen
 }
 
 func parsingThread(tokenChannel <-chan tokens.Token, statementChannel chan<- ast.Statement) {
+	runtime.LockOSThread()
+
 	parser := &parser{tokenChannel: tokenChannel}
 	parser.initSubParsers()
 
