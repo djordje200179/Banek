@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"banek/ast"
+	"banek/exec/environments"
 	"banek/interpreter/results"
 )
 
@@ -14,12 +15,14 @@ func Interpret(statementsChan <-chan ast.Statement, bufferSize int) <-chan resul
 }
 
 type interpreter struct {
-	globalEnv *environment
+	globalEnv environments.Environment
 }
+
+var EnvFactory environments.EnvironmentFactory = environments.NewArrayEnvironment
 
 func evalThread(statementsChan <-chan ast.Statement, resultsChan chan<- results.Result) {
 	interpreter := &interpreter{
-		globalEnv: newEnvironment(nil, 0),
+		globalEnv: EnvFactory(nil, 0),
 	}
 
 	for statement := range statementsChan {

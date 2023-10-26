@@ -3,11 +3,12 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/exec/environments"
 	"banek/exec/errors"
 	"banek/exec/objects"
 )
 
-func (interpreter *interpreter) evalAssignment(env *environment, expression expressions.Assignment) (objects.Object, error) {
+func (interpreter *interpreter) evalAssignment(env environments.Environment, expression expressions.Assignment) (objects.Object, error) {
 	value, err := interpreter.evalExpression(env, expression.Value)
 	if err != nil {
 		return nil, err
@@ -31,11 +32,11 @@ func (interpreter *interpreter) evalAssignment(env *environment, expression expr
 	return value, nil
 }
 
-func (interpreter *interpreter) evalVariableAssignment(env *environment, variable expressions.Identifier, value objects.Object) error {
+func (interpreter *interpreter) evalVariableAssignment(env environments.Environment, variable expressions.Identifier, value objects.Object) error {
 	return env.Set(variable.String(), value)
 }
 
-func (interpreter *interpreter) evalCollectionAccessAssignment(env *environment, variable expressions.CollectionAccess, value objects.Object) error {
+func (interpreter *interpreter) evalCollectionAccessAssignment(env environments.Environment, variable expressions.CollectionAccess, value objects.Object) error {
 	collectionObject, err := interpreter.evalExpression(env, variable.Collection)
 	if err != nil {
 		return err
@@ -54,7 +55,7 @@ func (interpreter *interpreter) evalCollectionAccessAssignment(env *environment,
 	return nil
 }
 
-func (interpreter *interpreter) evalArrayAccessAssignment(env *environment, array objects.Array, indexExpression ast.Expression, value objects.Object) error {
+func (interpreter *interpreter) evalArrayAccessAssignment(env environments.Environment, array objects.Array, indexExpression ast.Expression, value objects.Object) error {
 	indexObject, err := interpreter.evalExpression(env, indexExpression)
 	if err != nil {
 		return err

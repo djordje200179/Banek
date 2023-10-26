@@ -3,12 +3,13 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/statements"
+	"banek/exec/environments"
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalStatement(env *environment, statement ast.Statement) (results.Result, error) {
+func (interpreter *interpreter) evalStatement(env environments.Environment, statement ast.Statement) (results.Result, error) {
 	switch statement := statement.(type) {
 	case statements.Expression:
 		return interpreter.evalExpression(env, statement.Expression)
@@ -49,7 +50,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 
 		return results.None, nil
 	case statements.Block:
-		blockEnv := newEnvironment(env, 0)
+		blockEnv := EnvFactory(env, 0)
 		return interpreter.evalBlockStatement(blockEnv, statement)
 	case statements.Return:
 		value, err := interpreter.evalExpression(env, statement.Value)
@@ -90,7 +91,7 @@ func (interpreter *interpreter) evalStatement(env *environment, statement ast.St
 	}
 }
 
-func (interpreter *interpreter) evalBlockStatement(env *environment, block statements.Block) (results.Result, error) {
+func (interpreter *interpreter) evalBlockStatement(env environments.Environment, block statements.Block) (results.Result, error) {
 	for _, statement := range block.Statements {
 		result, err := interpreter.evalStatement(env, statement)
 		if err != nil {

@@ -13,6 +13,8 @@ type Function struct {
 	Env interface {
 		Get(name string) (Object, error)
 		Set(name string, value Object) error
+		Define(name string, value Object, mutable bool) error
+		Delete(name string) error
 	}
 }
 

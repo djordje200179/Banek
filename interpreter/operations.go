@@ -2,11 +2,12 @@ package interpreter
 
 import (
 	"banek/ast/expressions"
+	"banek/exec/environments"
 	"banek/exec/objects"
 	"banek/exec/operations"
 )
 
-func (interpreter *interpreter) evalInfixOperation(env *environment, expression expressions.InfixOperation) (objects.Object, error) {
+func (interpreter *interpreter) evalInfixOperation(env environments.Environment, expression expressions.InfixOperation) (objects.Object, error) {
 	right, err := interpreter.evalExpression(env, expression.Right)
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func (interpreter *interpreter) evalInfixOperation(env *environment, expression 
 	return operations.EvalInfixOperation(left, right, expression.Operator.Type)
 }
 
-func (interpreter *interpreter) evalPrefixOperation(env *environment, expression expressions.PrefixOperation) (objects.Object, error) {
+func (interpreter *interpreter) evalPrefixOperation(env environments.Environment, expression expressions.PrefixOperation) (objects.Object, error) {
 	operand, err := interpreter.evalExpression(env, expression.Operand)
 	if err != nil {
 		return nil, err
