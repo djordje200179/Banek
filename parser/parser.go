@@ -80,7 +80,12 @@ func (parser *parser) initSubParsers() {
 		tokens.Minus:               parser.parseInfixOperation,
 		tokens.Asterisk:            parser.parseInfixOperation,
 		tokens.Slash:               parser.parseInfixOperation,
-		tokens.Assign:              parser.parseAssignment,
+
+		tokens.Assign:         parser.parseAssignment,
+		tokens.PlusAssign:     parser.parseAssignment,
+		tokens.MinusAssign:    parser.parseAssignment,
+		tokens.AsteriskAssign: parser.parseAssignment,
+		tokens.SlashAssign:    parser.parseAssignment,
 
 		tokens.LeftParenthesis: parser.parseCallExpression,
 		tokens.LeftBracket:     parser.parseIndexExpression,

@@ -25,5 +25,9 @@ var CharTokens = map[string]TokenType{
 	"<":  LessThan,
 	">":  GreaterThan,
 
-	"=": Assign,
+	"=":  Assign,
+	"+=": PlusAssign,
+	"-=": MinusAssign,
+	"*=": AsteriskAssign,
+	"/=": SlashAssign,
 }

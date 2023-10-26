@@ -147,11 +147,24 @@ func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, 
 }
 
 func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, error) {
+	var valueWrapper expressions.InfixOperation
+	hasWrapper := false
+	if parser.currentToken.Type != tokens.Assign {
+		operator := tokens.CharTokens[parser.currentToken.Type.String()[0:1]]
+		valueWrapper = expressions.InfixOperation{Left: variable, Operator: tokens.Token{Type: operator}}
+		hasWrapper = true
+	}
+
 	parser.fetchToken()
 
 	value, err := parser.parseExpression(Lowest)
 	if err != nil {
 		return nil, err
+	}
+
+	if hasWrapper {
+		valueWrapper.Right = value
+		value = valueWrapper
 	}
 
 	return expressions.Assignment{Variable: variable, Value: value}, nil

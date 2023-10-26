@@ -13,12 +13,15 @@ const (
 	Undefined
 
 	Assign
+	PlusAssign
+	MinusAssign
+	AsteriskAssign
+	SlashAssign
 
 	Plus
 	Minus
 	Asterisk
 	Slash
-
 	Bang
 
 	Equals
@@ -64,7 +67,11 @@ var tokenTypeRepresentations = []string{
 	String:     "string",
 	Undefined:  "undefined",
 
-	Assign: "=",
+	Assign:         "=",
+	PlusAssign:     "+=",
+	MinusAssign:    "-=",
+	AsteriskAssign: "*=",
+	SlashAssign:    "/=",
 
 	Plus:     "+",
 	Minus:    "-",
