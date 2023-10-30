@@ -10,18 +10,32 @@ type Executable struct {
 	Code Code
 
 	ConstantsPool []objects.Object
+	FunctionsPool []FunctionTemplate
+
+	NumGlobals int
 }
 
-func (executable *Executable) String() string {
-	code := executable.Code.String()
+func (executable Executable) String() string {
+	var sb strings.Builder
 
-	replacePairs := make([]string, len(executable.ConstantsPool)*2)
+	sb.WriteString("Code:\n")
+	sb.WriteString(executable.Code.String())
+	sb.WriteByte('\n')
+
+	sb.WriteString("Constants:\n")
 	for i, constant := range executable.ConstantsPool {
-		replacePairs[i*2] = "=" + strconv.Itoa(i)
-		replacePairs[i*2+1] = constant.String()
+		sb.WriteString(strconv.Itoa(i) + ": " + constant.String())
+		sb.WriteByte('\n')
+	}
+	sb.WriteByte('\n')
+
+	sb.WriteString("Functions:\n")
+	for i, function := range executable.FunctionsPool {
+		sb.WriteString(strconv.Itoa(i))
+		sb.WriteByte(':')
+		sb.WriteString(function.String())
+		sb.WriteByte('\n')
 	}
 
-	code = strings.NewReplacer(replacePairs...).Replace(code)
-
-	return code
+	return sb.String()
 }

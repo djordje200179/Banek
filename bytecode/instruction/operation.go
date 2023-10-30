@@ -6,7 +6,14 @@ const (
 	Invalid Operation = iota
 
 	PushConst
+	PushLocal
+	PushGlobal
+	PushCaptured
+
 	Pop
+	PopLocal
+	PopGlobal
+	PopCaptured
 
 	Negate
 	Add
@@ -22,7 +29,11 @@ const (
 	Branch
 	BranchIfFalse
 
+	Call
+	Return
+
 	NewArray
+	NewFunction
 	CollectionAccess
 )
 
@@ -65,8 +76,15 @@ func (opInfo OperationInfo) OperandOffset(index int) int {
 var operationInfos = []OperationInfo{
 	Invalid: {"INVALID", []OperandInfo{}},
 
-	PushConst: {"PUSH.C", []OperandInfo{constantPoolOperand}},
-	Pop:       {"POP", []OperandInfo{}},
+	PushConst:    {"PUSH.C", []OperandInfo{{2, Constant}}},
+	PushLocal:    {"PUSH.L", []OperandInfo{{2, Literal}}},
+	PushGlobal:   {"PUSH.G", []OperandInfo{{2, Literal}}},
+	PushCaptured: {"PUSH.O", []OperandInfo{{2, Literal}}},
+
+	Pop:         {"POP", []OperandInfo{}},
+	PopLocal:    {"POP.L", []OperandInfo{{2, Literal}}},
+	PopGlobal:   {"POP.G", []OperandInfo{{2, Literal}}},
+	PopCaptured: {"POP.O", []OperandInfo{{2, Literal}}},
 
 	Negate:   {"NEG", []OperandInfo{}},
 	Add:      {"ADD", []OperandInfo{}},
@@ -79,9 +97,14 @@ var operationInfos = []OperationInfo{
 	LessThan:         {"LT", []OperandInfo{}},
 	LessThanOrEquals: {"LTE", []OperandInfo{}},
 
-	Branch:        {"BR", []OperandInfo{{2, Literal}}},
-	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},
+	Branch:        {"BR", []OperandInfo{{2, Constant}}},
+	BranchIfFalse: {"BR.F", []OperandInfo{{2, Constant}}},
 
-	NewArray:         {"NEW.A", []OperandInfo{{2, Literal}}},
+	Call:   {"CALL", []OperandInfo{}},
+	Return: {"RET", []OperandInfo{}},
+
+	NewArray:    {"NEW.A", []OperandInfo{{2, Literal}}},
+	NewFunction: {"NEW.F", []OperandInfo{{2, Literal}}},
+
 	CollectionAccess: {"CAC", []OperandInfo{}},
 }

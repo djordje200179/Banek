@@ -5,56 +5,70 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instruction"
 	"banek/exec/objects"
+	"slices"
 )
 
-type compiler struct {
-	executable *bytecode.Executable
+type codeContainer interface {
+	addVariable(name string) (int, error)
+	getVariable(name string) int
+
+	emitInstruction(operation instruction.Operation, operands ...int)
+	patchInstructionOperand(address int, operandIndex int, newValue int)
+	currentAddress() int
+
+	isGlobal() bool
 }
 
-func Compile(statementsChannel <-chan ast.Statement) (*bytecode.Executable, error) {
+type compiler struct {
+	constants []objects.Object
+	functions []bytecode.FunctionTemplate
+
+	containerStack []codeContainer
+}
+
+func Compile(statementsChannel <-chan ast.Statement) (bytecode.Executable, error) {
 	compiler := &compiler{
-		executable: new(bytecode.Executable),
+		containerStack: []codeContainer{new(executableGenerator)},
 	}
 
 	for statement := range statementsChannel {
 		err := compiler.compileStatement(statement)
 		if err != nil {
-			return nil, err
+			return bytecode.Executable{}, err
 		}
 	}
 
-	return compiler.executable, nil
+	return compiler.makeExecutable(), nil
 }
 
 func (compiler *compiler) addConstant(object objects.Object) int {
-	for index, constant := range compiler.executable.ConstantsPool {
-		if constant == object {
-			return index
-		}
+	if index := slices.Index(compiler.constants, object); index != -1 {
+		return index
 	}
 
-	index := len(compiler.executable.ConstantsPool)
-	compiler.executable.ConstantsPool = append(compiler.executable.ConstantsPool, object)
+	index := len(compiler.constants)
+	compiler.constants = append(compiler.constants, object)
+
 	return index
 }
 
-func (compiler *compiler) emitInstruction(operation instruction.Operation, operands ...int) {
-	instr := instruction.MakeInstruction(operation, operands...)
-	compiler.executable.Code = append(compiler.executable.Code, instr...)
+func (compiler *compiler) addFunction(template bytecode.FunctionTemplate) int {
+	index := len(compiler.functions)
+	compiler.functions = append(compiler.functions, template)
+
+	return index
 }
 
-func (compiler *compiler) patchInstructionOperand(address int, operandIndex int, newValue int) {
-	operation := instruction.Operation(compiler.executable.Code[address])
-	opInfo := operation.Info()
-
-	instructionCode := compiler.executable.Code[address : address+opInfo.Size()]
-
-	operandWidth := opInfo.Operands[operandIndex].Width
-	operandOffset := opInfo.OperandOffset(operandIndex)
-
-	copy(instructionCode[operandOffset:], instruction.MakeOperandValue(newValue, operandWidth))
+func (compiler *compiler) topContainer() codeContainer {
+	return compiler.containerStack[len(compiler.containerStack)-1]
 }
 
-func (compiler *compiler) currentAddress() int {
-	return len(compiler.executable.Code)
+func (compiler *compiler) makeExecutable() bytecode.Executable {
+	executableGenerator := compiler.containerStack[0].(*executableGenerator)
+
+	executable := executableGenerator.makeExecutable()
+	executable.ConstantsPool = compiler.constants
+	executable.FunctionsPool = compiler.functions
+
+	return executable
 }

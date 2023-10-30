@@ -16,8 +16,6 @@ type OperandInfo struct {
 	Type  OperandType
 }
 
-var constantPoolOperand = OperandInfo{2, Constant}
-
 func MakeOperandValue(value int, width int) []byte {
 	code := make([]byte, width)
 	switch width {

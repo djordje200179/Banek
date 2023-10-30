@@ -11,41 +11,36 @@ func (err ErrStackOverflow) Error() string {
 }
 
 func (vm *vm) push(object objects.Object) error {
-	if vm.sp >= stackSize {
+	if vm.operationStackPointer >= stackSize {
 		return ErrStackOverflow{}
 	}
 
-	vm.stack[vm.sp] = object
-	vm.sp++
+	vm.operationStack[vm.operationStackPointer] = object
+	vm.operationStackPointer++
 
 	return nil
 }
 
 func (vm *vm) pop() (objects.Object, error) {
-	if vm.sp <= 0 {
+	if vm.operationStackPointer <= 0 {
 		return nil, ErrStackOverflow{}
 	}
 
-	vm.sp--
-	object := vm.stack[vm.sp]
+	vm.operationStackPointer--
+	object := vm.operationStack[vm.operationStackPointer]
 
 	return object, nil
 }
 
 func (vm *vm) popMany(count int) ([]objects.Object, error) {
-	if vm.sp < count {
+	if vm.operationStackPointer < count {
 		return nil, ErrStackOverflow{}
 	}
 
-	elements := make([]objects.Object, count)
-	for i := 0; i < count; i++ {
-		object, err := vm.pop()
-		if err != nil {
-			return nil, err
-		}
+	nextStackPointer := vm.operationStackPointer - count
 
-		elements[i] = object
-	}
+	elements := vm.operationStack[nextStackPointer:vm.operationStackPointer]
+	vm.operationStackPointer = nextStackPointer
 
 	return elements, nil
 }

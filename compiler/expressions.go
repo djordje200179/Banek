@@ -3,6 +3,7 @@ package compiler
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/bytecode"
 	"banek/bytecode/instruction"
 	"banek/exec/errors"
 	"banek/exec/objects"
@@ -10,18 +11,20 @@ import (
 )
 
 func (compiler *compiler) compileExpression(expression ast.Expression) error {
+	container := compiler.topContainer()
+
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
 		integer := objects.Integer(expression)
-		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(integer))
+		container.emitInstruction(instruction.PushConst, compiler.addConstant(integer))
 		return nil
 	case expressions.BooleanLiteral:
 		boolean := objects.Boolean(expression)
-		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(boolean))
+		container.emitInstruction(instruction.PushConst, compiler.addConstant(boolean))
 		return nil
 	case expressions.StringLiteral:
 		str := objects.String(expression)
-		compiler.emitInstruction(instruction.PushConst, compiler.addConstant(str))
+		container.emitInstruction(instruction.PushConst, compiler.addConstant(str))
 		return nil
 	case expressions.InfixOperation:
 		reverseOperands := false
@@ -34,14 +37,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	case expressions.PrefixOperation:
 		return compiler.compilePrefixOperation(expression)
 	case expressions.If:
-		err := compiler.compileExpression(expression.Condition)
-		if err != nil {
-			return err
-		}
-
-		return nil
-
-		// TODO: Add support for else branch
+		// TODO: Implement
 	case expressions.ArrayLiteral:
 		for _, element := range expression {
 			err := compiler.compileExpression(element)
@@ -50,7 +46,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			}
 		}
 
-		compiler.emitInstruction(instruction.NewArray, len(expression))
+		container.emitInstruction(instruction.NewArray, len(expression))
 
 		return nil
 	case expressions.CollectionAccess:
@@ -64,12 +60,103 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		compiler.emitInstruction(instruction.CollectionAccess)
+		container.emitInstruction(instruction.CollectionAccess)
+
+		return nil
+	case expressions.Assignment:
+		// TODO: Implement
+	case expressions.FunctionCall:
+		for _, argument := range expression.Arguments {
+			err := compiler.compileExpression(argument)
+			if err != nil {
+				return err
+			}
+		}
+
+		err := compiler.compileExpression(expression.Function)
+		if err != nil {
+			return err
+		}
+
+		container.emitInstruction(instruction.Call)
+
+		return nil
+	case expressions.FunctionLiteral:
+		functionGenerator := new(functionGenerator)
+
+		parameterNames := make([]string, len(expression.Parameters))
+		for i, parameter := range expression.Parameters {
+			parameterNames[i] = parameter.String()
+		}
+
+		err := functionGenerator.addParameters(parameterNames)
+		if err != nil {
+			return err
+		}
+
+		compiler.containerStack = append(compiler.containerStack, functionGenerator)
+		err = compiler.compileStatement(expression.Body)
+		if err != nil {
+			return err
+		}
+		compiler.containerStack = compiler.containerStack[:len(compiler.containerStack)-1]
+
+		functionTemplate := functionGenerator.makeFunction()
+
+		functionIndex := compiler.addFunction(functionTemplate)
+
+		if functionTemplate.IsClosure() {
+			container.emitInstruction(instruction.NewFunction, functionIndex)
+		} else {
+			functionObject := bytecode.Function{
+				TemplateIndex: functionIndex,
+			}
+
+			container.emitInstruction(instruction.PushConst, compiler.addConstant(functionObject))
+		}
+
+		return nil
+	case expressions.Identifier:
+		variableName := expression.String()
+
+		var variableContainer codeContainer
+		var variableIndex, variableContainerIndex int
+		for i := len(compiler.containerStack) - 1; i >= 0; i-- {
+			index := compiler.containerStack[i].getVariable(variableName)
+			if index == -1 {
+				continue
+			}
+
+			variableContainer = compiler.containerStack[i]
+			variableContainerIndex = i
+			variableIndex = index
+		}
+
+		if variableContainer == nil {
+			return errors.ErrIdentifierNotDefined{Identifier: variableName}
+		}
+
+		if variableContainer.isGlobal() {
+			container.emitInstruction(instruction.PushGlobal, variableIndex)
+			return nil
+		}
+
+		if variableContainerIndex == len(compiler.containerStack)-1 {
+			container.emitInstruction(instruction.PushLocal, variableIndex)
+			return nil
+		}
+
+		capturedVariableLevel := len(compiler.containerStack) - 1 - variableContainerIndex
+
+		capturedVariableIndex := container.(*functionGenerator).addCapturedVariable(capturedVariableLevel, variableIndex)
+		container.emitInstruction(instruction.PushCaptured, capturedVariableIndex)
 
 		return nil
 	default:
 		return errors.ErrUnknownExpression{Expression: expression}
 	}
+
+	return nil
 }
 
 func (compiler *compiler) compileInfixOperation(expression expressions.InfixOperation, reverseOperands bool) error {
@@ -94,23 +181,25 @@ func (compiler *compiler) compileInfixOperation(expression expressions.InfixOper
 
 	operator := expression.Operator.Type
 
+	container := compiler.topContainer()
+
 	switch operator {
 	case tokens.Plus:
-		compiler.emitInstruction(instruction.Add)
+		container.emitInstruction(instruction.Add)
 	case tokens.Minus:
-		compiler.emitInstruction(instruction.Subtract)
+		container.emitInstruction(instruction.Subtract)
 	case tokens.Asterisk:
-		compiler.emitInstruction(instruction.Multiply)
+		container.emitInstruction(instruction.Multiply)
 	case tokens.Slash:
-		compiler.emitInstruction(instruction.Divide)
+		container.emitInstruction(instruction.Divide)
 	case tokens.Equals:
-		compiler.emitInstruction(instruction.Equals)
+		container.emitInstruction(instruction.Equals)
 	case tokens.NotEquals:
-		compiler.emitInstruction(instruction.NotEquals)
+		container.emitInstruction(instruction.NotEquals)
 	case tokens.LessThan, tokens.GreaterThan:
-		compiler.emitInstruction(instruction.LessThan)
+		container.emitInstruction(instruction.LessThan)
 	case tokens.LessThanOrEquals, tokens.GreaterThanOrEquals:
-		compiler.emitInstruction(instruction.LessThanOrEquals)
+		container.emitInstruction(instruction.LessThanOrEquals)
 	default:
 		return errors.ErrUnknownOperator{Operator: operator}
 	}
@@ -126,11 +215,13 @@ func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOp
 
 	operator := expression.Operator.Type
 
+	container := compiler.topContainer()
+
 	switch operator {
 	case tokens.Minus:
-		compiler.emitInstruction(instruction.Negate)
+		container.emitInstruction(instruction.Negate)
 	case tokens.Bang:
-		compiler.emitInstruction(instruction.Negate)
+		container.emitInstruction(instruction.Negate)
 	default:
 		return errors.ErrUnknownOperator{Operator: operator}
 	}
