@@ -12,8 +12,6 @@ type scope struct {
 	pc   int
 
 	variables []objects.Object
-
-	parent *scope
 }
 
 type ErrVariableOutOfScope struct {
