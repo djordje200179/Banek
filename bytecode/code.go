@@ -25,6 +25,8 @@ func (code Code) String() string {
 				operandsStr[i] = "=" + strconv.Itoa(operandValue)
 			case instruction.Literal:
 				operandsStr[i] = strconv.Itoa(operandValue)
+			case instruction.Function:
+				operandsStr[i] = "#" + strconv.Itoa(operandValue)
 			}
 		}
 

@@ -7,12 +7,12 @@ import (
 	"banek/exec/objects"
 	"banek/exec/operations"
 	"banek/tokens"
-	"encoding/binary"
-	"slices"
 )
 
 func (vm *vm) opPushConst() error {
-	constIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.PushConst.Info()
+
+	constIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	constant, err := vm.getConstant(constIndex)
 	if err != nil {
@@ -23,7 +23,9 @@ func (vm *vm) opPushConst() error {
 }
 
 func (vm *vm) opPushLocal() error {
-	localIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.PushLocal.Info()
+
+	localIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	local, err := vm.getLocal(localIndex)
 	if err != nil {
@@ -34,7 +36,9 @@ func (vm *vm) opPushLocal() error {
 }
 
 func (vm *vm) opPushGlobal() error {
-	globalIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.PushGlobal.Info()
+
+	globalIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	global, err := vm.getGlobal(globalIndex)
 	if err != nil {
@@ -44,13 +48,28 @@ func (vm *vm) opPushGlobal() error {
 	return vm.push(global)
 }
 
+func (vm *vm) opPushBuiltin() error {
+	opInfo := instruction.PushBuiltin.Info()
+
+	index := vm.readOperand(opInfo.Operands[0].Width)
+	if index >= len(objects.Builtins) {
+		return nil // TODO: return error
+	}
+
+	builtin := objects.Builtins[index]
+
+	return vm.push(builtin)
+}
+
 func (vm *vm) opPop() error {
 	_, err := vm.pop()
 	return err
 }
 
 func (vm *vm) opPopLocal() error {
-	localIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.PopLocal.Info()
+
+	localIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	local, err := vm.pop()
 	if err != nil {
@@ -66,7 +85,9 @@ func (vm *vm) opPopLocal() error {
 }
 
 func (vm *vm) opPopGlobal() error {
-	globalIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.PopGlobal.Info()
+
+	globalIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	global, err := vm.pop()
 	if err != nil {
@@ -115,11 +136,18 @@ func (vm *vm) opPrefixOperation(operation tokens.TokenType) error {
 }
 
 func (vm *vm) opBranch() {
-	offset := binary.LittleEndian.Uint16(vm.readCode())
-	vm.movePC(int(offset))
+	opInfo := instruction.Branch.Info()
+
+	offset := vm.readOperand(opInfo.Operands[0].Width)
+
+	vm.movePC(offset)
 }
 
 func (vm *vm) opBranchIfFalse() error {
+	opInfo := instruction.Branch.Info()
+
+	offset := vm.readOperand(opInfo.Operands[0].Width)
+
 	operand, err := vm.pop()
 	if err != nil {
 		return err
@@ -131,16 +159,18 @@ func (vm *vm) opBranchIfFalse() error {
 	}
 
 	if !boolOperand {
-		vm.opBranch()
+		vm.movePC(offset)
 	}
 
 	return nil
 }
 
 func (vm *vm) opNewArray() error {
-	size := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.NewArray.Info()
 
-	array, err := vm.popMany(int(size))
+	size := vm.readOperand(opInfo.Operands[0].Width)
+
+	array, err := vm.popMany(size)
 	if err != nil {
 		return err
 	}
@@ -164,7 +194,7 @@ func (vm *vm) opCollectionAccess() error {
 	case objects.Array:
 		index, ok := indexObject.(objects.Integer)
 		if !ok {
-			return errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: indexObject}
+			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: indexObject}
 		}
 
 		if index < 0 {
@@ -177,14 +207,16 @@ func (vm *vm) opCollectionAccess() error {
 
 		result = collection[index]
 	default:
-		return errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: indexObject}
+		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: indexObject}
 	}
 
 	return vm.push(result)
 }
 
 func (vm *vm) opNewFunction() error {
-	templateIndex := binary.LittleEndian.Uint16(vm.readCode())
+	opInfo := instruction.NewFunction.Info()
+
+	templateIndex := vm.readOperand(opInfo.Operands[0].Width)
 
 	template := vm.program.FunctionsPool[templateIndex]
 
@@ -198,8 +230,8 @@ func (vm *vm) opNewFunction() error {
 		captures[i] = &capturedVariableScope.variables[captureInfo.Index]
 	}
 
-	function := bytecode.Function{
-		TemplateIndex: int(templateIndex),
+	function := &bytecode.Function{
+		TemplateIndex: templateIndex,
 		Captures:      captures,
 	}
 
@@ -207,32 +239,59 @@ func (vm *vm) opNewFunction() error {
 }
 
 func (vm *vm) opCall() error {
+	opInfo := instruction.Call.Info()
+
 	functionObject, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	function, ok := functionObject.(bytecode.Function)
-	if !ok {
+	argumentsCount := vm.readOperand(opInfo.Operands[0].Width)
+
+	switch function := functionObject.(type) {
+	case *bytecode.Function:
+		functionTemplate := vm.program.FunctionsPool[function.TemplateIndex]
+
+		arguments, err := vm.popMany(int(argumentsCount))
+		if err != nil {
+			return err
+		}
+
+		if len(arguments) > len(functionTemplate.Parameters) {
+			arguments = arguments[:len(functionTemplate.Parameters)]
+		} else if len(arguments) < len(functionTemplate.Parameters) {
+			newArguments := make([]objects.Object, len(functionTemplate.Parameters))
+
+			copy(newArguments, arguments)
+			for i := len(arguments); i < len(functionTemplate.Parameters); i++ {
+				newArguments[i] = objects.Undefined
+			}
+		}
+
+		functionScope := &scope{
+			code:      functionTemplate.Code,
+			variables: arguments,
+			parent:    vm.scopeStack[len(vm.scopeStack)-1],
+		}
+
+		vm.scopeStack = append(vm.scopeStack, functionScope)
+
+		return nil
+	case objects.BuiltinFunction:
+		arguments, err := vm.popMany(argumentsCount)
+		if err != nil {
+			return err
+		}
+
+		result, err := function.Function(arguments...)
+		if err != nil {
+			return err
+		}
+
+		return vm.push(result)
+	default:
 		return errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
 	}
-
-	functionTemplate := vm.program.FunctionsPool[function.TemplateIndex]
-
-	arguments, err := vm.popMany(len(functionTemplate.Parameters))
-	if err != nil {
-		return err
-	}
-
-	functionScope := &scope{
-		code:      functionTemplate.Code,
-		variables: slices.Clone(arguments),
-		parent:    vm.scopeStack[len(vm.scopeStack)-1],
-	}
-
-	vm.scopeStack = append(vm.scopeStack, functionScope)
-
-	return nil
 }
 
 func (vm *vm) opReturn() error {

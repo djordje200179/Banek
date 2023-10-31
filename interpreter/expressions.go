@@ -57,9 +57,8 @@ func (interpreter *interpreter) evalExpression(env environments.Environment, exp
 }
 
 func (interpreter *interpreter) evalIdentifier(env environments.Environment, identifier expressions.Identifier) (objects.Object, error) {
-	builtin, ok := objects.Builtins[identifier.String()]
-	if ok {
-		return builtin, nil
+	if index := objects.BuiltinFindIndex(identifier.String()); index != -1 {
+		return objects.Builtins[index], nil
 	}
 
 	value, err := env.Get(identifier.String())
@@ -110,7 +109,7 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 			return nil, errors.ErrUnknownStatement{Statement: body}
 		}
 	case objects.BuiltinFunction:
-		return function(args...)
+		return function.Function(args...)
 	default:
 		return nil, errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
 	}

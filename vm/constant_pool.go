@@ -6,15 +6,15 @@ import (
 )
 
 type ErrConstantNotDefined struct {
-	Index uint16
+	Index int
 }
 
 func (err ErrConstantNotDefined) Error() string {
-	return fmt.Sprintf("undefined constant at index %d", err.Index)
+	return fmt.Sprintf("undefined constant at Index %d", err.Index)
 }
 
-func (vm *vm) getConstant(index uint16) (objects.Object, error) {
-	if int(index) >= len(vm.program.ConstantsPool) {
+func (vm *vm) getConstant(index int) (objects.Object, error) {
+	if index >= len(vm.program.ConstantsPool) {
 		return nil, ErrConstantNotDefined{index}
 	}
 

@@ -78,7 +78,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.Call)
+		container.emitInstruction(instruction.Call, len(expression.Arguments))
 
 		return nil
 	case expressions.FunctionLiteral:
@@ -108,7 +108,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		if functionTemplate.IsClosure() {
 			container.emitInstruction(instruction.NewFunction, functionIndex)
 		} else {
-			functionObject := bytecode.Function{
+			functionObject := &bytecode.Function{
 				TemplateIndex: functionIndex,
 			}
 
@@ -118,6 +118,11 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		return nil
 	case expressions.Identifier:
 		variableName := expression.String()
+
+		if index := objects.BuiltinFindIndex(variableName); index != -1 {
+			container.emitInstruction(instruction.PushBuiltin, index)
+			return nil
+		}
 
 		var variableContainer codeContainer
 		var variableIndex, variableContainerIndex int
@@ -130,19 +135,19 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			variableContainer = compiler.containerStack[i]
 			variableContainerIndex = i
 			variableIndex = index
+
+			break
 		}
 
 		if variableContainer == nil {
 			return errors.ErrIdentifierNotDefined{Identifier: variableName}
 		}
 
-		if variableContainer.isGlobal() {
-			container.emitInstruction(instruction.PushGlobal, variableIndex)
-			return nil
-		}
-
-		if variableContainerIndex == len(compiler.containerStack)-1 {
+		if variableContainerIndex == len(compiler.containerStack)-1 && variableContainerIndex != 0 {
 			container.emitInstruction(instruction.PushLocal, variableIndex)
+			return nil
+		} else if variableContainerIndex == 0 {
+			container.emitInstruction(instruction.PushGlobal, variableIndex)
 			return nil
 		}
 

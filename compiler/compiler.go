@@ -15,8 +15,6 @@ type codeContainer interface {
 	emitInstruction(operation instruction.Operation, operands ...int)
 	patchInstructionOperand(address int, operandIndex int, newValue int)
 	currentAddress() int
-
-	isGlobal() bool
 }
 
 type compiler struct {

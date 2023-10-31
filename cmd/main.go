@@ -5,7 +5,6 @@ import (
 	"banek/lexer"
 	"banek/parser"
 	"banek/vm"
-	"fmt"
 	"os"
 )
 
@@ -30,7 +29,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(executable)
+	//fmt.Println(executable)
 
 	err = vm.Execute(executable)
 	if err != nil {

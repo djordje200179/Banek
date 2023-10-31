@@ -9,6 +9,7 @@ const (
 	PushLocal
 	PushGlobal
 	PushCaptured
+	PushBuiltin
 
 	Pop
 	PopLocal
@@ -77,14 +78,15 @@ var operationInfos = []OperationInfo{
 	Invalid: {"INVALID", []OperandInfo{}},
 
 	PushConst:    {"PUSH.C", []OperandInfo{{2, Constant}}},
-	PushLocal:    {"PUSH.L", []OperandInfo{{2, Literal}}},
-	PushGlobal:   {"PUSH.G", []OperandInfo{{2, Literal}}},
-	PushCaptured: {"PUSH.O", []OperandInfo{{2, Literal}}},
+	PushLocal:    {"PUSH.L", []OperandInfo{{1, Literal}}},
+	PushGlobal:   {"PUSH.G", []OperandInfo{{1, Literal}}},
+	PushCaptured: {"PUSH.O", []OperandInfo{{1, Literal}}},
+	PushBuiltin:  {"PUSH.B", []OperandInfo{{1, Literal}}},
 
 	Pop:         {"POP", []OperandInfo{}},
-	PopLocal:    {"POP.L", []OperandInfo{{2, Literal}}},
-	PopGlobal:   {"POP.G", []OperandInfo{{2, Literal}}},
-	PopCaptured: {"POP.O", []OperandInfo{{2, Literal}}},
+	PopLocal:    {"POP.L", []OperandInfo{{1, Literal}}},
+	PopGlobal:   {"POP.G", []OperandInfo{{1, Literal}}},
+	PopCaptured: {"POP.O", []OperandInfo{{1, Literal}}},
 
 	Negate:   {"NEG", []OperandInfo{}},
 	Add:      {"ADD", []OperandInfo{}},
@@ -97,14 +99,14 @@ var operationInfos = []OperationInfo{
 	LessThan:         {"LT", []OperandInfo{}},
 	LessThanOrEquals: {"LTE", []OperandInfo{}},
 
-	Branch:        {"BR", []OperandInfo{{2, Constant}}},
-	BranchIfFalse: {"BR.F", []OperandInfo{{2, Constant}}},
+	Branch:        {"BR", []OperandInfo{{2, Literal}}},
+	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},
 
-	Call:   {"CALL", []OperandInfo{}},
+	Call:   {"CALL", []OperandInfo{{1, Literal}}},
 	Return: {"RET", []OperandInfo{}},
 
 	NewArray:    {"NEW.A", []OperandInfo{{2, Literal}}},
-	NewFunction: {"NEW.F", []OperandInfo{{2, Literal}}},
+	NewFunction: {"NEW.F", []OperandInfo{{2, Function}}},
 
 	CollectionAccess: {"CAC", []OperandInfo{}},
 }

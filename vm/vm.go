@@ -7,13 +7,13 @@ import (
 	"banek/tokens"
 )
 
-const stackSize = 2048
+const stackSize = 16 * 1024
 
 type vm struct {
 	program bytecode.Executable
 
-	operationStack        [stackSize]objects.Object
-	operationStackPointer int
+	opStack [stackSize]objects.Object
+	opSP    int
 
 	globalScope scope
 	scopeStack  []*scope
@@ -89,6 +89,11 @@ func (vm *vm) run() error {
 				if err != nil {
 					return err
 				}
+			case instruction.PushBuiltin:
+				err := vm.opPushBuiltin()
+				if err != nil {
+					return err
+				}
 			case instruction.Add, instruction.Subtract, instruction.Multiply, instruction.Divide,
 				instruction.Equals, instruction.NotEquals,
 				instruction.LessThan, instruction.LessThanOrEquals:
@@ -130,10 +135,6 @@ func (vm *vm) run() error {
 				}
 			default:
 				return ErrUnknownOperation{Operation: operation}
-			}
-
-			if operation != instruction.Call {
-				vm.movePC(operation.Info().Size())
 			}
 		}
 

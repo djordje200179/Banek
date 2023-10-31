@@ -78,6 +78,11 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
+		variableIndex, err := container.addVariable(statement.Name.String())
+		if err != nil {
+			return err
+		}
+
 		compiler.containerStack = append(compiler.containerStack, functionGenerator)
 		err = compiler.compileStatement(statement.Body)
 		if err != nil {
@@ -93,19 +98,18 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 		if functionTemplate.IsClosure() {
 			container.emitInstruction(instruction.NewFunction, functionIndex)
 		} else {
-			functionObject := bytecode.Function{
+			functionObject := &bytecode.Function{
 				TemplateIndex: functionIndex,
 			}
 
 			container.emitInstruction(instruction.PushConst, compiler.addConstant(functionObject))
 		}
 
-		variableIndex, err := container.addVariable(statement.Name.String())
-		if err != nil {
-			return err
+		if len(compiler.containerStack) == 1 {
+			container.emitInstruction(instruction.PopGlobal, variableIndex)
+		} else {
+			container.emitInstruction(instruction.PopLocal, variableIndex)
 		}
-
-		container.emitInstruction(instruction.PopLocal, variableIndex)
 
 		return nil
 	case statements.Return:
@@ -128,7 +132,11 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.PopLocal, index)
+		if len(compiler.containerStack) == 1 {
+			container.emitInstruction(instruction.PopGlobal, index)
+		} else {
+			container.emitInstruction(instruction.PopLocal, index)
+		}
 
 		return nil
 	case statements.While:

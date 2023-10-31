@@ -2,6 +2,7 @@ package vm
 
 import (
 	"banek/exec/objects"
+	"slices"
 )
 
 type ErrStackOverflow struct{}
@@ -11,36 +12,36 @@ func (err ErrStackOverflow) Error() string {
 }
 
 func (vm *vm) push(object objects.Object) error {
-	if vm.operationStackPointer >= stackSize {
+	if vm.opSP >= stackSize {
 		return ErrStackOverflow{}
 	}
 
-	vm.operationStack[vm.operationStackPointer] = object
-	vm.operationStackPointer++
+	vm.opStack[vm.opSP] = object
+	vm.opSP++
 
 	return nil
 }
 
 func (vm *vm) pop() (objects.Object, error) {
-	if vm.operationStackPointer <= 0 {
+	if vm.opSP <= 0 {
 		return nil, ErrStackOverflow{}
 	}
 
-	vm.operationStackPointer--
-	object := vm.operationStack[vm.operationStackPointer]
+	vm.opSP--
+	object := vm.opStack[vm.opSP]
 
 	return object, nil
 }
 
 func (vm *vm) popMany(count int) ([]objects.Object, error) {
-	if vm.operationStackPointer < count {
+	if vm.opSP < count {
 		return nil, ErrStackOverflow{}
 	}
 
-	nextStackPointer := vm.operationStackPointer - count
+	nextStackPointer := vm.opSP - count
 
-	elements := vm.operationStack[nextStackPointer:vm.operationStackPointer]
-	vm.operationStackPointer = nextStackPointer
+	elements := vm.opStack[nextStackPointer:vm.opSP]
+	vm.opSP = nextStackPointer
 
-	return elements, nil
+	return slices.Clone(elements), nil
 }

@@ -17,27 +17,27 @@ type scope struct {
 }
 
 type ErrVariableOutOfScope struct {
-	index uint16
+	Index int
 }
 
 func (err ErrVariableOutOfScope) Error() string {
-	return "variable out of scope: " + strconv.Itoa(int(err.index))
+	return "variable out of scope: " + strconv.Itoa(err.Index)
 }
 
-func (vm *vm) getGlobal(index uint16) (objects.Object, error) {
+func (vm *vm) getGlobal(index int) (objects.Object, error) {
 	globalScope := vm.scopeStack[0]
 
-	if int(index) >= len(globalScope.variables) {
+	if index >= len(globalScope.variables) {
 		return nil, ErrVariableOutOfScope{index}
 	}
 
 	return globalScope.variables[index], nil
 }
 
-func (vm *vm) setGlobal(index uint16, value objects.Object) error {
+func (vm *vm) setGlobal(index int, value objects.Object) error {
 	globalScope := vm.scopeStack[0]
 
-	if int(index) >= len(globalScope.variables) {
+	if index >= len(globalScope.variables) {
 		return ErrVariableOutOfScope{index}
 	}
 
@@ -46,20 +46,20 @@ func (vm *vm) setGlobal(index uint16, value objects.Object) error {
 	return nil
 }
 
-func (vm *vm) getLocal(index uint16) (objects.Object, error) {
+func (vm *vm) getLocal(index int) (objects.Object, error) {
 	localScope := vm.scopeStack[len(vm.scopeStack)-1]
 
-	if int(index) >= len(localScope.variables) {
+	if index >= len(localScope.variables) {
 		return nil, ErrVariableOutOfScope{index}
 	}
 
 	return localScope.variables[index], nil
 }
 
-func (vm *vm) setLocal(index uint16, value objects.Object) error {
+func (vm *vm) setLocal(index int, value objects.Object) error {
 	localScope := vm.scopeStack[len(vm.scopeStack)-1]
 
-	if int(index) >= len(localScope.variables) {
+	if index >= len(localScope.variables) {
 		return ErrVariableOutOfScope{index}
 	}
 
@@ -77,13 +77,22 @@ func (vm *vm) hasCode() bool {
 func (vm *vm) readOperation() instruction.Operation {
 	localScope := vm.scopeStack[len(vm.scopeStack)-1]
 
-	return instruction.Operation(localScope.code[localScope.pc])
+	code := localScope.code[localScope.pc]
+
+	localScope.pc++
+
+	return instruction.Operation(code)
 }
 
-func (vm *vm) readCode() bytecode.Code {
+func (vm *vm) readOperand(width int) int {
 	localScope := vm.scopeStack[len(vm.scopeStack)-1]
 
-	return localScope.code[localScope.pc+1:]
+	rawOperand := localScope.code[localScope.pc : localScope.pc+width]
+	operand := instruction.ReadOperandValue(rawOperand, width)
+
+	localScope.pc += width
+
+	return operand
 }
 
 func (vm *vm) movePC(offset int) {

@@ -2,13 +2,17 @@ package objects
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
-type BuiltinFunction func(args ...Object) (Object, error)
+type BuiltinFunction struct {
+	Name     string
+	Function func(args ...Object) (Object, error)
+}
 
 func (builtin BuiltinFunction) Type() string   { return "builtin" }
-func (builtin BuiltinFunction) String() string { return "builtin function" }
+func (builtin BuiltinFunction) String() string { return builtin.Name }
 
 type ErrIncorrectArgumentNumber struct {
 	Expected int
@@ -19,37 +23,52 @@ func (err ErrIncorrectArgumentNumber) Error() string {
 	return fmt.Sprintf("incorrect number of arguments: expected %d, got %d", err.Expected, err.Got)
 }
 
-var Builtins = map[string]BuiltinFunction{
-	"len": func(args ...Object) (Object, error) {
-		if len(args) != 1 {
-			return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
-		}
+var Builtins = []BuiltinFunction{
+	{
+		Name: "len",
+		Function: func(args ...Object) (Object, error) {
+			if len(args) != 1 {
+				return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+			}
 
-		switch arg := args[0].(type) {
-		case String:
-			return Integer(len(arg)), nil
-		case Array:
-			return Integer(len(arg)), nil
-		default:
+			switch arg := args[0].(type) {
+			case String:
+				return Integer(len(arg)), nil
+			case Array:
+				return Integer(len(arg)), nil
+			default:
+				return Undefined, nil
+			}
+		},
+	},
+	{
+		Name: "print",
+		Function: func(args ...Object) (Object, error) {
+			var sb strings.Builder
+
+			for _, arg := range args {
+				sb.WriteString(arg.String())
+			}
+
+			fmt.Println(sb.String())
+
 			return Undefined, nil
-		}
+		},
 	},
-	"print": func(args ...Object) (Object, error) {
-		var sb strings.Builder
+	{
+		Name: "str",
+		Function: func(args ...Object) (Object, error) {
+			if len(args) != 1 {
+				return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+			}
 
-		for _, arg := range args {
-			sb.WriteString(arg.String())
-		}
-
-		fmt.Println(sb.String())
-
-		return Undefined, nil
+			return String(args[0].String()), nil
+		},
 	},
-	"str": func(args ...Object) (Object, error) {
-		if len(args) != 1 {
-			return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
-		}
+}
 
-		return String(args[0].String()), nil
-	},
+func BuiltinFindIndex(name string) int {
+	return slices.IndexFunc(Builtins, func(builtin BuiltinFunction) bool {
+		return builtin.Name == name
+	})
 }

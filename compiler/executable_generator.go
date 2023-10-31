@@ -60,7 +60,3 @@ func (generator *executableGenerator) makeExecutable() bytecode.Executable {
 		NumGlobals: len(generator.globalVariables),
 	}
 }
-
-func (generator *executableGenerator) isGlobal() bool {
-	return true
-}

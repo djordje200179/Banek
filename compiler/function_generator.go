@@ -91,7 +91,3 @@ func (generator *functionGenerator) makeFunction() bytecode.FunctionTemplate {
 		CapturesInfo: generator.captures,
 	}
 }
-
-func (generator *functionGenerator) isGlobal() bool {
-	return false
-}
