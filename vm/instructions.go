@@ -222,7 +222,10 @@ func (vm *vm) opNewFunction() error {
 
 	captures := make([]*objects.Object, len(template.CapturesInfo))
 	for i, captureInfo := range template.CapturesInfo {
-		capturedVariableScope := vm.scopeStack[len(vm.scopeStack)-1-captureInfo.Level]
+		capturedVariableScope := vm.currentScope
+		for j := 0; j < captureInfo.Level; j++ {
+			capturedVariableScope = capturedVariableScope.parent
+		}
 
 		captures[i] = &capturedVariableScope.variables[captureInfo.Index]
 	}
@@ -265,12 +268,11 @@ func (vm *vm) opCall() error {
 			}
 		}
 
-		functionScope := &scope{
+		vm.currentScope = &scope{
 			code:      functionTemplate.Code,
 			variables: arguments,
+			parent:    vm.currentScope,
 		}
-
-		vm.scopeStack = append(vm.scopeStack, functionScope)
 
 		return nil
 	case objects.BuiltinFunction:
@@ -291,7 +293,7 @@ func (vm *vm) opCall() error {
 }
 
 func (vm *vm) opReturn() error {
-	vm.scopeStack = vm.scopeStack[:len(vm.scopeStack)-1]
+	vm.currentScope = vm.currentScope.parent
 
 	return nil
 }

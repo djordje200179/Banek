@@ -15,8 +15,8 @@ type vm struct {
 	opStack [stackSize]objects.Object
 	opSP    int
 
-	globalScope scope
-	scopeStack  []*scope
+	globalScope  scope
+	currentScope *scope
 }
 
 func Execute(program bytecode.Executable) error {
@@ -26,9 +26,8 @@ func Execute(program bytecode.Executable) error {
 			variables: make([]objects.Object, program.NumGlobals),
 			code:      program.Code,
 		},
-		scopeStack: make([]*scope, 1),
 	}
-	vm.scopeStack[0] = &vm.globalScope
+	vm.currentScope = &vm.globalScope
 
 	return vm.run()
 }
@@ -55,7 +54,7 @@ var infixOperations = map[instruction.Operation]tokens.TokenType{
 }
 
 func (vm *vm) run() error {
-	for len(vm.scopeStack) > 0 {
+	for vm.currentScope != nil {
 		for vm.hasCode() {
 			operation := vm.readOperation()
 			switch operation {
