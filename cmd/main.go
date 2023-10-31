@@ -21,6 +21,20 @@ func RegisterGobTypes() {
 	gob.Register(&bytecode.Function{})
 }
 
+func HandleUsageError() {
+	flag.Usage()
+	os.Exit(1)
+}
+
+func CheckError(err error) {
+	if err == nil {
+		return
+	}
+
+	_, _ = fmt.Fprint(os.Stderr, err)
+	os.Exit(2)
+}
+
 func main() {
 	var isCompiled bool
 	flag.BoolVar(&isCompiled, "c", false, "Compile the file")
@@ -38,64 +52,41 @@ func main() {
 
 	argsCount := flag.NArg()
 	if argsCount == 0 || argsCount > 1 {
-		flag.Usage()
-		return
+		HandleUsageError()
 	}
 
 	inputFileName := flag.Arg(0)
 	inputFile, err := os.Open(inputFileName)
-	if err != nil {
-		fmt.Fprint(os.Stderr, err)
-		return
-	}
+	CheckError(err)
 	defer inputFile.Close()
 
 	switch {
 	case isInterpreted:
 		err := Interpret(inputFile)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 	case isCompiled:
 		outputFile, err := os.Create(outputFileName)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 		defer outputFile.Close()
 
 		executable, err := Compile(inputFile)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 
 		RegisterGobTypes()
 		encoder := gob.NewEncoder(outputFile)
 		err = encoder.Encode(executable)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 	case isRun:
 		var executable bytecode.Executable
 
 		RegisterGobTypes()
 		decoder := gob.NewDecoder(inputFile)
 		err := decoder.Decode(&executable)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 
 		err = vm.Execute(executable)
-		if err != nil {
-			fmt.Fprint(os.Stderr, err)
-			return
-		}
+		CheckError(err)
 	default:
-		flag.Usage()
-		return
+		HandleUsageError()
 	}
 }
