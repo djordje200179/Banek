@@ -174,10 +174,17 @@ function foo(a, b) {
 All the basic arithmetic operators are supported. They not only work 
 with numbers, but some of them also work with strings and arrays.
 
+- `+` - Addition or concatenation
+- `-` - Subtraction
+- `*` - Multiplication
+- `/` - Division
+- `%` - Remainder
+- `^` - Exponentiation
+
 ```banek
-print(1 + 2); // Prints 3
-print("Hello, " + "world!"); // Prints "Hello, world!"
-print([1, 2] + [3, 4]); // Prints [1, 2, 3, 4]
+print("Hello, " + "world!");    // Prints "Hello, world!"
+print([1, 2] + [3, 4]);         // Prints [1, 2, 3, 4]
+print(5 ^ 2);                   // Prints 25
 ```
 
 #### Comparison operators
@@ -188,9 +195,9 @@ Every value can be compared to every other value for equality.
 However, only integers and strings can be compared for ordering.
 
 ```banek
-print(1 == 2); // Prints false
-print(1 != "1"); // Prints true
-print(1 < 2); // Prints true
+print(1 == 2);      // Prints false
+print(1 != "1");    // Prints true
+print(1 < 2);       // Prints true
 ```
 
 ### Control flow

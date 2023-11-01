@@ -28,6 +28,8 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 
 	tokens.Asterisk: Product,
 	tokens.Slash:    Product,
+	tokens.Modulo:   Product,
+	tokens.Caret:    Product,
 
 	tokens.LeftParenthesis: Call,
 	tokens.LeftBracket:     Call,

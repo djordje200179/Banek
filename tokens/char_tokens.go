@@ -5,6 +5,8 @@ var CharTokens = map[string]TokenType{
 	"-": Minus,
 	"*": Asterisk,
 	"/": Slash,
+	"%": Modulo,
+	"^": Caret,
 
 	"!": Bang,
 
@@ -30,4 +32,6 @@ var CharTokens = map[string]TokenType{
 	"-=": MinusAssign,
 	"*=": AsteriskAssign,
 	"/=": SlashAssign,
+	"%=": ModuloAssign,
+	"^=": CaretAssign,
 }

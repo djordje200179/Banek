@@ -14,6 +14,8 @@ var infixOperations = map[tokens.TokenType]operations.InfixOperationType{
 	tokens.Minus:    operations.InfixMinusOperation,
 	tokens.Asterisk: operations.InfixAsteriskOperation,
 	tokens.Slash:    operations.InfixSlashOperation,
+	tokens.Modulo:   operations.InfixModuloOperation,
+	tokens.Caret:    operations.InfixCaretOperation,
 
 	tokens.Equals:              operations.InfixEqualsOperation,
 	tokens.NotEquals:           operations.InfixNotEqualsOperation,

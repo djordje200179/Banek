@@ -16,12 +16,16 @@ const (
 	PlusAssign
 	MinusAssign
 	AsteriskAssign
+	CaretAssign
 	SlashAssign
+	ModuloAssign
 
 	Plus
 	Minus
 	Asterisk
 	Slash
+	Modulo
+	Caret
 	Bang
 
 	Equals
@@ -72,11 +76,15 @@ var tokenTypeRepresentations = []string{
 	MinusAssign:    "-=",
 	AsteriskAssign: "*=",
 	SlashAssign:    "/=",
+	ModuloAssign:   "%=",
+	CaretAssign:    "^=",
 
 	Plus:     "+",
 	Minus:    "-",
 	Asterisk: "*",
 	Slash:    "/",
+	Modulo:   "%",
+	Caret:    "^",
 	Bang:     "!",
 
 	Equals:              "==",

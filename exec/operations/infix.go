@@ -13,6 +13,8 @@ const (
 	InfixMinusOperation
 	InfixAsteriskOperation
 	InfixSlashOperation
+	InfixModuloOperation
+	InfixCaretOperation
 
 	InfixEqualsOperation
 	InfixNotEqualsOperation
@@ -33,6 +35,8 @@ var infixOperationNames = []string{
 	InfixMinusOperation:    "-",
 	InfixAsteriskOperation: "*",
 	InfixSlashOperation:    "/",
+	InfixModuloOperation:   "%",
+	InfixCaretOperation:    "^",
 
 	InfixEqualsOperation:              "==",
 	InfixNotEqualsOperation:           "!=",
@@ -47,6 +51,8 @@ var infixOperations = []infixOperationFunction{
 	InfixMinusOperation:    evalInfixMinusOperation,
 	InfixAsteriskOperation: evalInfixAsteriskOperation,
 	InfixSlashOperation:    evalInfixSlashOperation,
+	InfixModuloOperation:   evalInfixModuloOperation,
+	InfixCaretOperation:    evalInfixCaretOperation,
 
 	InfixEqualsOperation:              evalInfixEqualsOperation,
 	InfixNotEqualsOperation:           evalInfixNotEqualsOperation,
@@ -138,6 +144,25 @@ func evalInfixAsteriskOperation(left, right objects.Object) (objects.Object, err
 	return nil, errors.ErrInvalidOperand{Operation: InfixAsteriskOperation.String(), LeftOperand: left, RightOperand: right}
 }
 
+func evalInfixCaretOperation(left, right objects.Object) (objects.Object, error) {
+	leftInteger, ok := left.(objects.Integer)
+	if !ok {
+		return nil, errors.ErrInvalidOperand{Operation: InfixCaretOperation.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	rightInteger, ok := right.(objects.Integer)
+	if !ok {
+		return nil, errors.ErrInvalidOperand{Operation: InfixCaretOperation.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	result := objects.Integer(1)
+	for i := objects.Integer(0); i < rightInteger; i++ {
+		result *= leftInteger
+	}
+
+	return result, nil
+}
+
 func evalInfixSlashOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
@@ -150,6 +175,20 @@ func evalInfixSlashOperation(left, right objects.Object) (objects.Object, error)
 	}
 
 	return leftInteger / rightInteger, nil
+}
+
+func evalInfixModuloOperation(left, right objects.Object) (objects.Object, error) {
+	leftInteger, ok := left.(objects.Integer)
+	if !ok {
+		return nil, errors.ErrInvalidOperand{Operation: InfixModuloOperation.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	rightInteger, ok := right.(objects.Integer)
+	if !ok {
+		return nil, errors.ErrInvalidOperand{Operation: InfixModuloOperation.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return leftInteger % rightInteger, nil
 }
 
 func evalInfixEqualsOperation(left, right objects.Object) (objects.Object, error) {
