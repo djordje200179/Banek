@@ -30,7 +30,38 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	case expressions.PrefixOperation:
 		return compiler.compilePrefixOperation(expression)
 	case expressions.If:
-		// TODO: Implement
+		err := compiler.compileExpression(expression.Condition)
+		if err != nil {
+			return err
+		}
+
+		firstPatchAddress := container.currentAddress()
+		container.emitInstruction(instruction.BranchIfFalse, 0)
+
+		err = compiler.compileExpression(expression.Consequence)
+		if err != nil {
+			return err
+		}
+
+		elseAddress := container.currentAddress()
+
+		branchSize := instruction.Branch.Info().Size()
+
+		secondPatchAddress := elseAddress
+		container.emitInstruction(instruction.Branch, 0)
+		elseAddress += branchSize
+
+		err = compiler.compileExpression(expression.Alternative)
+		if err != nil {
+			return err
+		}
+
+		outAddress := container.currentAddress()
+		container.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
+
+		container.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
+
+		return nil
 	case expressions.ArrayLiteral:
 		for _, element := range expression {
 			err := compiler.compileExpression(element)
