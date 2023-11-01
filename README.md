@@ -204,19 +204,21 @@ print(1 < 2);       // Prints true
 
 #### If statements
 If statements are used to execute a block of code conditionally, like
-in most other languages. Brackets are not needed around the condition.
-The alternative branch is optional.
+in most other languages. 
+
+Brackets are not needed around the condition. Bodies of consequent and
+alternative branches do not need to be blocks if they consist of only one statement.
 
 ```banek
-if 1 == 2 then {
+if 1 == 2 then
     print("1 is equal to 2");
-} else {
+else
     print("1 is not equal to 2");
-}
 ```
 
-Also, if statements can be used as expressions. In this case, the
-alternative branch is mandatory.
+Also, these statements can be used as expressions. In this case, the
+alternative branch is mandatory, and the value of the expression is
+the value of the executed branch.
 
 ```banek
 let a = if 1 == 2 then "same" else "different";
@@ -224,7 +226,10 @@ let a = if 1 == 2 then "same" else "different";
 
 #### While loops
 While loops are used to execute a block of code repeatedly until a
-condition is met. Brackets are not needed around the condition.
+condition is met. 
+
+Like if statements, brackets are not needed around the condition and the
+body does not need to be a block if it consists of only one statement.
 
 ```banek
 let i = 0;
