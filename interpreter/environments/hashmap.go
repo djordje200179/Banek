@@ -68,3 +68,7 @@ func (env *hashmapEnvironment) Delete(name string) error {
 
 	return nil
 }
+
+func (env *hashmapEnvironment) Clear() {
+	clear(env.values)
+}

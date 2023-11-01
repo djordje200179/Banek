@@ -12,6 +12,8 @@ type Environment interface {
 	Set(name string, value objects.Object) error
 	Define(name string, value objects.Object, mutable bool) error
 	Delete(name string) error
+
+	Clear()
 }
 
 type EnvironmentFactory func(outer Environment, capacity int) Environment

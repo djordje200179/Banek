@@ -79,3 +79,8 @@ func (env *arrayEnvironment) Delete(name string) error {
 
 	return nil
 }
+
+func (env *arrayEnvironment) Clear() {
+	env.keys = nil
+	env.values = nil
+}
