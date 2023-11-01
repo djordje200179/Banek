@@ -12,10 +12,21 @@ and motivation to add new features.
 Every part of the toolchain is written in Go. So my language depends on
 Go runtime and its standard library.
 
+Lexing and parsing is done completely by hand. I did not use any external
+libraries for this, because I wanted to learn how it works. Both the lexer
+and the parser run on their own goroutines, so they can work in parallel.
+They work in a streaming fashion, producing tokens and sending them to the
+consumers via buffered channels.
+
+Parsing is done using a recursive descent Pratt parser. It is a top-down
+parser that uses operator precedence to parse expressions. It is very
+simple to implement, and it is also very fast.
+
 ### Interpreter
 The interpreter is used for running Banek programs without compiling them
-or for running the REPL. Executing a program with the interpreter is
-slower than executing the bytecode with the emulator.
+or for running the REPL. 
+Executing a program with the interpreter is slower than executing the bytecode 
+because it recursively evaluates the AST and parses nodes on every step.
 
 ### Compiler
 The compiler is used for compiling Banek programs to bytecode. The bytecode
