@@ -12,8 +12,6 @@ import (
 
 func HandleUsageError() {
 	_, _ = fmt.Fprintln(os.Stderr, "Usage: compiler <file>")
-
-	flag.CommandLine.SetOutput(os.Stderr)
 	flag.PrintDefaults()
 
 	os.Exit(1)
@@ -25,6 +23,8 @@ func HandleError(err error) {
 }
 
 func main() {
+	flag.CommandLine.SetOutput(os.Stderr)
+
 	var outputFileName string
 	flag.StringVar(&outputFileName, "o", "a.bac", "Output file name")
 

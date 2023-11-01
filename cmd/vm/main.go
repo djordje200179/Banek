@@ -20,6 +20,8 @@ func HandleError(err error) {
 }
 
 func main() {
+	flag.CommandLine.SetOutput(os.Stderr)
+
 	flag.Parse()
 
 	argsCount := flag.NArg()
