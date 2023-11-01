@@ -3,7 +3,6 @@ package operations
 import (
 	"banek/exec/errors"
 	"banek/exec/objects"
-	"banek/tokens"
 	"strings"
 )
 
@@ -88,18 +87,18 @@ func evalInfixPlusOperation(left, right objects.Object) (objects.Object, error) 
 		}
 	}
 
-	return nil, errors.ErrInvalidOperand{Operation: tokens.Plus.String(), LeftOperand: left, RightOperand: right}
+	return nil, errors.ErrInvalidOperand{Operation: InfixPlusOperation.String(), LeftOperand: left, RightOperand: right}
 }
 
 func evalInfixMinusOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), LeftOperand: left, RightOperand: right}
+		return nil, errors.ErrInvalidOperand{Operation: InfixMinusOperation.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	rightInteger, ok := right.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), LeftOperand: left, RightOperand: right}
+		return nil, errors.ErrInvalidOperand{Operation: InfixMinusOperation.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	return leftInteger - rightInteger, nil
@@ -136,18 +135,18 @@ func evalInfixAsteriskOperation(left, right objects.Object) (objects.Object, err
 		}
 	}
 
-	return nil, errors.ErrInvalidOperand{Operation: tokens.Asterisk.String(), LeftOperand: left, RightOperand: right}
+	return nil, errors.ErrInvalidOperand{Operation: InfixAsteriskOperation.String(), LeftOperand: left, RightOperand: right}
 }
 
 func evalInfixSlashOperation(left, right objects.Object) (objects.Object, error) {
 	leftInteger, ok := left.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Slash.String(), LeftOperand: left, RightOperand: right}
+		return nil, errors.ErrInvalidOperand{Operation: InfixSlashOperation.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	rightInteger, ok := right.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Slash.String(), LeftOperand: left, RightOperand: right}
+		return nil, errors.ErrInvalidOperand{Operation: InfixSlashOperation.String(), LeftOperand: left, RightOperand: right}
 	}
 
 	return leftInteger / rightInteger, nil
@@ -175,7 +174,7 @@ func evalInfixLessThanOperation(left, right objects.Object) (objects.Object, err
 		}
 	}
 
-	return nil, errors.ErrInvalidOperand{Operation: tokens.LessThan.String(), LeftOperand: left, RightOperand: right}
+	return nil, errors.ErrInvalidOperand{Operation: InfixLessThanOperation.String(), LeftOperand: left, RightOperand: right}
 }
 
 func evalInfixGreaterThanOperation(left, right objects.Object) (objects.Object, error) {
@@ -194,7 +193,7 @@ func evalInfixGreaterThanOperation(left, right objects.Object) (objects.Object, 
 		}
 	}
 
-	return nil, errors.ErrInvalidOperand{Operation: tokens.GreaterThan.String(), LeftOperand: left, RightOperand: right}
+	return nil, errors.ErrInvalidOperand{Operation: InfixGreaterThanOperation.String(), LeftOperand: left, RightOperand: right}
 }
 
 func evalInfixLessThanOrEqualsOperation(left, right objects.Object) (objects.Object, error) {

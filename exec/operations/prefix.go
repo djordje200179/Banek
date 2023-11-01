@@ -3,7 +3,6 @@ package operations
 import (
 	"banek/exec/errors"
 	"banek/exec/objects"
-	"banek/tokens"
 )
 
 type PrefixOperationType byte
@@ -40,7 +39,7 @@ func EvalPrefixOperation(operand objects.Object, operation PrefixOperationType) 
 func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 	integer, ok := operand.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), RightOperand: operand}
+		return nil, errors.ErrInvalidOperand{Operation: PrefixMinusOperation.String(), RightOperand: operand}
 	}
 
 	return -integer, nil
@@ -49,7 +48,7 @@ func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
 func evalPrefixBangOperation(operand objects.Object) (objects.Object, error) {
 	boolean, ok := operand.(objects.Boolean)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: tokens.Bang.String(), RightOperand: operand}
+		return nil, errors.ErrInvalidOperand{Operation: PrefixBangOperation.String(), RightOperand: operand}
 	}
 
 	return !boolean, nil
