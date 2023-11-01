@@ -92,9 +92,13 @@ let a = 1;
 Few functions are built-in to the language. These are needed for
 interacting with the outside world and for more complex operations.
 
-- `print` - Prints the given value to the console
+- `print` - Prints given values to the standard output
+- `println` - Prints given values to the standard output and adds a newline
+- `read` - Reads a value from the standard input and returns it as a string
+- `readln` - Reads a line from the standard input and returns it as a string
 - `len` - Returns the length of the given array
 - `str` - Converts the given value to a string
+- `int` - Converts the given value to an integer
 
 ```banek
 print("Hello, world!");
