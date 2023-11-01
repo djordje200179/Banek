@@ -9,15 +9,24 @@ import (
 )
 
 func BenchmarkEmulator(b *testing.B) {
-	file, _ := os.Open("test.bac")
+	file, err := os.Open("test.bac")
+	if err != nil {
+		b.Fatal(err)
+	}
 	defer file.Close()
 
 	var executable bytecode.Executable
-	_ = gob.NewDecoder(file).Decode(&executable)
+	err = gob.NewDecoder(file).Decode(&executable)
+	if err != nil {
+		b.Fatal(err)
+	}
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = vm.Execute(executable)
+		err := vm.Execute(executable)
+		if err != nil {
+			b.Error(err)
+		}
 	}
 }
