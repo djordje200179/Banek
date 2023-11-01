@@ -10,7 +10,7 @@ import (
 )
 
 func HandleUsageError() {
-	_, _ = fmt.Fprintln(os.Stderr, "Usage: vm <file>")
+	_, _ = fmt.Fprintln(os.Stderr, "Usage: emulator <file>")
 	os.Exit(1)
 }
 
