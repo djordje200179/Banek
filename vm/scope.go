@@ -14,6 +14,8 @@ type scope struct {
 
 	variables []objects.Object
 
+	function *bytecode.Function
+
 	parent *scope
 }
 
@@ -63,6 +65,24 @@ func (vm *vm) setLocal(index int, value objects.Object) error {
 	}
 
 	vm.currentScope.variables[index] = value
+
+	return nil
+}
+
+func (vm *vm) getCaptured(index int) (objects.Object, error) {
+	if index >= len(vm.currentScope.function.Captures) {
+		return nil, ErrVariableOutOfScope{index}
+	}
+
+	return *vm.currentScope.function.Captures[index], nil
+}
+
+func (vm *vm) setCaptured(index int, value objects.Object) error {
+	if index >= len(vm.currentScope.function.Captures) {
+		return ErrVariableOutOfScope{index}
+	}
+
+	*vm.currentScope.function.Captures[index] = value
 
 	return nil
 }

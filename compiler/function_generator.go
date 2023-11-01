@@ -40,7 +40,7 @@ func (generator *functionGenerator) addVariable(name string) (int, error) {
 	return len(generator.locals) - 1, nil
 }
 
-func (generator *functionGenerator) addCapturedVariable(index, level int) int {
+func (generator *functionGenerator) addCapturedVariable(level, index int) int {
 	captureInfo := bytecode.CaptureInfo{Index: index, Level: level}
 
 	if captureIndex := slices.Index(generator.captures, captureInfo); captureIndex != -1 {

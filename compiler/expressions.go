@@ -119,10 +119,11 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		}
 
 		compiler.containerStack = append(compiler.containerStack, functionGenerator)
-		err = compiler.compileStatement(expression.Body)
+		err = compiler.compileExpression(expression.Body)
 		if err != nil {
 			return err
 		}
+		functionGenerator.emitInstruction(instruction.Return)
 		compiler.containerStack = compiler.containerStack[:len(compiler.containerStack)-1]
 
 		functionTemplate := functionGenerator.makeFunction()
@@ -167,15 +168,15 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return errors.ErrIdentifierNotDefined{Identifier: variableName}
 		}
 
-		if variableContainerIndex == len(compiler.containerStack)-1 && variableContainerIndex != 0 {
-			container.emitInstruction(instruction.PushLocal, variableIndex)
-			return nil
-		} else if variableContainerIndex == 0 {
+		if variableContainerIndex == 0 {
 			container.emitInstruction(instruction.PushGlobal, variableIndex)
+			return nil
+		} else if variableContainerIndex == len(compiler.containerStack)-1 {
+			container.emitInstruction(instruction.PushLocal, variableIndex)
 			return nil
 		}
 
-		capturedVariableLevel := len(compiler.containerStack) - 1 - variableContainerIndex
+		capturedVariableLevel := len(compiler.containerStack) - 2 - variableContainerIndex
 
 		capturedVariableIndex := container.(*functionGenerator).addCapturedVariable(capturedVariableLevel, variableIndex)
 		container.emitInstruction(instruction.PushCaptured, capturedVariableIndex)

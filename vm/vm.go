@@ -59,6 +59,11 @@ func (vm *vm) run() error {
 				if err != nil {
 					return err
 				}
+			case instruction.PopCaptured:
+				err := vm.opPopCaptured()
+				if err != nil {
+					return err
+				}
 			case instruction.Pop:
 				err := vm.opPop()
 				if err != nil {
@@ -76,6 +81,11 @@ func (vm *vm) run() error {
 				}
 			case instruction.PushBuiltin:
 				err := vm.opPushBuiltin()
+				if err != nil {
+					return err
+				}
+			case instruction.PushCaptured:
+				err := vm.opPushCaptured()
 				if err != nil {
 					return err
 				}

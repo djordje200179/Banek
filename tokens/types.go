@@ -28,6 +28,8 @@ const (
 	Caret
 	Bang
 
+	Arrow
+
 	Equals
 	NotEquals
 	LessThan
@@ -86,6 +88,8 @@ var tokenTypeRepresentations = []string{
 	Modulo:   "%",
 	Caret:    "^",
 	Bang:     "!",
+
+	Arrow: "->",
 
 	Equals:              "==",
 	NotEquals:           "!=",

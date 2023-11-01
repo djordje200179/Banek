@@ -8,7 +8,7 @@ import (
 
 type FunctionLiteral struct {
 	Parameters []Identifier
-	Body       ast.Statement
+	Body       ast.Expression
 }
 
 func (literal FunctionLiteral) String() string {

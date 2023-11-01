@@ -59,9 +59,7 @@ is not known until runtime. The following types are supported:
 let num = 1;
 let s = "Hello, world!";
 let arr = [1, 2, 3];
-let fun = fn() {
-    return 1;
-};
+let fun = fn() -> 1;
 ```
 
 #### Mutability
@@ -116,9 +114,7 @@ function foo() {
     return 1;
 }
 
-let bar = fn() {
-    return 2;
-};
+const doubler = fn(num) -> num * 2;
 ```
 
 #### Closure
@@ -126,15 +122,12 @@ let bar = fn() {
 Functions can access and capture variables from the outer scope. 
 
 ```banek
-function foo() {
-    let a = 1;
-    return fn() {
-        return a;
-    };
+function adder(increment) {
+    return fn(num) -> num + increment;
 }
 
-let bar = foo();
-print(bar()); // Prints 1
+const addOne = adder(1);
+print(addOne(1)); // Prints 2
 ```
 
 

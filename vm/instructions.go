@@ -60,6 +60,19 @@ func (vm *vm) opPushBuiltin() error {
 	return vm.push(builtin)
 }
 
+func (vm *vm) opPushCaptured() error {
+	opInfo := instruction.PushCaptured.Info()
+
+	capturedIndex := vm.readOperand(opInfo.Operands[0].Width)
+
+	captured, err := vm.getCaptured(capturedIndex)
+	if err != nil {
+		return err
+	}
+
+	return vm.push(captured)
+}
+
 func (vm *vm) opPop() error {
 	_, err := vm.pop()
 	return err
@@ -99,6 +112,19 @@ func (vm *vm) opPopGlobal() error {
 	}
 
 	return nil
+}
+
+func (vm *vm) opPopCaptured() error {
+	opInfo := instruction.PopCaptured.Info()
+
+	capturedIndex := vm.readOperand(opInfo.Operands[0].Width)
+
+	captured, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	return vm.setCaptured(capturedIndex, captured)
 }
 
 func (vm *vm) opInfixOperation() error {
@@ -284,6 +310,7 @@ func (vm *vm) opCall() error {
 		functionScope.pc = 0
 		functionScope.variables = arguments
 		functionScope.parent = vm.currentScope
+		functionScope.function = function
 
 		vm.currentScope = functionScope
 

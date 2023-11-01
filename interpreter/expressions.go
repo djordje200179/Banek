@@ -44,7 +44,7 @@ func (interpreter *interpreter) evalExpression(env environments.Environment, exp
 	case expressions.FunctionLiteral:
 		return &environments.Function{
 			Parameters: expression.Parameters,
-			Body:       expression.Body,
+			Body:       statements.Return{Value: expression.Body},
 			Env:        env,
 		}, nil
 	case expressions.FunctionCall:

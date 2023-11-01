@@ -7,8 +7,9 @@ var CharTokens = map[string]TokenType{
 	"/": Slash,
 	"%": Modulo,
 	"^": Caret,
-
 	"!": Bang,
+
+	"->": Arrow,
 
 	",": Comma,
 	";": SemiColon,
