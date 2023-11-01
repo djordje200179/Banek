@@ -6,29 +6,51 @@ import (
 	"banek/tokens"
 )
 
-type prefixOperation func(operand objects.Object) (objects.Object, error)
+type PrefixOperationType byte
 
-var prefixOperations = map[tokens.TokenType]prefixOperation{
-	tokens.Minus: evalPrefixMinusOperation,
-	tokens.Bang:  evalPrefixMinusOperation,
+const (
+	PrefixMinusOperation PrefixOperationType = iota
+	PrefixBangOperation
+)
+
+func (operation PrefixOperationType) String() string {
+	return prefixOperationNames[operation]
 }
 
-func EvalPrefixOperation(operand objects.Object, operator tokens.TokenType) (objects.Object, error) {
-	operation := prefixOperations[operator]
-	if operation == nil {
-		return nil, errors.ErrUnknownOperator{Operator: operator}
+type prefixOperationFunction func(operand objects.Object) (objects.Object, error)
+
+var prefixOperationNames = []string{
+	PrefixMinusOperation: "-",
+	PrefixBangOperation:  "!",
+}
+
+var prefixOperations = []prefixOperationFunction{
+	PrefixMinusOperation: evalPrefixMinusOperation,
+	PrefixBangOperation:  evalPrefixBangOperation,
+}
+
+func EvalPrefixOperation(operand objects.Object, operation PrefixOperationType) (objects.Object, error) {
+	if operation >= PrefixOperationType(len(prefixOperationNames)) {
+		return nil, errors.ErrUnknownOperator{Operator: operation.String()}
 	}
 
-	return operation(operand)
+	return prefixOperations[operation](operand)
 }
 
 func evalPrefixMinusOperation(operand objects.Object) (objects.Object, error) {
-	switch operand := operand.(type) {
-	case objects.Integer:
-		return -operand, nil
-	case objects.Boolean:
-		return !operand, nil
-	default:
+	integer, ok := operand.(objects.Integer)
+	if !ok {
 		return nil, errors.ErrInvalidOperand{Operation: tokens.Minus.String(), RightOperand: operand}
 	}
+
+	return -integer, nil
+}
+
+func evalPrefixBangOperation(operand objects.Object) (objects.Object, error) {
+	boolean, ok := operand.(objects.Boolean)
+	if !ok {
+		return nil, errors.ErrInvalidOperand{Operation: tokens.Bang.String(), RightOperand: operand}
+	}
+
+	return !boolean, nil
 }

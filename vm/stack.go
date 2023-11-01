@@ -34,14 +34,25 @@ func (vm *vm) pop() (objects.Object, error) {
 }
 
 func (vm *vm) popMany(count int) ([]objects.Object, error) {
+	if count == 0 {
+		return nil, nil
+	} else if count == 1 {
+		object, err := vm.pop()
+		if err != nil {
+			return nil, err
+		}
+
+		return []objects.Object{object}, nil
+	}
+
 	if vm.opSP < count {
 		return nil, ErrStackOverflow{}
 	}
 
-	nextStackPointer := vm.opSP - count
+	nextSP := vm.opSP - count
 
-	elements := vm.opStack[nextStackPointer:vm.opSP]
-	vm.opSP = nextStackPointer
+	elements := vm.opStack[nextSP:vm.opSP]
+	vm.opSP = nextSP
 
 	return slices.Clone(elements), nil
 }

@@ -1,11 +1,10 @@
-package interpreter
+package compiler
 
 import (
 	"banek/ast/expressions"
+	"banek/bytecode/instruction"
 	"banek/exec/errors"
-	"banek/exec/objects"
 	"banek/exec/operations"
-	"banek/interpreter/environments"
 	"banek/tokens"
 )
 
@@ -28,35 +27,43 @@ var prefixOperations = map[tokens.TokenType]operations.PrefixOperationType{
 	tokens.Bang:  operations.PrefixBangOperation,
 }
 
-func (interpreter *interpreter) evalInfixOperation(env environments.Environment, expression expressions.InfixOperation) (objects.Object, error) {
-	right, err := interpreter.evalExpression(env, expression.Right)
+func (compiler *compiler) compileInfixOperation(expression expressions.InfixOperation) error {
+	err := compiler.compileExpression(expression.Left)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	left, err := interpreter.evalExpression(env, expression.Left)
+	err = compiler.compileExpression(expression.Right)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	operation, ok := infixOperations[expression.Operator.Type]
+	operator := expression.Operator.Type
+	operation, ok := infixOperations[operator]
 	if !ok {
-		return nil, errors.ErrUnknownOperator{Operator: expression.Operator.Type.String()}
+		return errors.ErrUnknownOperator{Operator: operator.String()}
 	}
 
-	return operations.EvalInfixOperation(left, right, operation)
+	container := compiler.topContainer()
+	container.emitInstruction(instruction.OperationInfix, int(operation))
+
+	return nil
 }
 
-func (interpreter *interpreter) evalPrefixOperation(env environments.Environment, expression expressions.PrefixOperation) (objects.Object, error) {
-	operand, err := interpreter.evalExpression(env, expression.Operand)
+func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOperation) error {
+	err := compiler.compileExpression(expression.Operand)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	operation, ok := prefixOperations[expression.Operator.Type]
+	operator := expression.Operator.Type
+	operation, ok := prefixOperations[operator]
 	if !ok {
-		return nil, errors.ErrUnknownOperator{Operator: expression.Operator.Type.String()}
+		return errors.ErrUnknownOperator{Operator: operator.String()}
 	}
 
-	return operations.EvalPrefixOperation(operand, operation)
+	container := compiler.topContainer()
+	container.emitInstruction(instruction.OperationPrefix, int(operation))
+
+	return nil
 }

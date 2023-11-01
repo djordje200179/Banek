@@ -16,16 +16,8 @@ const (
 	PopGlobal
 	PopCaptured
 
-	Negate
-	Add
-	Subtract
-	Multiply
-	Divide
-
-	Equals
-	NotEquals
-	LessThan
-	LessThanOrEquals
+	OperationInfix
+	OperationPrefix
 
 	Branch
 	BranchIfFalse
@@ -88,16 +80,8 @@ var operationInfos = []OperationInfo{
 	PopGlobal:   {"POP.G", []OperandInfo{{1, Literal}}},
 	PopCaptured: {"POP.O", []OperandInfo{{1, Literal}}},
 
-	Negate:   {"NEG", []OperandInfo{}},
-	Add:      {"ADD", []OperandInfo{}},
-	Subtract: {"SUB", []OperandInfo{}},
-	Multiply: {"MUL", []OperandInfo{}},
-	Divide:   {"DIV", []OperandInfo{}},
-
-	Equals:           {"EQ", []OperandInfo{}},
-	NotEquals:        {"NEQ", []OperandInfo{}},
-	LessThan:         {"LT", []OperandInfo{}},
-	LessThanOrEquals: {"LTE", []OperandInfo{}},
+	OperationInfix:  {"OP.I", []OperandInfo{{1, Literal}}},
+	OperationPrefix: {"OP.P", []OperandInfo{{1, Literal}}},
 
 	Branch:        {"BR", []OperandInfo{{2, Literal}}},
 	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},

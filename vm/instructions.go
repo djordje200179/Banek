@@ -6,7 +6,6 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
-	"banek/tokens"
 )
 
 func (vm *vm) opPushConst() error {
@@ -102,16 +101,17 @@ func (vm *vm) opPopGlobal() error {
 	return nil
 }
 
-func (vm *vm) opInfixOperation(operation tokens.TokenType) error {
-	right, err := vm.pop()
+func (vm *vm) opInfixOperation() error {
+	opInfo := instruction.OperationInfix.Info()
+
+	operation := operations.InfixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+
+	operands, err := vm.popMany(2)
 	if err != nil {
 		return err
 	}
 
-	left, err := vm.pop()
-	if err != nil {
-		return err
-	}
+	left, right := operands[0], operands[1]
 
 	result, err := operations.EvalInfixOperation(left, right, operation)
 	if err != nil {
@@ -121,7 +121,11 @@ func (vm *vm) opInfixOperation(operation tokens.TokenType) error {
 	return vm.push(result)
 }
 
-func (vm *vm) opPrefixOperation(operation tokens.TokenType) error {
+func (vm *vm) opPrefixOperation() error {
+	opInfo := instruction.OperationPrefix.Info()
+
+	operation := operations.PrefixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+
 	operand, err := vm.pop()
 	if err != nil {
 		return err
@@ -252,7 +256,7 @@ func (vm *vm) opCall() error {
 	case *bytecode.Function:
 		functionTemplate := vm.program.FunctionsPool[function.TemplateIndex]
 
-		arguments, err := vm.popMany(int(argumentsCount))
+		arguments, err := vm.popMany(argumentsCount)
 		if err != nil {
 			return err
 		}
@@ -268,11 +272,13 @@ func (vm *vm) opCall() error {
 			}
 		}
 
-		vm.currentScope = &scope{
-			code:      functionTemplate.Code,
-			variables: arguments,
-			parent:    vm.currentScope,
-		}
+		functionScope := scopePool.Get().(*scope)
+		functionScope.code = functionTemplate.Code
+		functionScope.pc = 0
+		functionScope.variables = arguments
+		functionScope.parent = vm.currentScope
+
+		vm.currentScope = functionScope
 
 		return nil
 	case objects.BuiltinFunction:
@@ -293,7 +299,11 @@ func (vm *vm) opCall() error {
 }
 
 func (vm *vm) opReturn() error {
+	removedScope := vm.currentScope
+
 	vm.currentScope = vm.currentScope.parent
+
+	scopePool.Put(removedScope)
 
 	return nil
 }

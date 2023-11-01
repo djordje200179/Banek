@@ -7,7 +7,6 @@ import (
 	"banek/bytecode/instruction"
 	"banek/exec/errors"
 	"banek/exec/objects"
-	"banek/tokens"
 )
 
 func (compiler *compiler) compileExpression(expression ast.Expression) error {
@@ -27,13 +26,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		container.emitInstruction(instruction.PushConst, compiler.addConstant(str))
 		return nil
 	case expressions.InfixOperation:
-		reverseOperands := false
-		switch expression.Operator.Type {
-		case tokens.GreaterThan, tokens.GreaterThanOrEquals:
-			reverseOperands = true
-		}
-
-		return compiler.compileInfixOperation(expression, reverseOperands)
+		return compiler.compileInfixOperation(expression)
 	case expressions.PrefixOperation:
 		return compiler.compilePrefixOperation(expression)
 	case expressions.If:
@@ -159,76 +152,6 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 		return nil
 	default:
 		return errors.ErrUnknownExpression{Expression: expression}
-	}
-
-	return nil
-}
-
-func (compiler *compiler) compileInfixOperation(expression expressions.InfixOperation, reverseOperands bool) error {
-	var firstOperand, secondOperand ast.Expression
-	if reverseOperands {
-		firstOperand = expression.Right
-		secondOperand = expression.Left
-	} else {
-		firstOperand = expression.Left
-		secondOperand = expression.Right
-	}
-
-	err := compiler.compileExpression(firstOperand)
-	if err != nil {
-		return err
-	}
-
-	err = compiler.compileExpression(secondOperand)
-	if err != nil {
-		return err
-	}
-
-	operator := expression.Operator.Type
-
-	container := compiler.topContainer()
-
-	switch operator {
-	case tokens.Plus:
-		container.emitInstruction(instruction.Add)
-	case tokens.Minus:
-		container.emitInstruction(instruction.Subtract)
-	case tokens.Asterisk:
-		container.emitInstruction(instruction.Multiply)
-	case tokens.Slash:
-		container.emitInstruction(instruction.Divide)
-	case tokens.Equals:
-		container.emitInstruction(instruction.Equals)
-	case tokens.NotEquals:
-		container.emitInstruction(instruction.NotEquals)
-	case tokens.LessThan, tokens.GreaterThan:
-		container.emitInstruction(instruction.LessThan)
-	case tokens.LessThanOrEquals, tokens.GreaterThanOrEquals:
-		container.emitInstruction(instruction.LessThanOrEquals)
-	default:
-		return errors.ErrUnknownOperator{Operator: operator}
-	}
-
-	return nil
-}
-
-func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOperation) error {
-	err := compiler.compileExpression(expression.Operand)
-	if err != nil {
-		return err
-	}
-
-	operator := expression.Operator.Type
-
-	container := compiler.topContainer()
-
-	switch operator {
-	case tokens.Minus:
-		container.emitInstruction(instruction.Negate)
-	case tokens.Bang:
-		container.emitInstruction(instruction.Negate)
-	default:
-		return errors.ErrUnknownOperator{Operator: operator}
 	}
 
 	return nil

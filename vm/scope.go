@@ -5,6 +5,7 @@ import (
 	"banek/bytecode/instruction"
 	"banek/exec/objects"
 	"strconv"
+	"sync"
 )
 
 type scope struct {
@@ -14,6 +15,12 @@ type scope struct {
 	variables []objects.Object
 
 	parent *scope
+}
+
+var scopePool = sync.Pool{
+	New: func() interface{} {
+		return &scope{}
+	},
 }
 
 type ErrVariableOutOfScope struct {
