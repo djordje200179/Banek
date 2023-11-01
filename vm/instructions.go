@@ -6,7 +6,6 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
-	"banek/tokens"
 )
 
 func (vm *vm) opPushConst() error {
@@ -102,7 +101,11 @@ func (vm *vm) opPopGlobal() error {
 	return nil
 }
 
-func (vm *vm) opInfixOperation(operation tokens.TokenType) error {
+func (vm *vm) opInfixOperation() error {
+	opInfo := instruction.OperationInfix.Info()
+
+	operation := operations.InfixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+
 	right, err := vm.pop()
 	if err != nil {
 		return err
@@ -121,7 +124,11 @@ func (vm *vm) opInfixOperation(operation tokens.TokenType) error {
 	return vm.push(result)
 }
 
-func (vm *vm) opPrefixOperation(operation tokens.TokenType) error {
+func (vm *vm) opPrefixOperation() error {
+	opInfo := instruction.OperationPrefix.Info()
+
+	operation := operations.PrefixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+
 	operand, err := vm.pop()
 	if err != nil {
 		return err
@@ -170,12 +177,14 @@ func (vm *vm) opNewArray() error {
 
 	size := vm.readOperand(opInfo.Operands[0].Width)
 
-	array, err := vm.popMany(size)
+	arr := make(objects.Array, size)
+
+	err := vm.popMany(arr)
 	if err != nil {
 		return err
 	}
 
-	return vm.push(objects.Array(array))
+	return vm.push(arr)
 }
 
 func (vm *vm) opCollectionAccess() error {
@@ -241,46 +250,45 @@ func (vm *vm) opNewFunction() error {
 func (vm *vm) opCall() error {
 	opInfo := instruction.Call.Info()
 
+	argumentsCount := vm.readOperand(opInfo.Operands[0].Width)
+
 	functionObject, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	argumentsCount := vm.readOperand(opInfo.Operands[0].Width)
+	arguments := make([]objects.Object, argumentsCount)
+	err = vm.popMany(arguments)
+	if err != nil {
+		return err
+	}
 
 	switch function := functionObject.(type) {
 	case *bytecode.Function:
 		functionTemplate := vm.program.FunctionsPool[function.TemplateIndex]
 
-		arguments, err := vm.popMany(int(argumentsCount))
-		if err != nil {
-			return err
-		}
+		if len(arguments) < len(functionTemplate.Parameters) {
+			oldArguments := arguments
+			arguments = make([]objects.Object, len(functionTemplate.Parameters))
 
-		if len(arguments) > len(functionTemplate.Parameters) {
-			arguments = arguments[:len(functionTemplate.Parameters)]
-		} else if len(arguments) < len(functionTemplate.Parameters) {
-			newArguments := make([]objects.Object, len(functionTemplate.Parameters))
-
-			copy(newArguments, arguments)
-			for i := len(arguments); i < len(functionTemplate.Parameters); i++ {
-				newArguments[i] = objects.Undefined
+			copy(arguments, oldArguments)
+			for i := len(oldArguments); i < len(functionTemplate.Parameters); i++ {
+				arguments[i] = objects.Undefined
 			}
+		} else if len(arguments) > len(functionTemplate.Parameters) {
+			arguments = arguments[:len(functionTemplate.Parameters)]
 		}
 
-		vm.currentScope = &scope{
-			code:      functionTemplate.Code,
-			variables: arguments,
-			parent:    vm.currentScope,
-		}
+		functionScope := scopePool.Get().(*scope)
+		functionScope.code = functionTemplate.Code
+		functionScope.pc = 0
+		functionScope.variables = arguments
+		functionScope.parent = vm.currentScope
+
+		vm.currentScope = functionScope
 
 		return nil
 	case objects.BuiltinFunction:
-		arguments, err := vm.popMany(argumentsCount)
-		if err != nil {
-			return err
-		}
-
 		result, err := function.Function(arguments...)
 		if err != nil {
 			return err
@@ -293,7 +301,11 @@ func (vm *vm) opCall() error {
 }
 
 func (vm *vm) opReturn() error {
+	removedScope := vm.currentScope
+
 	vm.currentScope = vm.currentScope.parent
+
+	scopePool.Put(removedScope)
 
 	return nil
 }

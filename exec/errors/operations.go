@@ -2,16 +2,15 @@ package errors
 
 import (
 	"banek/exec/objects"
-	"banek/tokens"
 	"strings"
 )
 
 type ErrUnknownOperator struct {
-	Operator tokens.TokenType
+	Operator string
 }
 
 func (err ErrUnknownOperator) Error() string {
-	return "unknown operator: " + err.Operator.String()
+	return "unknown operator: " + err.Operator
 }
 
 type ErrInvalidOperand struct {

@@ -4,7 +4,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instruction"
 	"banek/exec/objects"
-	"banek/tokens"
 )
 
 const stackSize = 16 * 1024
@@ -38,19 +37,6 @@ type ErrUnknownOperation struct {
 
 func (err ErrUnknownOperation) Error() string {
 	return "unknown operation: " + err.Operation.String()
-}
-
-var infixOperations = map[instruction.Operation]tokens.TokenType{
-	instruction.Negate:   tokens.Minus,
-	instruction.Add:      tokens.Plus,
-	instruction.Subtract: tokens.Minus,
-	instruction.Multiply: tokens.Asterisk,
-	instruction.Divide:   tokens.Slash,
-
-	instruction.Equals:           tokens.Equals,
-	instruction.NotEquals:        tokens.NotEquals,
-	instruction.LessThan:         tokens.LessThan,
-	instruction.LessThanOrEquals: tokens.LessThanOrEquals,
 }
 
 func (vm *vm) run() error {
@@ -93,15 +79,13 @@ func (vm *vm) run() error {
 				if err != nil {
 					return err
 				}
-			case instruction.Add, instruction.Subtract, instruction.Multiply, instruction.Divide,
-				instruction.Equals, instruction.NotEquals,
-				instruction.LessThan, instruction.LessThanOrEquals:
-				err := vm.opInfixOperation(infixOperations[operation])
+			case instruction.OperationInfix:
+				err := vm.opInfixOperation()
 				if err != nil {
 					return err
 				}
-			case instruction.Negate:
-				err := vm.opPrefixOperation(infixOperations[operation])
+			case instruction.OperationPrefix:
+				err := vm.opPrefixOperation()
 				if err != nil {
 					return err
 				}

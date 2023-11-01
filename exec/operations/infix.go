@@ -7,28 +7,62 @@ import (
 	"strings"
 )
 
-type infixOperation func(left, right objects.Object) (objects.Object, error)
+type InfixOperationType byte
 
-var infixOperations = map[tokens.TokenType]infixOperation{
-	tokens.Plus:                evalInfixPlusOperation,
-	tokens.Minus:               evalInfixMinusOperation,
-	tokens.Asterisk:            evalInfixAsteriskOperation,
-	tokens.Slash:               evalInfixSlashOperation,
-	tokens.Equals:              evalInfixEqualsOperation,
-	tokens.NotEquals:           evalInfixNotEqualsOperation,
-	tokens.LessThan:            evalInfixLessThanOperation,
-	tokens.GreaterThan:         evalInfixGreaterThanOperation,
-	tokens.LessThanOrEquals:    evalInfixLessThanOrEqualsOperation,
-	tokens.GreaterThanOrEquals: evalInfixGreaterThanOrEqualsOperation,
+const (
+	InfixPlusOperation InfixOperationType = iota
+	InfixMinusOperation
+	InfixAsteriskOperation
+	InfixSlashOperation
+
+	InfixEqualsOperation
+	InfixNotEqualsOperation
+	InfixLessThanOperation
+	InfixGreaterThanOperation
+	InfixLessThanOrEqualsOperation
+	InfixGreaterThanOrEqualsOperation
+)
+
+func (operation InfixOperationType) String() string {
+	return infixOperationNames[operation]
 }
 
-func EvalInfixOperation(left, right objects.Object, operator tokens.TokenType) (objects.Object, error) {
-	operation := infixOperations[operator]
-	if operation == nil {
-		return nil, errors.ErrUnknownOperator{Operator: operator}
+type infixOperationFunction func(left, right objects.Object) (objects.Object, error)
+
+var infixOperationNames = []string{
+	InfixPlusOperation:     "+",
+	InfixMinusOperation:    "-",
+	InfixAsteriskOperation: "*",
+	InfixSlashOperation:    "/",
+
+	InfixEqualsOperation:              "==",
+	InfixNotEqualsOperation:           "!=",
+	InfixLessThanOperation:            "<",
+	InfixGreaterThanOperation:         ">",
+	InfixLessThanOrEqualsOperation:    "<=",
+	InfixGreaterThanOrEqualsOperation: ">=",
+}
+
+var infixOperations = []infixOperationFunction{
+	InfixPlusOperation:     evalInfixPlusOperation,
+	InfixMinusOperation:    evalInfixMinusOperation,
+	InfixAsteriskOperation: evalInfixAsteriskOperation,
+	InfixSlashOperation:    evalInfixSlashOperation,
+
+	InfixEqualsOperation:              evalInfixEqualsOperation,
+	InfixNotEqualsOperation:           evalInfixNotEqualsOperation,
+	InfixLessThanOperation:            evalInfixLessThanOperation,
+	InfixGreaterThanOperation:         evalInfixGreaterThanOperation,
+	InfixLessThanOrEqualsOperation:    evalInfixLessThanOrEqualsOperation,
+	InfixGreaterThanOrEqualsOperation: evalInfixGreaterThanOrEqualsOperation,
+}
+
+func EvalInfixOperation(left, right objects.Object, operation InfixOperationType) (objects.Object, error) {
+	if operation >= InfixOperationType(len(infixOperations)) {
+		return nil, errors.ErrUnknownOperator{Operator: operation.String()}
 	}
 
-	return operation(left, right)
+	return infixOperations[operation](left, right)
 }
 
 func evalInfixPlusOperation(left, right objects.Object) (objects.Object, error) {
