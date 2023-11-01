@@ -156,8 +156,14 @@ func evalInfixCaretOperation(left, right objects.Object) (objects.Object, error)
 	}
 
 	result := objects.Integer(1)
-	for i := objects.Integer(0); i < rightInteger; i++ {
-		result *= leftInteger
+	if rightInteger < 0 {
+		for i := objects.Integer(0); i > rightInteger; i-- {
+			result /= leftInteger
+		}
+	} else {
+		for i := objects.Integer(0); i < rightInteger; i++ {
+			result *= leftInteger
+		}
 	}
 
 	return result, nil
