@@ -10,6 +10,14 @@ func (err ErrStackOverflow) Error() string {
 	return "stack overflow"
 }
 
+func (vm *vm) peek() (objects.Object, error) {
+	if vm.opSP <= 0 {
+		return nil, ErrStackOverflow{}
+	}
+
+	return vm.opStack[vm.opSP-1], nil
+}
+
 func (vm *vm) push(object objects.Object) error {
 	if vm.opSP >= stackSize {
 		return ErrStackOverflow{}

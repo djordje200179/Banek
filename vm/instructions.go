@@ -8,6 +8,15 @@ import (
 	"banek/exec/operations"
 )
 
+func (vm *vm) opPushDuplicate() error {
+	value, err := vm.peek()
+	if err != nil {
+		return err
+	}
+
+	return vm.push(value)
+}
+
 func (vm *vm) opPushConst() error {
 	opInfo := instruction.PushConst.Info()
 
@@ -73,6 +82,38 @@ func (vm *vm) opPushCaptured() error {
 	return vm.push(captured)
 }
 
+func (vm *vm) opPushCollectionElement() error {
+	key, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	collection, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	switch collection := collection.(type) {
+	case objects.Array:
+		index, ok := key.(objects.Integer)
+		if !ok {
+			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
+		}
+
+		if index < 0 {
+			index += objects.Integer(len(collection))
+		}
+
+		if index < 0 || index >= objects.Integer(len(collection)) {
+			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
+		}
+
+		return vm.push(collection[index])
+	default:
+		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
+	}
+}
+
 func (vm *vm) opPop() error {
 	_, err := vm.pop()
 	return err
@@ -125,6 +166,45 @@ func (vm *vm) opPopCaptured() error {
 	}
 
 	return vm.setCaptured(capturedIndex, captured)
+}
+
+func (vm *vm) opPopCollectionElement() error {
+	key, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	collection, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	value, err := vm.pop()
+	if err != nil {
+		return err
+	}
+
+	switch collection := collection.(type) {
+	case objects.Array:
+		index, ok := key.(objects.Integer)
+		if !ok {
+			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
+		}
+
+		if index < 0 {
+			index += objects.Integer(len(collection))
+		}
+
+		if index < 0 || index >= objects.Integer(len(collection)) {
+			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
+		}
+
+		collection[index] = value
+
+		return nil
+	default:
+		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
+	}
 }
 
 func (vm *vm) opInfixOperation() error {

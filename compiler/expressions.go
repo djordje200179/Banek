@@ -84,11 +84,71 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.CollectionAccess)
+		container.emitInstruction(instruction.PushCollectionElement)
 
 		return nil
 	case expressions.Assignment:
-		// TODO: Implement
+		err := compiler.compileExpression(expression.Value)
+		if err != nil {
+			return err
+		}
+
+		container.emitInstruction(instruction.PushDuplicate)
+
+		switch variable := expression.Variable.(type) {
+		case expressions.Identifier:
+			variableName := variable.String()
+
+			var variableContainer codeContainer
+			var variableIndex, variableContainerIndex int
+			for i := len(compiler.containerStack) - 1; i >= 0; i-- {
+				index := compiler.containerStack[i].getVariable(variableName)
+				if index == -1 {
+					continue
+				}
+
+				variableContainer = compiler.containerStack[i]
+				variableContainerIndex = i
+				variableIndex = index
+
+				break
+			}
+
+			if variableContainer == nil {
+				return errors.ErrIdentifierNotDefined{Identifier: variableName}
+			}
+
+			if variableContainerIndex == 0 {
+				container.emitInstruction(instruction.PopGlobal, variableIndex)
+				return nil
+			} else if variableContainerIndex == len(compiler.containerStack)-1 {
+				container.emitInstruction(instruction.PopLocal, variableIndex)
+				return nil
+			}
+
+			capturedVariableLevel := len(compiler.containerStack) - 2 - variableContainerIndex
+
+			capturedVariableIndex := container.(*functionGenerator).addCapturedVariable(capturedVariableLevel, variableIndex)
+			container.emitInstruction(instruction.PopCaptured, capturedVariableIndex)
+
+			return nil
+		case expressions.CollectionAccess:
+			err := compiler.compileExpression(variable.Collection)
+			if err != nil {
+				return err
+			}
+
+			err = compiler.compileExpression(variable.Key)
+			if err != nil {
+				return err
+			}
+
+			container.emitInstruction(instruction.PopCollectionElement)
+
+			return nil
+		default:
+			return errors.ErrInvalidOperand{Operation: "=", LeftOperand: objects.Unknown} // TODO: fix right operand
+		}
 	case expressions.FunctionCall:
 		for _, argument := range expression.Arguments {
 			err := compiler.compileExpression(argument)
@@ -185,6 +245,4 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	default:
 		return errors.ErrUnknownExpression{Expression: expression}
 	}
-
-	return nil
 }

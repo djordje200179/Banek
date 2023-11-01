@@ -5,16 +5,19 @@ type Operation byte
 const (
 	Invalid Operation = iota
 
+	PushDuplicate
 	PushConst
 	PushLocal
 	PushGlobal
 	PushCaptured
 	PushBuiltin
+	PushCollectionElement
 
 	Pop
 	PopLocal
 	PopGlobal
 	PopCaptured
+	PopCollectionElement
 
 	OperationInfix
 	OperationPrefix
@@ -27,7 +30,6 @@ const (
 
 	NewArray
 	NewFunction
-	CollectionAccess
 )
 
 func (operation Operation) String() string {
@@ -69,16 +71,19 @@ func (opInfo OperationInfo) OperandOffset(index int) int {
 var operationInfos = []OperationInfo{
 	Invalid: {"INVALID", []OperandInfo{}},
 
-	PushConst:    {"PUSH.C", []OperandInfo{{2, Constant}}},
-	PushLocal:    {"PUSH.L", []OperandInfo{{1, Literal}}},
-	PushGlobal:   {"PUSH.G", []OperandInfo{{1, Literal}}},
-	PushCaptured: {"PUSH.O", []OperandInfo{{1, Literal}}},
-	PushBuiltin:  {"PUSH.B", []OperandInfo{{1, Literal}}},
+	PushDuplicate:         {"PUSH.D", []OperandInfo{}},
+	PushConst:             {"PUSH.C", []OperandInfo{{2, Constant}}},
+	PushLocal:             {"PUSH.L", []OperandInfo{{1, Literal}}},
+	PushGlobal:            {"PUSH.G", []OperandInfo{{1, Literal}}},
+	PushCaptured:          {"PUSH.O", []OperandInfo{{1, Literal}}},
+	PushBuiltin:           {"PUSH.B", []OperandInfo{{1, Literal}}},
+	PushCollectionElement: {"PUSH.CE", []OperandInfo{}},
 
-	Pop:         {"POP", []OperandInfo{}},
-	PopLocal:    {"POP.L", []OperandInfo{{1, Literal}}},
-	PopGlobal:   {"POP.G", []OperandInfo{{1, Literal}}},
-	PopCaptured: {"POP.O", []OperandInfo{{1, Literal}}},
+	Pop:                  {"POP", []OperandInfo{}},
+	PopLocal:             {"POP.L", []OperandInfo{{1, Literal}}},
+	PopGlobal:            {"POP.G", []OperandInfo{{1, Literal}}},
+	PopCaptured:          {"POP.O", []OperandInfo{{1, Literal}}},
+	PopCollectionElement: {"POP.CE", []OperandInfo{}},
 
 	OperationInfix:  {"OP.I", []OperandInfo{{1, Literal}}},
 	OperationPrefix: {"OP.P", []OperandInfo{{1, Literal}}},
@@ -91,6 +96,4 @@ var operationInfos = []OperationInfo{
 
 	NewArray:    {"NEW.A", []OperandInfo{{2, Literal}}},
 	NewFunction: {"NEW.F", []OperandInfo{{2, Function}}},
-
-	CollectionAccess: {"CAC", []OperandInfo{}},
 }

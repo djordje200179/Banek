@@ -44,8 +44,8 @@ func (vm *vm) run() error {
 		for vm.hasCode() {
 			operation := vm.readOperation()
 			switch operation {
-			case instruction.PushConst:
-				err := vm.opPushConst()
+			case instruction.Pop:
+				err := vm.opPop()
 				if err != nil {
 					return err
 				}
@@ -64,8 +64,18 @@ func (vm *vm) run() error {
 				if err != nil {
 					return err
 				}
-			case instruction.Pop:
-				err := vm.opPop()
+			case instruction.PopCollectionElement:
+				err := vm.opPopCollectionElement()
+				if err != nil {
+					return err
+				}
+			case instruction.PushDuplicate:
+				err := vm.opPushDuplicate()
+				if err != nil {
+					return err
+				}
+			case instruction.PushConst:
+				err := vm.opPushConst()
 				if err != nil {
 					return err
 				}
@@ -86,6 +96,11 @@ func (vm *vm) run() error {
 				}
 			case instruction.PushCaptured:
 				err := vm.opPushCaptured()
+				if err != nil {
+					return err
+				}
+			case instruction.PushCollectionElement:
+				err := vm.opPushCollectionElement()
 				if err != nil {
 					return err
 				}
