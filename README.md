@@ -57,9 +57,9 @@ is not known until runtime. The following types are supported:
 
 ```banek
 let num = 1;
-let str = "Hello, world!";
+let s = "Hello, world!";
 let arr = [1, 2, 3];
-let fn = fn() {
+let fun = fn() {
     return 1;
 };
 ```
