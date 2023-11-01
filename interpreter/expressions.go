@@ -91,8 +91,8 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 		}
 
 		switch body := function.Body.(type) {
-		case statements.Expression:
-			return interpreter.evalExpression(functionEnv, body.Expression)
+		case statements.Return:
+			return interpreter.evalExpression(functionEnv, body.Value)
 		case statements.Block:
 			result, err := interpreter.evalBlockStatement(functionEnv, body)
 			if err != nil {
