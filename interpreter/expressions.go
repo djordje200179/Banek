@@ -6,6 +6,7 @@ import (
 	"banek/ast/statements"
 	"banek/exec/errors"
 	"banek/exec/objects"
+	"banek/exec/operations"
 	"banek/interpreter/environments"
 	"banek/interpreter/results"
 )
@@ -144,7 +145,7 @@ func (interpreter *interpreter) evalArrayLiteral(env environments.Environment, e
 }
 
 func (interpreter *interpreter) evalCollectionAccess(env environments.Environment, expression expressions.CollectionAccess) (objects.Object, error) {
-	collectionObject, err := interpreter.evalExpression(env, expression.Collection)
+	collection, err := interpreter.evalExpression(env, expression.Collection)
 	if err != nil {
 		return nil, err
 	}
@@ -154,12 +155,7 @@ func (interpreter *interpreter) evalCollectionAccess(env environments.Environmen
 		return nil, err
 	}
 
-	switch collection := collectionObject.(type) {
-	case objects.Array:
-		return interpreter.evalArrayAccess(collection, key)
-	default:
-		return nil, errors.ErrInvalidOperand{Operation: "index", LeftOperand: collection, RightOperand: key}
-	}
+	return operations.EvalCollectionGet(collection, key)
 }
 
 func (interpreter *interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {

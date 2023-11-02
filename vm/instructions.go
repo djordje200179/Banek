@@ -93,25 +93,12 @@ func (vm *vm) opPushCollectionElement() error {
 		return err
 	}
 
-	switch collection := collection.(type) {
-	case objects.Array:
-		index, ok := key.(objects.Integer)
-		if !ok {
-			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
-		}
-
-		if index < 0 {
-			index += objects.Integer(len(collection))
-		}
-
-		if index < 0 || index >= objects.Integer(len(collection)) {
-			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
-		}
-
-		return vm.push(collection[index])
-	default:
-		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
+	value, err := operations.EvalCollectionGet(collection, key)
+	if err != nil {
+		return err
 	}
+
+	return vm.push(value)
 }
 
 func (vm *vm) opPop() error {
@@ -184,27 +171,7 @@ func (vm *vm) opPopCollectionElement() error {
 		return err
 	}
 
-	switch collection := collection.(type) {
-	case objects.Array:
-		index, ok := key.(objects.Integer)
-		if !ok {
-			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
-		}
-
-		if index < 0 {
-			index += objects.Integer(len(collection))
-		}
-
-		if index < 0 || index >= objects.Integer(len(collection)) {
-			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
-		}
-
-		collection[index] = value
-
-		return nil
-	default:
-		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: key}
-	}
+	return operations.EvalCollectionSet(collection, key, value)
 }
 
 func (vm *vm) opInfixOperation() error {
