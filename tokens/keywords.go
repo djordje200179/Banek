@@ -4,8 +4,8 @@ var keywords = map[string]TokenType{
 	"function": Function,
 	"fn":       LambdaFunction,
 
-	"let":   Let,
-	"const": Const,
+	"let": Let,
+	"mut": Mut,
 
 	"return": Return,
 

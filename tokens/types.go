@@ -51,7 +51,7 @@ const (
 	LambdaFunction
 
 	Let
-	Const
+	Mut
 
 	Return
 
@@ -111,8 +111,8 @@ var tokenTypeRepresentations = []string{
 	Function:       "function",
 	LambdaFunction: "fn",
 
-	Let:   "let",
-	Const: "const",
+	Let: "let",
+	Mut: "mut",
 
 	Return: "return",
 

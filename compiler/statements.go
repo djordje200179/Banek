@@ -137,7 +137,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		index, err := scope.AddVar(statement.Name.String(), !statement.Const)
+		index, err := scope.AddVar(statement.Name.String(), statement.Mutable)
 		if err != nil {
 			return err
 		}

@@ -32,7 +32,7 @@ func (scope *Function) AddParams(params []string) error {
 
 	scope.vars = make([]Var, len(params))
 	for i, param := range params {
-		scope.vars[i] = Var{Name: param, Mutable: true}
+		scope.vars[i] = Var{Name: param}
 	}
 
 	return nil

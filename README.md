@@ -63,13 +63,16 @@ let fun = fn() -> 1;
 ```
 
 #### Mutability
-Variables are declared with either `let` or `const`. `let` is used for
-variables that can be reassigned, while `const` is used for variables that
-cannot be reassigned.
+Variables are by default immutable. This means that they cannot be
+reassigned after they are declared. To make a variable mutable, the
+keyword `mut` must be used before the variable name.
 
 ```banek
 let a = 1;
-const b = 2;
+let mut b = 2;
+
+a = 3; // Error
+b = 4; // OK
 ```
 
 #### Visibility
@@ -114,7 +117,7 @@ function foo() {
     return 1;
 }
 
-const doubler = fn(num) -> num * 2;
+let doubler = fn(num) -> num * 2;
 ```
 
 #### Closure
@@ -126,7 +129,7 @@ function adder(increment) {
     return fn(num) -> num + increment;
 }
 
-const addOne = adder(1);
+let addOne = adder(1);
 print(addOne(1)); // Prints 2
 ```
 

@@ -65,7 +65,7 @@ func (interpreter *interpreter) evalStatement(env environments.Environment, stat
 			return nil, err
 		}
 
-		err = env.Define(statement.Name.String(), value, !statement.Const)
+		err = env.Define(statement.Name.String(), value, statement.Mutable)
 		if err != nil {
 			return nil, err
 		}

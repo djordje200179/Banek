@@ -100,8 +100,7 @@ func (parser *parser) initSubParsers() {
 	}
 
 	parser.statementParsers = map[tokens.TokenType]statementParser{
-		tokens.Let:   parser.parseVariableDeclarationStatement,
-		tokens.Const: parser.parseVariableDeclarationStatement,
+		tokens.Let: parser.parseVariableDeclarationStatement,
 
 		tokens.Return:    parser.parseReturnStatement,
 		tokens.LeftBrace: parser.parseBlockStatement,

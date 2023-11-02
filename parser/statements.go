@@ -17,9 +17,13 @@ func (parser *parser) parseStatement() (ast.Statement, error) {
 }
 
 func (parser *parser) parseVariableDeclarationStatement() (ast.Statement, error) {
-	isConst := parser.currentToken.Type == tokens.Const
-
 	parser.fetchToken()
+
+	var isMutable bool
+	if parser.currentToken.Type == tokens.Mut {
+		isMutable = true
+		parser.fetchToken()
+	}
 
 	if err := parser.assertToken(tokens.Identifier); err != nil {
 		return nil, err
@@ -47,7 +51,7 @@ func (parser *parser) parseVariableDeclarationStatement() (ast.Statement, error)
 
 	parser.fetchToken()
 
-	return statements.VariableDeclaration{Const: isConst, Name: name.(expressions.Identifier), Value: value}, nil
+	return statements.VariableDeclaration{Mutable: isMutable, Name: name.(expressions.Identifier), Value: value}, nil
 }
 
 func (parser *parser) parseReturnStatement() (ast.Statement, error) {
