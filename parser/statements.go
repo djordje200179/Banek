@@ -8,6 +8,10 @@ import (
 )
 
 func (parser *parser) parseStatement() (ast.Statement, error) {
+	for parser.currentToken.Type == tokens.SemiColon {
+		parser.fetchToken()
+	}
+
 	statementParser := parser.statementParsers[parser.currentToken.Type]
 	if statementParser == nil {
 		statementParser = parser.parseExpressionStatement
