@@ -103,9 +103,13 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			var varScope scopes.Scope
 			var varIndex, varScopeIndex int
 			for i := len(compiler.scopes) - 1; i >= 0; i-- {
-				_, index := compiler.scopes[i].GetVar(varName)
+				variable, index := compiler.scopes[i].GetVar(varName)
 				if index == -1 {
 					continue
+				}
+
+				if !variable.Mutable {
+					return errors.ErrIdentifierNotMutable{Identifier: varName}
 				}
 
 				varScope = compiler.scopes[i]
