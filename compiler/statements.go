@@ -6,7 +6,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instruction"
 	"banek/compiler/scopes"
-	"banek/exec/errors"
 )
 
 func (compiler *compiler) compileStatement(statement ast.Statement) error {
@@ -42,7 +41,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 	case statements.While:
 		return compiler.compileWhileStatement(statement)
 	default:
-		return errors.ErrUnknownStatement{Statement: statement}
+		return ast.ErrUnknownStatement{Statement: statement}
 	}
 }
 

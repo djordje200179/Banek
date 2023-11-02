@@ -53,7 +53,7 @@ func (interpreter *interpreter) evalExpression(env environments.Environment, exp
 	case expressions.CollectionAccess:
 		return interpreter.evalCollectionAccess(env, expression)
 	default:
-		return nil, errors.ErrUnknownExpression{Expression: expression}
+		return nil, ast.ErrUnknownExpression{Expression: expression}
 	}
 }
 
@@ -107,7 +107,7 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 
 			return returnValue.Value, nil
 		default:
-			return nil, errors.ErrUnknownStatement{Statement: body}
+			return nil, ast.ErrUnknownStatement{Statement: body}
 		}
 	case objects.BuiltinFunction:
 		return function.Function(args...)

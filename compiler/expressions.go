@@ -80,7 +80,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	case expressions.Identifier:
 		return compiler.compileIdentifier(expression)
 	default:
-		return errors.ErrUnknownExpression{Expression: expression}
+		return ast.ErrUnknownExpression{Expression: expression}
 	}
 }
 

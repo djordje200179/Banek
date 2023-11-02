@@ -3,7 +3,6 @@ package interpreter
 import (
 	"banek/ast"
 	"banek/ast/statements"
-	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/interpreter/environments"
 	"banek/interpreter/results"
@@ -87,7 +86,7 @@ func (interpreter *interpreter) evalStatement(env environments.Environment, stat
 	case statements.Error:
 		return nil, results.Error{Err: statement.Err}
 	default:
-		return nil, errors.ErrUnknownStatement{Statement: statement}
+		return nil, ast.ErrUnknownStatement{Statement: statement}
 	}
 }
 
