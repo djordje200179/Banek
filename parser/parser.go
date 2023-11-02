@@ -16,7 +16,7 @@ type (
 type parser struct {
 	tokenChannel <-chan tokens.Token
 
-	currentToken, nextToken tokens.Token
+	currentToken tokens.Token
 
 	prefixParsers    map[tokens.TokenType]prefixParser
 	infixParsers     map[tokens.TokenType]infixParser
@@ -37,7 +37,6 @@ func parsingThread(tokenChannel <-chan tokens.Token, statementChannel chan<- ast
 	parser := &parser{tokenChannel: tokenChannel}
 	parser.initSubParsers()
 
-	parser.fetchToken()
 	parser.fetchToken()
 
 	for parser.currentToken.Type != tokens.EOF {

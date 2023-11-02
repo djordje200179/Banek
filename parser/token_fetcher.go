@@ -3,12 +3,13 @@ package parser
 import "banek/tokens"
 
 func (parser *parser) fetchToken() {
-	if parser.nextToken.Type == tokens.EOF {
+	nextToken, ok := <-parser.tokenChannel
+	if !ok {
 		parser.currentToken = tokens.Token{Type: tokens.EOF}
 		return
 	}
 
-	parser.currentToken, parser.nextToken = parser.nextToken, <-parser.tokenChannel
+	parser.currentToken = nextToken
 }
 
 func (parser *parser) assertToken(tokenType tokens.TokenType) error {
