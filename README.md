@@ -228,8 +228,8 @@ Like if statements, brackets are not needed around the condition and the
 body does not need to be a block if it consists of only one statement.
 
 ```banek
-let i = 0;
-while i < 10 then {
+let mut i = 0;
+while i < 10 do {
     print(i);
     i = i + 1;
 }

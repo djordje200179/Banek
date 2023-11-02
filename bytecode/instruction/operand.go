@@ -23,7 +23,7 @@ func MakeOperandValue(value int, width int) []byte {
 	case 1:
 		code[0] = byte(value)
 	case 2:
-		binary.LittleEndian.PutUint16(code, uint16(value))
+		binary.PutVarint(code, int64(value))
 	default:
 		return nil
 	}
@@ -36,7 +36,8 @@ func ReadOperandValue(code []byte, width int) int {
 	case 1:
 		return int(code[0])
 	case 2:
-		return int(binary.LittleEndian.Uint16(code))
+		value, _ := binary.Varint(code)
+		return int(value)
 	}
 
 	return 0
