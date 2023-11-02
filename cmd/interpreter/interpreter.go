@@ -1,6 +1,7 @@
 package main
 
 import (
+	"banek/exec/objects"
 	"banek/interpreter"
 	"banek/interpreter/results"
 	"banek/lexer"
@@ -18,6 +19,41 @@ func HandleUsageError() {
 func HandleError(err error) {
 	_, _ = fmt.Fprintln(os.Stderr, err)
 	os.Exit(2)
+}
+
+func REPL() {
+	tokenChannel := lexer.Tokenize(os.Stdin, 200)
+	statementChannel := parser.Parse(tokenChannel, 20)
+	resultsChannel := interpreter.Interpret(statementChannel, 1)
+
+	fmt.Println("Welcome to Banek REPL!")
+	fmt.Print(">>> ")
+
+	for result := range resultsChannel {
+		switch result := result.(type) {
+		case results.Error:
+			fmt.Println(result)
+		case objects.Object:
+			fmt.Println(result)
+		}
+
+		fmt.Print(">>> ")
+	}
+}
+
+func EvalFile(file *os.File) {
+	tokenChannel := lexer.Tokenize(file, 200)
+	statementChannel := parser.Parse(tokenChannel, 20)
+	resultsChannel := interpreter.Interpret(statementChannel, 5)
+
+	for result := range resultsChannel {
+		switch result := result.(type) {
+		case results.Error:
+			HandleError(result)
+		case objects.Object:
+			fmt.Println(result)
+		}
+	}
 }
 
 func main() {
@@ -40,19 +76,9 @@ func main() {
 		}
 
 		defer file.Close()
+
+		EvalFile(file)
 	} else {
-		file = os.Stdin
-	}
-
-	tokenChannel := lexer.Tokenize(file, 200)
-	statementChannel := parser.Parse(tokenChannel, 20)
-	resultsChannel := interpreter.Interpret(statementChannel, 5)
-
-	for result := range resultsChannel {
-		if err, ok := result.(results.Error); ok {
-			HandleError(err)
-		}
-
-		fmt.Println(result)
+		REPL()
 	}
 }
