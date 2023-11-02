@@ -5,11 +5,12 @@ import (
 	"banek/ast/statements"
 	"banek/bytecode"
 	"banek/bytecode/instruction"
+	"banek/compiler/scopes"
 	"banek/exec/errors"
 )
 
 func (compiler *compiler) compileStatement(statement ast.Statement) error {
-	container := compiler.topContainer()
+	scope := compiler.topScope()
 
 	switch statement := statement.(type) {
 	case statements.Expression:
@@ -18,7 +19,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.Pop)
+		scope.EmitInstr(instruction.Pop)
 
 		return nil
 	case statements.If:
@@ -27,21 +28,21 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		firstPatchAddress := container.currentAddress()
-		container.emitInstruction(instruction.BranchIfFalse, 0)
+		firstPatchAddress := scope.CurrAddr()
+		scope.EmitInstr(instruction.BranchIfFalse, 0)
 
 		err = compiler.compileStatement(statement.Consequence)
 		if err != nil {
 			return err
 		}
 
-		elseAddress := container.currentAddress()
+		elseAddress := scope.CurrAddr()
 
 		if statement.Alternative != nil {
 			branchSize := instruction.Branch.Info().Size()
 
 			secondPatchAddress := elseAddress
-			container.emitInstruction(instruction.Branch, 0)
+			scope.EmitInstr(instruction.Branch, 0)
 			elseAddress += branchSize
 
 			err = compiler.compileStatement(statement.Alternative)
@@ -49,14 +50,21 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 				return err
 			}
 
-			outAddress := container.currentAddress()
-			container.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
+			outAddress := scope.CurrAddr()
+			scope.PatchInstrOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
 		}
 
-		container.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
+		scope.PatchInstrOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
 
 		return nil
 	case statements.Block:
+		blockScope := &scopes.Block{
+			Index:  scope.NextBlockIndex(),
+			Parent: scope,
+		}
+
+		compiler.pushScope(blockScope)
+
 		for _, statement := range statement.Statements {
 			err := compiler.compileStatement(statement)
 			if err != nil {
@@ -64,51 +72,53 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			}
 		}
 
+		compiler.popScope()
+
 		return nil
 	case statements.Function:
-		functionGenerator := new(functionGenerator)
+		functionScope := new(scopes.Function)
 
 		parameterNames := make([]string, len(statement.Parameters))
 		for i, parameter := range statement.Parameters {
 			parameterNames[i] = parameter.String()
 		}
 
-		err := functionGenerator.addParameters(parameterNames)
+		err := functionScope.AddParams(parameterNames)
 		if err != nil {
 			return err
 		}
 
-		variableIndex, err := container.addVariable(statement.Name.String())
+		variableIndex, err := scope.AddVar(statement.Name.String(), false)
 		if err != nil {
 			return err
 		}
 
-		compiler.containerStack = append(compiler.containerStack, functionGenerator)
+		compiler.scopes = append(compiler.scopes, functionScope)
 		err = compiler.compileStatement(statement.Body)
 		if err != nil {
 			return err
 		}
-		compiler.containerStack = compiler.containerStack[:len(compiler.containerStack)-1]
+		compiler.scopes = compiler.scopes[:len(compiler.scopes)-1]
 
-		functionTemplate := functionGenerator.makeFunction()
+		functionTemplate := functionScope.MakeFunction()
 		functionTemplate.Name = statement.Name.String()
 
 		functionIndex := compiler.addFunction(functionTemplate)
 
 		if functionTemplate.IsClosure() {
-			container.emitInstruction(instruction.NewFunction, functionIndex)
+			scope.EmitInstr(instruction.NewFunction, functionIndex)
 		} else {
 			functionObject := &bytecode.Function{
 				TemplateIndex: functionIndex,
 			}
 
-			container.emitInstruction(instruction.PushConst, compiler.addConstant(functionObject))
+			scope.EmitInstr(instruction.PushConst, compiler.addConstant(functionObject))
 		}
 
-		if len(compiler.containerStack) == 1 {
-			container.emitInstruction(instruction.PopGlobal, variableIndex)
+		if scope.IsGlobal() {
+			scope.EmitInstr(instruction.PopGlobal, variableIndex)
 		} else {
-			container.emitInstruction(instruction.PopLocal, variableIndex)
+			scope.EmitInstr(instruction.PopLocal, variableIndex)
 		}
 
 		return nil
@@ -118,7 +128,7 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.Return)
+		scope.EmitInstr(instruction.Return)
 
 		return nil
 	case statements.VariableDeclaration:
@@ -127,15 +137,15 @@ func (compiler *compiler) compileStatement(statement ast.Statement) error {
 			return err
 		}
 
-		index, err := container.addVariable(statement.Name.String())
+		index, err := scope.AddVar(statement.Name.String(), !statement.Const)
 		if err != nil {
 			return err
 		}
 
-		if len(compiler.containerStack) == 1 {
-			container.emitInstruction(instruction.PopGlobal, index)
+		if scope.IsGlobal() {
+			scope.EmitInstr(instruction.PopGlobal, index)
 		} else {
-			container.emitInstruction(instruction.PopLocal, index)
+			scope.EmitInstr(instruction.PopLocal, index)
 		}
 
 		return nil

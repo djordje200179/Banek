@@ -3,31 +3,24 @@ package compiler
 import (
 	"banek/ast"
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/compiler/scopes"
 	"banek/exec/objects"
 	"slices"
 )
-
-type codeContainer interface {
-	addVariable(name string) (int, error)
-	getVariable(name string) int
-
-	emitInstruction(operation instruction.Operation, operands ...int)
-	patchInstructionOperand(address int, operandIndex int, newValue int)
-	currentAddress() int
-}
 
 type compiler struct {
 	constants []objects.Object
 	functions []bytecode.FunctionTemplate
 
-	containerStack []codeContainer
+	globalScope scopes.Global
+	scopes      []scopes.Scope
 }
 
 func Compile(statementsChannel <-chan ast.Statement) (bytecode.Executable, error) {
 	compiler := &compiler{
-		containerStack: []codeContainer{new(executableGenerator)},
+		scopes: make([]scopes.Scope, 1),
 	}
+	compiler.scopes[0] = &compiler.globalScope
 
 	for statement := range statementsChannel {
 		err := compiler.compileStatement(statement)
@@ -57,14 +50,20 @@ func (compiler *compiler) addFunction(template bytecode.FunctionTemplate) int {
 	return index
 }
 
-func (compiler *compiler) topContainer() codeContainer {
-	return compiler.containerStack[len(compiler.containerStack)-1]
+func (compiler *compiler) topScope() scopes.Scope {
+	return compiler.scopes[len(compiler.scopes)-1]
+}
+
+func (compiler *compiler) popScope() {
+	compiler.scopes = compiler.scopes[:len(compiler.scopes)-1]
+}
+
+func (compiler *compiler) pushScope(scope scopes.Scope) {
+	compiler.scopes = append(compiler.scopes, scope)
 }
 
 func (compiler *compiler) makeExecutable() bytecode.Executable {
-	executableGenerator := compiler.containerStack[0].(*executableGenerator)
-
-	executable := executableGenerator.makeExecutable()
+	executable := compiler.globalScope.MakeExecutable()
 	executable.ConstantsPool = compiler.constants
 	executable.FunctionsPool = compiler.functions
 

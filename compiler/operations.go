@@ -46,8 +46,8 @@ func (compiler *compiler) compileInfixOperation(expression expressions.InfixOper
 		return errors.ErrUnknownOperator{Operator: operator.String()}
 	}
 
-	container := compiler.topContainer()
-	container.emitInstruction(instruction.OperationInfix, int(operation))
+	container := compiler.topScope()
+	container.EmitInstr(instruction.OperationInfix, int(operation))
 
 	return nil
 }
@@ -64,8 +64,8 @@ func (compiler *compiler) compilePrefixOperation(expression expressions.PrefixOp
 		return errors.ErrUnknownOperator{Operator: operator.String()}
 	}
 
-	container := compiler.topContainer()
-	container.emitInstruction(instruction.OperationPrefix, int(operation))
+	container := compiler.topScope()
+	container.EmitInstr(instruction.OperationPrefix, int(operation))
 
 	return nil
 }

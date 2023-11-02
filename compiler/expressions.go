@@ -5,25 +5,26 @@ import (
 	"banek/ast/expressions"
 	"banek/bytecode"
 	"banek/bytecode/instruction"
+	"banek/compiler/scopes"
 	"banek/exec/errors"
 	"banek/exec/objects"
 )
 
 func (compiler *compiler) compileExpression(expression ast.Expression) error {
-	container := compiler.topContainer()
+	scope := compiler.topScope()
 
 	switch expression := expression.(type) {
 	case expressions.IntegerLiteral:
 		integer := objects.Integer(expression)
-		container.emitInstruction(instruction.PushConst, compiler.addConstant(integer))
+		scope.EmitInstr(instruction.PushConst, compiler.addConstant(integer))
 		return nil
 	case expressions.BooleanLiteral:
 		boolean := objects.Boolean(expression)
-		container.emitInstruction(instruction.PushConst, compiler.addConstant(boolean))
+		scope.EmitInstr(instruction.PushConst, compiler.addConstant(boolean))
 		return nil
 	case expressions.StringLiteral:
 		str := objects.String(expression)
-		container.emitInstruction(instruction.PushConst, compiler.addConstant(str))
+		scope.EmitInstr(instruction.PushConst, compiler.addConstant(str))
 		return nil
 	case expressions.InfixOperation:
 		return compiler.compileInfixOperation(expression)
@@ -35,20 +36,20 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		firstPatchAddress := container.currentAddress()
-		container.emitInstruction(instruction.BranchIfFalse, 0)
+		firstPatchAddress := scope.CurrAddr()
+		scope.EmitInstr(instruction.BranchIfFalse, 0)
 
 		err = compiler.compileExpression(expression.Consequence)
 		if err != nil {
 			return err
 		}
 
-		elseAddress := container.currentAddress()
+		elseAddress := scope.CurrAddr()
 
 		branchSize := instruction.Branch.Info().Size()
 
 		secondPatchAddress := elseAddress
-		container.emitInstruction(instruction.Branch, 0)
+		scope.EmitInstr(instruction.Branch, 0)
 		elseAddress += branchSize
 
 		err = compiler.compileExpression(expression.Alternative)
@@ -56,10 +57,10 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		outAddress := container.currentAddress()
-		container.patchInstructionOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
+		outAddress := scope.CurrAddr()
+		scope.PatchInstrOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
 
-		container.patchInstructionOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
+		scope.PatchInstrOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
 
 		return nil
 	case expressions.ArrayLiteral:
@@ -70,7 +71,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			}
 		}
 
-		container.emitInstruction(instruction.NewArray, len(expression))
+		scope.EmitInstr(instruction.NewArray, len(expression))
 
 		return nil
 	case expressions.CollectionAccess:
@@ -84,7 +85,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.PushCollectionElement)
+		scope.EmitInstr(instruction.PushCollectionElement)
 
 		return nil
 	case expressions.Assignment:
@@ -93,43 +94,58 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.PushDuplicate)
+		scope.EmitInstr(instruction.PushDuplicate)
 
 		switch variable := expression.Variable.(type) {
 		case expressions.Identifier:
-			variableName := variable.String()
+			varName := variable.String()
 
-			var variableContainer codeContainer
-			var variableIndex, variableContainerIndex int
-			for i := len(compiler.containerStack) - 1; i >= 0; i-- {
-				index := compiler.containerStack[i].getVariable(variableName)
+			var varScope scopes.Scope
+			var varIndex, varScopeIndex int
+			for i := len(compiler.scopes) - 1; i >= 0; i-- {
+				_, index := compiler.scopes[i].GetVar(varName)
 				if index == -1 {
 					continue
 				}
 
-				variableContainer = compiler.containerStack[i]
-				variableContainerIndex = i
-				variableIndex = index
+				varScope = compiler.scopes[i]
+				varScopeIndex = i
+				varIndex = index
 
 				break
 			}
 
-			if variableContainer == nil {
-				return errors.ErrIdentifierNotDefined{Identifier: variableName}
+			if varScope == nil {
+				return errors.ErrIdentifierNotDefined{Identifier: varName}
 			}
 
-			if variableContainerIndex == 0 {
-				container.emitInstruction(instruction.PopGlobal, variableIndex)
+			if varScope.IsGlobal() {
+				scope.EmitInstr(instruction.PopGlobal, varIndex)
 				return nil
-			} else if variableContainerIndex == len(compiler.containerStack)-1 {
-				container.emitInstruction(instruction.PopLocal, variableIndex)
+			} else if varScope == scope {
+				scope.EmitInstr(instruction.PopLocal, varIndex)
 				return nil
 			}
 
-			capturedVariableLevel := len(compiler.containerStack) - 2 - variableContainerIndex
+			capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-			capturedVariableIndex := container.(*functionGenerator).addCapturedVariable(capturedVariableLevel, variableIndex)
-			container.emitInstruction(instruction.PopCaptured, capturedVariableIndex)
+			functionScope, ok := varScope.(*scopes.Function)
+			if !ok {
+				block := varScope.(*scopes.Block)
+				for {
+					nextScope := block.Parent
+
+					functionScope, ok = nextScope.(*scopes.Function)
+					if ok {
+						break
+					}
+
+					block = nextScope.(*scopes.Block)
+				}
+			}
+
+			capturedVariableIndex := functionScope.AddCapturedVar(capturedVarLevel, varIndex)
+			scope.EmitInstr(instruction.PopCaptured, capturedVariableIndex)
 
 			return nil
 		case expressions.CollectionAccess:
@@ -143,7 +159,7 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 				return err
 			}
 
-			container.emitInstruction(instruction.PopCollectionElement)
+			scope.EmitInstr(instruction.PopCollectionElement)
 
 			return nil
 		default:
@@ -162,84 +178,99 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 			return err
 		}
 
-		container.emitInstruction(instruction.Call, len(expression.Arguments))
+		scope.EmitInstr(instruction.Call, len(expression.Arguments))
 
 		return nil
 	case expressions.FunctionLiteral:
-		functionGenerator := new(functionGenerator)
+		funcScope := new(scopes.Function)
 
-		parameterNames := make([]string, len(expression.Parameters))
-		for i, parameter := range expression.Parameters {
-			parameterNames[i] = parameter.String()
+		paramNames := make([]string, len(expression.Parameters))
+		for i, param := range expression.Parameters {
+			paramNames[i] = param.String()
 		}
 
-		err := functionGenerator.addParameters(parameterNames)
+		err := funcScope.AddParams(paramNames)
 		if err != nil {
 			return err
 		}
 
-		compiler.containerStack = append(compiler.containerStack, functionGenerator)
+		compiler.scopes = append(compiler.scopes, funcScope)
 		err = compiler.compileExpression(expression.Body)
 		if err != nil {
 			return err
 		}
-		functionGenerator.emitInstruction(instruction.Return)
-		compiler.containerStack = compiler.containerStack[:len(compiler.containerStack)-1]
+		funcScope.EmitInstr(instruction.Return)
+		compiler.scopes = compiler.scopes[:len(compiler.scopes)-1]
 
-		functionTemplate := functionGenerator.makeFunction()
+		functionTemplate := funcScope.MakeFunction()
 
 		functionIndex := compiler.addFunction(functionTemplate)
 
 		if functionTemplate.IsClosure() {
-			container.emitInstruction(instruction.NewFunction, functionIndex)
+			scope.EmitInstr(instruction.NewFunction, functionIndex)
 		} else {
 			functionObject := &bytecode.Function{
 				TemplateIndex: functionIndex,
 			}
 
-			container.emitInstruction(instruction.PushConst, compiler.addConstant(functionObject))
+			scope.EmitInstr(instruction.PushConst, compiler.addConstant(functionObject))
 		}
 
 		return nil
 	case expressions.Identifier:
-		variableName := expression.String()
+		varName := expression.String()
 
-		if index := objects.BuiltinFindIndex(variableName); index != -1 {
-			container.emitInstruction(instruction.PushBuiltin, index)
+		if index := objects.BuiltinFindIndex(varName); index != -1 {
+			scope.EmitInstr(instruction.PushBuiltin, index)
 			return nil
 		}
 
-		var variableContainer codeContainer
-		var variableIndex, variableContainerIndex int
-		for i := len(compiler.containerStack) - 1; i >= 0; i-- {
-			index := compiler.containerStack[i].getVariable(variableName)
+		var varScope scopes.Scope
+		var varIndex, varScopeIndex int
+		for i := len(compiler.scopes) - 1; i >= 0; i-- {
+			_, index := compiler.scopes[i].GetVar(varName)
 			if index == -1 {
 				continue
 			}
 
-			variableContainer = compiler.containerStack[i]
-			variableContainerIndex = i
-			variableIndex = index
+			varScope = compiler.scopes[i]
+			varScopeIndex = i
+			varIndex = index
 
 			break
 		}
 
-		if variableContainer == nil {
-			return errors.ErrIdentifierNotDefined{Identifier: variableName}
+		if varScope == nil {
+			return errors.ErrIdentifierNotDefined{Identifier: varName}
 		}
 
-		if variableContainerIndex == 0 {
-			container.emitInstruction(instruction.PushGlobal, variableIndex)
+		if varScope.IsGlobal() {
+			scope.EmitInstr(instruction.PushGlobal, varIndex)
 			return nil
-		} else if variableContainerIndex == len(compiler.containerStack)-1 {
-			container.emitInstruction(instruction.PushLocal, variableIndex)
+		} else if varScope == scope {
+			scope.EmitInstr(instruction.PushLocal, varIndex)
 			return nil
 		}
 
-		capturedVariableLevel := len(compiler.containerStack) - 2 - variableContainerIndex
+		capturedVariableLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-		capturedVariableIndex := container.(*functionGenerator).addCapturedVariable(capturedVariableLevel, variableIndex)
-		container.emitInstruction(instruction.PushCaptured, capturedVariableIndex)
+		functionScope, ok := varScope.(*scopes.Function)
+		if !ok {
+			block := varScope.(*scopes.Block)
+			for {
+				nextScope := block.Parent
+
+				functionScope, ok = nextScope.(*scopes.Function)
+				if ok {
+					break
+				}
+
+				block = nextScope.(*scopes.Block)
+			}
+		}
+
+		capturedVariableIndex := functionScope.AddCapturedVar(capturedVariableLevel, varIndex)
+		scope.EmitInstr(instruction.PushCaptured, capturedVariableIndex)
 
 		return nil
 	default:
