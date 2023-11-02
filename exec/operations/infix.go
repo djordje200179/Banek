@@ -3,6 +3,7 @@ package operations
 import (
 	"banek/exec/errors"
 	"banek/exec/objects"
+	"slices"
 	"strings"
 )
 
@@ -198,11 +199,24 @@ func evalInfixModuloOperation(left, right objects.Object) (objects.Object, error
 }
 
 func evalInfixEqualsOperation(left, right objects.Object) (objects.Object, error) {
+	switch left := left.(type) {
+	case objects.Array:
+		switch right := right.(type) {
+		case objects.Array:
+			return objects.Boolean(slices.Equal(left, right)), nil
+		}
+	}
+
 	return objects.Boolean(left == right), nil
 }
 
 func evalInfixNotEqualsOperation(left, right objects.Object) (objects.Object, error) {
-	return objects.Boolean(left != right), nil
+	res, err := evalInfixEqualsOperation(left, right)
+	if err != nil {
+		return nil, err
+	}
+
+	return !res.(objects.Boolean), nil
 }
 
 func evalInfixLessThanOperation(left, right objects.Object) (objects.Object, error) {
