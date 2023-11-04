@@ -11,7 +11,8 @@ type Function struct {
 	Captures []*objects.Object
 }
 
-func (function *Function) Type() string { return "function" }
+func (function *Function) Type() string          { return "function" }
+func (function *Function) Clone() objects.Object { return function }
 
 func (function *Function) String() string {
 	return fmt.Sprintf("func#%d", function.TemplateIndex)

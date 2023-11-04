@@ -3,6 +3,7 @@ package environments
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/exec/objects"
 	"strings"
 )
 
@@ -13,7 +14,8 @@ type Function struct {
 	Env Environment
 }
 
-func (function *Function) Type() string { return "function" }
+func (function *Function) Type() string          { return "function" }
+func (function *Function) Clone() objects.Object { return function }
 
 func (function *Function) String() string {
 	var sb strings.Builder

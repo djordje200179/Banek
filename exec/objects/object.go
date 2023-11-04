@@ -6,6 +6,7 @@ import (
 
 type Object interface {
 	Type() string
+	Clone() Object
 
 	fmt.Stringer
 }

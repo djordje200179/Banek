@@ -27,7 +27,7 @@ func (vm *vm) opPushConst() error {
 		return err
 	}
 
-	return vm.push(constant)
+	return vm.push(constant.Clone())
 }
 
 func (vm *vm) opPushLocal() error {
