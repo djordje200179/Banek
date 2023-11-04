@@ -2,13 +2,13 @@ package expressions
 
 import (
 	"banek/ast"
-	"banek/tokens"
+	"banek/exec/operations"
 	"strings"
 )
 
 type InfixOperation struct {
 	Left, Right ast.Expression
-	Operator    tokens.Token
+	Operator    operations.InfixOperationType
 }
 
 func (operation InfixOperation) String() string {

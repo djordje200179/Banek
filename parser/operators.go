@@ -1,6 +1,9 @@
 package parser
 
-import "banek/tokens"
+import (
+	"banek/exec/operations"
+	"banek/tokens"
+)
 
 type OperatorPrecedence int
 
@@ -39,4 +42,25 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 	tokens.MinusAssign:    Assignment,
 	tokens.AsteriskAssign: Assignment,
 	tokens.SlashAssign:    Assignment,
+}
+
+var infixOperations = map[tokens.TokenType]operations.InfixOperationType{
+	tokens.Plus:     operations.InfixPlusOperation,
+	tokens.Minus:    operations.InfixMinusOperation,
+	tokens.Asterisk: operations.InfixAsteriskOperation,
+	tokens.Slash:    operations.InfixSlashOperation,
+	tokens.Modulo:   operations.InfixModuloOperation,
+	tokens.Caret:    operations.InfixCaretOperation,
+
+	tokens.Equals:              operations.InfixEqualsOperation,
+	tokens.NotEquals:           operations.InfixNotEqualsOperation,
+	tokens.LessThan:            operations.InfixLessThanOperation,
+	tokens.GreaterThan:         operations.InfixGreaterThanOperation,
+	tokens.LessThanOrEquals:    operations.InfixLessThanOrEqualsOperation,
+	tokens.GreaterThanOrEquals: operations.InfixGreaterThanOrEqualsOperation,
+}
+
+var prefixOperations = map[tokens.TokenType]operations.PrefixOperationType{
+	tokens.Minus: operations.PrefixMinusOperation,
+	tokens.Bang:  operations.PrefixBangOperation,
 }

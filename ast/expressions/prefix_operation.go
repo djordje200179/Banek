@@ -2,12 +2,12 @@ package expressions
 
 import (
 	"banek/ast"
-	"banek/tokens"
+	"banek/exec/operations"
 	"strings"
 )
 
 type PrefixOperation struct {
-	Operator tokens.Token
+	Operator operations.PrefixOperationType
 	Operand  ast.Expression
 }
 

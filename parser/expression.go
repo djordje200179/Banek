@@ -115,7 +115,7 @@ func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
 }
 
 func (parser *parser) parsePrefixOperation() (ast.Expression, error) {
-	operator := parser.currentToken
+	operatorToken := parser.currentToken
 
 	parser.fetchToken()
 
@@ -124,15 +124,15 @@ func (parser *parser) parsePrefixOperation() (ast.Expression, error) {
 		return nil, err
 	}
 
-	return expressions.PrefixOperation{Operator: operator, Operand: operand}, nil
+	return expressions.PrefixOperation{Operator: prefixOperations[operatorToken.Type], Operand: operand}, nil
 }
 
 func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, error) {
-	operator := parser.currentToken
+	operatorToken := parser.currentToken
 
-	precedence, ok := infixOperatorPrecedences[operator.Type]
+	precedence, ok := infixOperatorPrecedences[operatorToken.Type]
 	if !ok {
-		return nil, ErrUnknownToken{TokenType: operator.Type}
+		return nil, ErrUnknownToken{TokenType: operatorToken.Type}
 	}
 
 	parser.fetchToken()
@@ -142,7 +142,7 @@ func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, 
 		return nil, err
 	}
 
-	return expressions.InfixOperation{Left: left, Operator: operator, Right: right}, nil
+	return expressions.InfixOperation{Left: left, Operator: infixOperations[operatorToken.Type], Right: right}, nil
 }
 
 func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, error) {
@@ -150,7 +150,7 @@ func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, 
 	hasWrapper := false
 	if parser.currentToken.Type != tokens.Assign {
 		operator := tokens.CharTokens[parser.currentToken.Type.String()[0:1]]
-		valueWrapper = expressions.InfixOperation{Left: variable, Operator: tokens.Token{Type: operator}}
+		valueWrapper = expressions.InfixOperation{Left: variable, Operator: infixOperations[operator]}
 		hasWrapper = true
 	}
 
