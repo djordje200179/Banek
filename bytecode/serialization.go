@@ -11,7 +11,7 @@ func init() {
 	gob.Register(objects.BuiltinFunction{})
 	gob.Register(objects.Integer(0))
 	gob.Register(objects.String(""))
-	gob.Register(objects.Undefined)
+	gob.Register(objects.Undefined{})
 	gob.Register(objects.Unknown)
 	gob.Register(&Function{})
 }

@@ -14,17 +14,8 @@ func (compiler *compiler) compileExpression(expression ast.Expression) error {
 	scope := compiler.topScope()
 
 	switch expression := expression.(type) {
-	case expressions.IntegerLiteral:
-		integer := objects.Integer(expression)
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(integer))
-		return nil
-	case expressions.BooleanLiteral:
-		boolean := objects.Boolean(expression)
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(boolean))
-		return nil
-	case expressions.StringLiteral:
-		str := objects.String(expression)
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(str))
+	case expressions.ConstantLiteral:
+		scope.EmitInstr(instruction.PushConst, compiler.addConstant(expression.Value))
 		return nil
 	case expressions.InfixOperation:
 		return compiler.compileInfixOperation(expression)

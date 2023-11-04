@@ -37,7 +37,7 @@ var Builtins = []BuiltinFunction{
 
 			fmt.Print(sb.String())
 
-			return Undefined, nil
+			return Undefined{}, nil
 		},
 	},
 	{
@@ -51,7 +51,7 @@ var Builtins = []BuiltinFunction{
 
 			fmt.Println(sb.String())
 
-			return Undefined, nil
+			return Undefined{}, nil
 		},
 	},
 	{
@@ -99,7 +99,7 @@ var Builtins = []BuiltinFunction{
 			case Array:
 				return Integer(len(arg)), nil
 			default:
-				return Undefined, nil
+				return Undefined{}, nil
 			}
 		},
 	},
@@ -137,7 +137,7 @@ var Builtins = []BuiltinFunction{
 					return Integer(0), nil
 				}
 			default:
-				return Undefined, nil
+				return Undefined{}, nil
 			}
 		},
 	},

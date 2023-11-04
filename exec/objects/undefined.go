@@ -1,9 +1,7 @@
 package objects
 
-type undefined struct{}
+type Undefined struct{}
 
-func (undefined undefined) Type() string   { return "undefined" }
-func (undefined undefined) Clone() Object  { return undefined }
-func (undefined undefined) String() string { return "undefined" }
-
-var Undefined Object = undefined{}
+func (undefined Undefined) Type() string   { return "Undefined" }
+func (undefined Undefined) Clone() Object  { return undefined }
+func (undefined Undefined) String() string { return "Undefined" }

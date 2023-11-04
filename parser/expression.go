@@ -3,6 +3,7 @@ package parser
 import (
 	"banek/ast"
 	"banek/ast/expressions"
+	"banek/exec/objects"
 	"banek/tokens"
 	"strconv"
 )
@@ -49,7 +50,7 @@ func (parser *parser) parseIntegerLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.IntegerLiteral(value), nil
+	return expressions.ConstantLiteral{Value: objects.Integer(value)}, nil
 }
 
 func (parser *parser) parseBooleanLiteral() (ast.Expression, error) {
@@ -60,21 +61,21 @@ func (parser *parser) parseBooleanLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return expressions.BooleanLiteral(value), nil
+	return expressions.ConstantLiteral{Value: objects.Boolean(value)}, nil
 }
 
 func (parser *parser) parseStringLiteral() (ast.Expression, error) {
-	literal := parser.currentToken.Literal
+	value := parser.currentToken.Literal
 
 	parser.fetchToken()
 
-	return expressions.StringLiteral(literal), nil
+	return expressions.ConstantLiteral{Value: objects.String(value)}, nil
 }
 
 func (parser *parser) parseUndefinedLiteral() (ast.Expression, error) {
 	parser.fetchToken()
 
-	return expressions.UndefinedLiteralConst, nil
+	return expressions.ConstantLiteral{Value: objects.Undefined{}}, nil
 }
 
 func (parser *parser) parseArrayLiteral() (ast.Expression, error) {

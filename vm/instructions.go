@@ -346,7 +346,7 @@ func (vm *vm) opCall() error {
 
 			copy(arguments, oldArguments)
 			for i := len(oldArguments); i < len(functionTemplate.Parameters); i++ {
-				arguments[i] = objects.Undefined
+				arguments[i] = objects.Undefined{}
 			}
 		} else if len(arguments) > len(functionTemplate.Parameters) {
 			arguments = arguments[:len(functionTemplate.Parameters)]

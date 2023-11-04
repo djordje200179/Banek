@@ -13,14 +13,8 @@ import (
 
 func (interpreter *interpreter) evalExpression(env environments.Environment, expression ast.Expression) (objects.Object, error) {
 	switch expression := expression.(type) {
-	case expressions.IntegerLiteral:
-		return objects.Integer(expression), nil
-	case expressions.BooleanLiteral:
-		return objects.Boolean(expression), nil
-	case expressions.StringLiteral:
-		return objects.String(expression), nil
-	case expressions.UndefinedLiteral:
-		return objects.Undefined, nil
+	case expressions.ConstantLiteral:
+		return expression.Value, nil
 	case expressions.ArrayLiteral:
 		return interpreter.evalArrayLiteral(env, expression)
 	case expressions.PrefixOperation:
@@ -102,7 +96,7 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 
 			returnValue, ok := result.(results.Return)
 			if !ok {
-				return objects.Undefined, nil
+				return objects.Undefined{}, nil
 			}
 
 			return returnValue.Value, nil
