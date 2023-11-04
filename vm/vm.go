@@ -18,6 +18,36 @@ type vm struct {
 	currentScope *scope
 }
 
+type opHandler func(*vm) error
+
+var ops = []opHandler{
+	instruction.PushDuplicate:         (*vm).opPushDuplicate,
+	instruction.PushConst:             (*vm).opPushConst,
+	instruction.PushLocal:             (*vm).opPushLocal,
+	instruction.PushGlobal:            (*vm).opPushGlobal,
+	instruction.PushCaptured:          (*vm).opPushCaptured,
+	instruction.PushBuiltin:           (*vm).opPushBuiltin,
+	instruction.PushCollectionElement: (*vm).opPushCollectionElement,
+
+	instruction.Pop:                  (*vm).opPop,
+	instruction.PopLocal:             (*vm).opPopLocal,
+	instruction.PopGlobal:            (*vm).opPopGlobal,
+	instruction.PopCaptured:          (*vm).opPopCaptured,
+	instruction.PopCollectionElement: (*vm).opPopCollectionElement,
+
+	instruction.OperationInfix:  (*vm).opInfixOperation,
+	instruction.OperationPrefix: (*vm).opPrefixOperation,
+
+	instruction.Branch:        (*vm).opBranch,
+	instruction.BranchIfFalse: (*vm).opBranchIfFalse,
+
+	instruction.Call:   (*vm).opCall,
+	instruction.Return: (*vm).opReturn,
+
+	instruction.NewArray:    (*vm).opNewArray,
+	instruction.NewFunction: (*vm).opNewFunction,
+}
+
 func Execute(program bytecode.Executable) error {
 	vm := &vm{
 		program: program,
@@ -43,106 +73,14 @@ func (vm *vm) run() error {
 	for vm.currentScope != nil {
 		for vm.hasCode() {
 			operation := vm.readOperation()
-			switch operation {
-			case instruction.Pop:
-				err := vm.opPop()
-				if err != nil {
-					return err
-				}
-			case instruction.PopLocal:
-				err := vm.opPopLocal()
-				if err != nil {
-					return err
-				}
-			case instruction.PopGlobal:
-				err := vm.opPopGlobal()
-				if err != nil {
-					return err
-				}
-			case instruction.PopCaptured:
-				err := vm.opPopCaptured()
-				if err != nil {
-					return err
-				}
-			case instruction.PopCollectionElement:
-				err := vm.opPopCollectionElement()
-				if err != nil {
-					return err
-				}
-			case instruction.PushDuplicate:
-				err := vm.opPushDuplicate()
-				if err != nil {
-					return err
-				}
-			case instruction.PushConst:
-				err := vm.opPushConst()
-				if err != nil {
-					return err
-				}
-			case instruction.PushLocal:
-				err := vm.opPushLocal()
-				if err != nil {
-					return err
-				}
-			case instruction.PushGlobal:
-				err := vm.opPushGlobal()
-				if err != nil {
-					return err
-				}
-			case instruction.PushBuiltin:
-				err := vm.opPushBuiltin()
-				if err != nil {
-					return err
-				}
-			case instruction.PushCaptured:
-				err := vm.opPushCaptured()
-				if err != nil {
-					return err
-				}
-			case instruction.PushCollectionElement:
-				err := vm.opPushCollectionElement()
-				if err != nil {
-					return err
-				}
-			case instruction.OperationInfix:
-				err := vm.opInfixOperation()
-				if err != nil {
-					return err
-				}
-			case instruction.OperationPrefix:
-				err := vm.opPrefixOperation()
-				if err != nil {
-					return err
-				}
-			case instruction.Branch:
-				vm.opBranch()
-			case instruction.BranchIfFalse:
-				err := vm.opBranchIfFalse()
-				if err != nil {
-					return err
-				}
-			case instruction.NewArray:
-				err := vm.opNewArray()
-				if err != nil {
-					return err
-				}
-			case instruction.NewFunction:
-				err := vm.opNewFunction()
-				if err != nil {
-					return err
-				}
-			case instruction.Call:
-				err := vm.opCall()
-				if err != nil {
-					return err
-				}
-			case instruction.Return:
-				err := vm.opReturn()
-				if err != nil {
-					return err
-				}
-			default:
+
+			if operation == instruction.Invalid || operation >= instruction.Operation(len(ops)) {
 				return ErrUnknownOperation{Operation: operation}
+			}
+
+			err := ops[operation](vm)
+			if err != nil {
+				return err
 			}
 		}
 

@@ -215,12 +215,14 @@ func (vm *vm) opPrefixOperation() error {
 	return vm.push(result)
 }
 
-func (vm *vm) opBranch() {
+func (vm *vm) opBranch() error {
 	opInfo := instruction.Branch.Info()
 
 	offset := vm.readOperand(opInfo.Operands[0].Width)
 
 	vm.movePC(offset)
+
+	return nil
 }
 
 func (vm *vm) opBranchIfFalse() error {
