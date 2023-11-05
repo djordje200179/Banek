@@ -85,8 +85,8 @@ var operationInfos = []OperationInfo{
 	PopCaptured:          {"POP.O", []OperandInfo{{1, Literal}}},
 	PopCollectionElement: {"POP.CE", []OperandInfo{}},
 
-	OperationInfix:  {"OP.I", []OperandInfo{{1, Literal}}},
-	OperationPrefix: {"OP.P", []OperandInfo{{1, Literal}}},
+	OperationInfix:  {"OP.I", []OperandInfo{{1, InfixOperation}}},
+	OperationPrefix: {"OP.P", []OperandInfo{{1, PrefixOperation}}},
 
 	Branch:        {"BR", []OperandInfo{{2, Literal}}},
 	BranchIfFalse: {"BR.F", []OperandInfo{{2, Literal}}},

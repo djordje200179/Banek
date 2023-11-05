@@ -18,20 +18,16 @@ type Executable struct {
 func (executable Executable) String() string {
 	var sb strings.Builder
 
-	// TODO: Replace generic function object names with real names
-	replacePairs := make([]string, (len(executable.ConstantsPool)+len(executable.FunctionsPool))*2)
-	i := 0
-	for _, constant := range executable.ConstantsPool {
+	replacePairs := make([]string, len(executable.ConstantsPool)*2)
+	for i, constant := range executable.ConstantsPool {
 		replacePairs[i*2] = "=" + strconv.Itoa(i)
-		replacePairs[i*2+1] = constant.String()
-		i++
-	}
-	for _, function := range executable.FunctionsPool {
-		replacePairs[i*2] = "#" + strconv.Itoa(i)
-		replacePairs[i*2+1] = function.String()
-		i++
-	}
 
+		if functionObject, ok := constant.(*Function); ok {
+			replacePairs[i*2+1] = executable.FunctionsPool[functionObject.TemplateIndex].Name
+		} else {
+			replacePairs[i*2+1] = constant.String()
+		}
+	}
 	replacer := strings.NewReplacer(replacePairs...)
 
 	sb.WriteString("Code:\n")
@@ -39,9 +35,7 @@ func (executable Executable) String() string {
 	sb.WriteByte('\n')
 
 	sb.WriteString("Functions:\n")
-	for i, function := range executable.FunctionsPool {
-		sb.WriteString(strconv.Itoa(i))
-		sb.WriteString(": ")
+	for _, function := range executable.FunctionsPool {
 		sb.WriteString(replacer.Replace(function.String()))
 		sb.WriteByte('\n')
 	}

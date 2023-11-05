@@ -2,6 +2,7 @@ package bytecode
 
 import (
 	"banek/bytecode/instruction"
+	"banek/exec/operations"
 	"fmt"
 	"strconv"
 	"strings"
@@ -27,6 +28,10 @@ func (code Code) String() string {
 				operandsStr[i] = strconv.Itoa(operandValue)
 			case instruction.Function:
 				operandsStr[i] = "#" + strconv.Itoa(operandValue)
+			case instruction.InfixOperation:
+				operandsStr[i] = operations.InfixOperationType(operandValue).String()
+			case instruction.PrefixOperation:
+				operandsStr[i] = operations.PrefixOperationType(operandValue).String()
 			}
 		}
 

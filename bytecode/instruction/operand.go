@@ -10,6 +10,9 @@ const (
 	Constant OperandType = iota
 	Literal
 	Function
+
+	InfixOperation
+	PrefixOperation
 )
 
 type OperandInfo struct {
