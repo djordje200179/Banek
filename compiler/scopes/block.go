@@ -22,7 +22,12 @@ func (scope *Block) AddVar(name string, mutable bool) (int, error) {
 func (scope *Block) GetVar(name string) (Var, int) {
 	newName := fmt.Sprintf("%d#%s", scope.Index, name)
 
-	return scope.Parent.GetVar(newName)
+	localVar, index := scope.Parent.GetVar(newName)
+	if index != -1 {
+		return localVar, index
+	}
+
+	return scope.Parent.GetVar(name)
 }
 
 func (scope *Block) EmitInstr(op instruction.Operation, operands ...int) {
