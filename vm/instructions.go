@@ -18,9 +18,7 @@ func (vm *vm) opPushDuplicate() error {
 }
 
 func (vm *vm) opPushConst() error {
-	opInfo := instruction.PushConst.Info()
-
-	constIndex := vm.readOperand(opInfo.Operands[0].Width)
+	constIndex := vm.readOperand(2)
 
 	constant, err := vm.getConstant(constIndex)
 	if err != nil {
@@ -31,9 +29,7 @@ func (vm *vm) opPushConst() error {
 }
 
 func (vm *vm) opPushLocal() error {
-	opInfo := instruction.PushLocal.Info()
-
-	localIndex := vm.readOperand(opInfo.Operands[0].Width)
+	localIndex := vm.readOperand(1)
 
 	local, err := vm.getLocal(localIndex)
 	if err != nil {
@@ -44,9 +40,7 @@ func (vm *vm) opPushLocal() error {
 }
 
 func (vm *vm) opPushGlobal() error {
-	opInfo := instruction.PushGlobal.Info()
-
-	globalIndex := vm.readOperand(opInfo.Operands[0].Width)
+	globalIndex := vm.readOperand(1)
 
 	global, err := vm.getGlobal(globalIndex)
 	if err != nil {
@@ -57,9 +51,7 @@ func (vm *vm) opPushGlobal() error {
 }
 
 func (vm *vm) opPushBuiltin() error {
-	opInfo := instruction.PushBuiltin.Info()
-
-	index := vm.readOperand(opInfo.Operands[0].Width)
+	index := vm.readOperand(1)
 	if index >= len(objects.Builtins) {
 		return nil // TODO: return error
 	}
@@ -70,9 +62,7 @@ func (vm *vm) opPushBuiltin() error {
 }
 
 func (vm *vm) opPushCaptured() error {
-	opInfo := instruction.PushCaptured.Info()
-
-	capturedIndex := vm.readOperand(opInfo.Operands[0].Width)
+	capturedIndex := vm.readOperand(1)
 
 	captured, err := vm.getCaptured(capturedIndex)
 	if err != nil {
@@ -107,9 +97,7 @@ func (vm *vm) opPop() error {
 }
 
 func (vm *vm) opPopLocal() error {
-	opInfo := instruction.PopLocal.Info()
-
-	localIndex := vm.readOperand(opInfo.Operands[0].Width)
+	localIndex := vm.readOperand(1)
 
 	local, err := vm.pop()
 	if err != nil {
@@ -125,9 +113,7 @@ func (vm *vm) opPopLocal() error {
 }
 
 func (vm *vm) opPopGlobal() error {
-	opInfo := instruction.PopGlobal.Info()
-
-	globalIndex := vm.readOperand(opInfo.Operands[0].Width)
+	globalIndex := vm.readOperand(1)
 
 	global, err := vm.pop()
 	if err != nil {
@@ -143,9 +129,7 @@ func (vm *vm) opPopGlobal() error {
 }
 
 func (vm *vm) opPopCaptured() error {
-	opInfo := instruction.PopCaptured.Info()
-
-	capturedIndex := vm.readOperand(opInfo.Operands[0].Width)
+	capturedIndex := vm.readOperand(1)
 
 	captured, err := vm.pop()
 	if err != nil {
@@ -175,9 +159,7 @@ func (vm *vm) opPopCollectionElement() error {
 }
 
 func (vm *vm) opInfixOperation() error {
-	opInfo := instruction.OperationInfix.Info()
-
-	operation := operations.InfixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+	operation := operations.InfixOperationType(vm.readOperand(1))
 
 	right, err := vm.pop()
 	if err != nil {
@@ -198,9 +180,7 @@ func (vm *vm) opInfixOperation() error {
 }
 
 func (vm *vm) opPrefixOperation() error {
-	opInfo := instruction.OperationPrefix.Info()
-
-	operation := operations.PrefixOperationType(vm.readOperand(opInfo.Operands[0].Width))
+	operation := operations.PrefixOperationType(vm.readOperand(1))
 
 	operand, err := vm.pop()
 	if err != nil {
@@ -216,9 +196,7 @@ func (vm *vm) opPrefixOperation() error {
 }
 
 func (vm *vm) opBranch() error {
-	opInfo := instruction.Branch.Info()
-
-	offset := vm.readOperand(opInfo.Operands[0].Width)
+	offset := vm.readOperand(2)
 
 	vm.movePC(offset)
 
@@ -226,9 +204,7 @@ func (vm *vm) opBranch() error {
 }
 
 func (vm *vm) opBranchIfFalse() error {
-	opInfo := instruction.Branch.Info()
-
-	offset := vm.readOperand(opInfo.Operands[0].Width)
+	offset := vm.readOperand(2)
 
 	operand, err := vm.pop()
 	if err != nil {
@@ -248,9 +224,7 @@ func (vm *vm) opBranchIfFalse() error {
 }
 
 func (vm *vm) opNewArray() error {
-	opInfo := instruction.NewArray.Info()
-
-	size := vm.readOperand(opInfo.Operands[0].Width)
+	size := vm.readOperand(2)
 
 	arr := make(objects.Array, size)
 
@@ -262,45 +236,8 @@ func (vm *vm) opNewArray() error {
 	return vm.push(arr)
 }
 
-func (vm *vm) opCollectionAccess() error {
-	indexObject, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	collectionObject, err := vm.pop()
-	if err != nil {
-		return err
-	}
-
-	var result objects.Object
-	switch collection := collectionObject.(type) {
-	case objects.Array:
-		index, ok := indexObject.(objects.Integer)
-		if !ok {
-			return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: indexObject}
-		}
-
-		if index < 0 {
-			index = objects.Integer(len(collection)) + index
-		}
-
-		if index < 0 || index >= objects.Integer(len(collection)) {
-			return objects.ErrIndexOutOfBounds{Index: int(index), Size: len(collection)}
-		}
-
-		result = collection[index]
-	default:
-		return errors.ErrInvalidOperand{Operation: "Index", LeftOperand: collection, RightOperand: indexObject}
-	}
-
-	return vm.push(result)
-}
-
 func (vm *vm) opNewFunction() error {
-	opInfo := instruction.NewFunction.Info()
-
-	templateIndex := vm.readOperand(opInfo.Operands[0].Width)
+	templateIndex := vm.readOperand(2)
 
 	template := vm.program.FunctionsPool[templateIndex]
 
@@ -323,9 +260,7 @@ func (vm *vm) opNewFunction() error {
 }
 
 func (vm *vm) opCall() error {
-	opInfo := instruction.Call.Info()
-
-	argumentsCount := vm.readOperand(opInfo.Operands[0].Width)
+	argumentsCount := vm.readOperand(1)
 
 	functionObject, err := vm.pop()
 	if err != nil {
