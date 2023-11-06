@@ -3,18 +3,18 @@ package parser
 import "banek/tokens"
 
 func (parser *parser) fetchToken() {
-	nextToken, ok := <-parser.tokenChannel
+	nextToken, ok := <-parser.tokenChan
 	if !ok {
-		parser.currentToken = tokens.Token{Type: tokens.EOF}
+		parser.currToken = tokens.Token{Type: tokens.EOF}
 		return
 	}
 
-	parser.currentToken = nextToken
+	parser.currToken = nextToken
 }
 
-func (parser *parser) assertToken(tokenType tokens.TokenType) error {
-	if parser.currentToken.Type != tokenType {
-		return ErrUnexpectedToken{Expected: tokenType, Got: parser.currentToken.Type}
+func (parser *parser) assertToken(tokenType tokens.Type) error {
+	if parser.currToken.Type != tokenType {
+		return ErrUnexpectedToken{Expected: tokenType, Got: parser.currToken.Type}
 	}
 
 	return nil

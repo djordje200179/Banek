@@ -5,7 +5,7 @@ import (
 	"banek/tokens"
 )
 
-type OperatorPrecedence int
+type OperatorPrecedence byte
 
 const (
 	_ OperatorPrecedence = iota
@@ -18,13 +18,13 @@ const (
 	Call
 )
 
-var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
-	tokens.Equals:              Comparison,
-	tokens.NotEquals:           Comparison,
-	tokens.LessThan:            Comparison,
-	tokens.GreaterThan:         Comparison,
-	tokens.LessThanOrEquals:    Comparison,
-	tokens.GreaterThanOrEquals: Comparison,
+var infixOperatorPrecedences = map[tokens.Type]OperatorPrecedence{
+	tokens.Equals:        Comparison,
+	tokens.NotEquals:     Comparison,
+	tokens.Less:          Comparison,
+	tokens.Greater:       Comparison,
+	tokens.LessEquals:    Comparison,
+	tokens.GreaterEquals: Comparison,
 
 	tokens.Plus:  Sum,
 	tokens.Minus: Sum,
@@ -34,8 +34,8 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 	tokens.Modulo:   Product,
 	tokens.Caret:    Product,
 
-	tokens.LeftParenthesis: Call,
-	tokens.LeftBracket:     Call,
+	tokens.LeftParen:   Call,
+	tokens.LeftBracket: Call,
 
 	tokens.Assign:         Assignment,
 	tokens.PlusAssign:     Assignment,
@@ -44,23 +44,23 @@ var infixOperatorPrecedences = map[tokens.TokenType]OperatorPrecedence{
 	tokens.SlashAssign:    Assignment,
 }
 
-var infixOperations = map[tokens.TokenType]operations.InfixOperationType{
-	tokens.Plus:     operations.InfixPlusOperation,
-	tokens.Minus:    operations.InfixMinusOperation,
-	tokens.Asterisk: operations.InfixAsteriskOperation,
-	tokens.Slash:    operations.InfixSlashOperation,
-	tokens.Modulo:   operations.InfixModuloOperation,
-	tokens.Caret:    operations.InfixCaretOperation,
+var binaryOps = map[tokens.Type]operations.BinaryOperator{
+	tokens.Plus:     operations.BinaryPlus,
+	tokens.Minus:    operations.BinaryMinus,
+	tokens.Asterisk: operations.BinaryAsterisk,
+	tokens.Slash:    operations.BinarySlash,
+	tokens.Modulo:   operations.BinaryModulo,
+	tokens.Caret:    operations.BinaryCaret,
 
-	tokens.Equals:              operations.InfixEqualsOperation,
-	tokens.NotEquals:           operations.InfixNotEqualsOperation,
-	tokens.LessThan:            operations.InfixLessThanOperation,
-	tokens.GreaterThan:         operations.InfixGreaterThanOperation,
-	tokens.LessThanOrEquals:    operations.InfixLessThanOrEqualsOperation,
-	tokens.GreaterThanOrEquals: operations.InfixGreaterThanOrEqualsOperation,
+	tokens.Equals:        operations.BinaryEquals,
+	tokens.NotEquals:     operations.BinaryNotEquals,
+	tokens.Less:          operations.BinaryLess,
+	tokens.Greater:       operations.BinaryGreater,
+	tokens.LessEquals:    operations.BinaryLessEquals,
+	tokens.GreaterEquals: operations.BinaryGreaterEquals,
 }
 
-var prefixOperations = map[tokens.TokenType]operations.PrefixOperationType{
-	tokens.Minus: operations.PrefixMinusOperation,
-	tokens.Bang:  operations.PrefixBangOperation,
+var unaryOps = map[tokens.Type]operations.UnaryOperator{
+	tokens.Minus: operations.UnaryMinus,
+	tokens.Bang:  operations.UnaryBang,
 }

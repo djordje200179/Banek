@@ -6,21 +6,22 @@ import (
 	"strings"
 )
 
-type Function struct {
-	Name       expressions.Identifier
-	Parameters []expressions.Identifier
-	Body       Block
+type Func struct {
+	Name expressions.Identifier
+
+	Params []expressions.Identifier
+	Body   Block
 }
 
-func (statement Function) String() string {
+func (stmt Func) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.Function.String())
+	sb.WriteString(tokens.Func.String())
 	sb.WriteByte(' ')
-	sb.WriteString(statement.Name.String())
+	sb.WriteString(stmt.Name.String())
 
 	sb.WriteByte('(')
-	for i, param := range statement.Parameters {
+	for i, param := range stmt.Params {
 		if i != 0 {
 			sb.WriteString(", ")
 		}
@@ -28,12 +29,12 @@ func (statement Function) String() string {
 		sb.WriteString(param.String())
 	}
 	sb.WriteString(") {\n")
-	sb.WriteString(statement.Body.String())
+	sb.WriteString(stmt.Body.String())
 	sb.WriteString("\n}")
 
 	return sb.String()
 }
 
-func (statement Function) HasSideEffects() bool {
+func (stmt Func) HasSideEffects() bool {
 	return true
 }

@@ -7,7 +7,7 @@ type variable struct {
 	Mutable bool
 }
 
-type Environment interface {
+type Env interface {
 	Get(name string) (objects.Object, error)
 	Set(name string, value objects.Object) error
 	Define(name string, value objects.Object, mutable bool) error
@@ -16,4 +16,4 @@ type Environment interface {
 	Clear()
 }
 
-type EnvironmentFactory func(outer Environment, capacity int) Environment
+type EnvFactory func(outer Env, capacity int) Env

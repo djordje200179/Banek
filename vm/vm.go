@@ -2,11 +2,11 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/objects"
 )
 
-const stackSize = 16 * 1024
+const stackSize = 4 * 1024
 
 type vm struct {
 	program bytecode.Executable
@@ -14,71 +14,70 @@ type vm struct {
 	opStack [stackSize]objects.Object
 	opSP    int
 
-	globalScope  scope
-	currentScope *scope
+	globalScope scope
+	currScope   *scope
 }
 
 type opHandler func(*vm) error
 
-var ops = []opHandler{
-	instruction.PushDuplicate:         (*vm).opPushDuplicate,
-	instruction.PushConst:             (*vm).opPushConst,
-	instruction.PushLocal:             (*vm).opPushLocal,
-	instruction.PushGlobal:            (*vm).opPushGlobal,
-	instruction.PushCaptured:          (*vm).opPushCaptured,
-	instruction.PushBuiltin:           (*vm).opPushBuiltin,
-	instruction.PushCollectionElement: (*vm).opPushCollectionElement,
+var ops = [...]opHandler{
+	instructions.OpPushDup:      (*vm).opPushDup,
+	instructions.OpPushConst:    (*vm).opPushConst,
+	instructions.OpPushLocal:    (*vm).opPushLocal,
+	instructions.OpPushGlobal:   (*vm).opPushGlobal,
+	instructions.OpPushCaptured: (*vm).opPushCaptured,
+	instructions.OpPushBuiltin:  (*vm).opPushBuiltin,
+	instructions.OpPushCollElem: (*vm).opPushCollElem,
 
-	instruction.Pop:                  (*vm).opPop,
-	instruction.PopLocal:             (*vm).opPopLocal,
-	instruction.PopGlobal:            (*vm).opPopGlobal,
-	instruction.PopCaptured:          (*vm).opPopCaptured,
-	instruction.PopCollectionElement: (*vm).opPopCollectionElement,
+	instructions.OpPop:         (*vm).opPop,
+	instructions.OpPopLocal:    (*vm).opPopLocal,
+	instructions.OpPopGlobal:   (*vm).opPopGlobal,
+	instructions.OpPopCaptured: (*vm).opPopCaptured,
+	instructions.OpPopCollElem: (*vm).opPopCollElem,
 
-	instruction.OperationInfix:  (*vm).opInfixOperation,
-	instruction.OperationPrefix: (*vm).opPrefixOperation,
+	instructions.OpBinaryOp: (*vm).opBinaryOp,
+	instructions.OpUnaryOp:  (*vm).opUnaryOp,
 
-	instruction.Branch:        (*vm).opBranch,
-	instruction.BranchIfFalse: (*vm).opBranchIfFalse,
+	instructions.OpBranch:        (*vm).opBranch,
+	instructions.OpBranchIfFalse: (*vm).opBranchIfFalse,
 
-	instruction.Call:   (*vm).opCall,
-	instruction.Return: (*vm).opReturn,
+	instructions.OpCall:   (*vm).opCall,
+	instructions.OpReturn: (*vm).opReturn,
 
-	instruction.NewArray:    (*vm).opNewArray,
-	instruction.NewFunction: (*vm).opNewFunction,
+	instructions.OpNewArray: (*vm).opNewArray,
+	instructions.OpNewFunc:  (*vm).opNewFunc,
 }
 
 func Execute(program bytecode.Executable) error {
 	vm := &vm{
 		program: program,
 		globalScope: scope{
-			variables: make([]objects.Object, program.NumGlobals),
-			code:      program.Code,
+			vars: make([]objects.Object, program.NumGlobals),
+			code: program.Code,
 		},
 	}
-	vm.currentScope = &vm.globalScope
+	vm.currScope = &vm.globalScope
 
 	return vm.run()
 }
 
-type ErrUnknownOperation struct {
-	Operation instruction.Operation
+type ErrUnknownInstr struct {
+	InstrType instructions.Opcode
 }
 
-func (err ErrUnknownOperation) Error() string {
-	return "unknown operation: " + err.Operation.String()
+func (err ErrUnknownInstr) Error() string {
+	return "unknown instruction " + err.InstrType.String()
 }
 
 func (vm *vm) run() error {
-	for vm.currentScope != nil {
+	for vm.currScope != nil {
 		for vm.hasCode() {
-			operation := vm.readOperation()
-
-			if operation == instruction.Invalid || operation >= instruction.Operation(len(ops)) {
-				return ErrUnknownOperation{Operation: operation}
+			opcode := vm.readOpcode()
+			if opcode == instructions.OpInvalid || opcode >= instructions.Opcode(len(ops)) {
+				return ErrUnknownInstr{InstrType: opcode}
 			}
 
-			err := ops[operation](vm)
+			err := ops[opcode](vm)
 			if err != nil {
 				return err
 			}

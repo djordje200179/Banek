@@ -4,85 +4,88 @@ import (
 	"banek/ast"
 	"banek/ast/statements"
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/compiler/scopes"
 )
 
-func (compiler *compiler) compileStatement(statement ast.Statement) error {
+func (compiler *compiler) compileStmt(stmt ast.Statement) error {
 	scope := compiler.topScope()
 
-	switch statement := statement.(type) {
-	case statements.Expression:
-		err := compiler.compileExpression(statement.Expression)
+	switch stmt := stmt.(type) {
+	case statements.Expr:
+		err := compiler.compileExpr(stmt.Expr)
 		if err != nil {
 			return err
 		}
 
-		scope.EmitInstr(instruction.Pop)
+		scope.EmitInstr(instructions.OpPop)
 
 		return nil
 	case statements.If:
-		return compiler.compileIfStatement(statement)
+		return compiler.compileIfStatement(stmt)
 	case statements.Block:
-		return compiler.compileBlockStatement(statement)
-	case statements.Function:
-		return compiler.compileFunctionStatement(statement)
+		return compiler.compileBlock(stmt)
+	case statements.Func:
+		return compiler.compileFuncStmt(stmt)
 	case statements.Return:
-		err := compiler.compileExpression(statement.Value)
+		err := compiler.compileExpr(stmt.Value)
 		if err != nil {
 			return err
 		}
 
-		scope.EmitInstr(instruction.Return)
+		scope.EmitInstr(instructions.OpReturn)
 
 		return nil
-	case statements.VariableDeclaration:
-		return compiler.compileVariableDeclaration(statement)
+	case statements.VarDecl:
+		return compiler.compileVarDeclaration(stmt)
 	case statements.While:
-		return compiler.compileWhileStatement(statement)
+		return compiler.compileWhile(stmt)
 	default:
-		return ast.ErrUnknownStatement{Statement: statement}
+		return ast.ErrUnknownStmt{Stmt: stmt}
 	}
 }
 
-func (compiler *compiler) compileIfStatement(statement statements.If) error {
-	err := compiler.compileExpression(statement.Condition)
+func (compiler *compiler) compileIfStatement(stmt statements.If) error {
+	err := compiler.compileExpr(stmt.Cond)
 	if err != nil {
 		return err
 	}
 
 	scope := compiler.topScope()
 
-	firstPatchAddress := scope.CurrAddr()
-	scope.EmitInstr(instruction.BranchIfFalse, 0)
+	firstPatchAddr := scope.CurrAddr()
+	scope.EmitInstr(instructions.OpBranchIfFalse, 0)
 
-	err = compiler.compileStatement(statement.Consequence)
+	err = compiler.compileStmt(stmt.Consequence)
 	if err != nil {
 		return err
 	}
 
-	elseAddress := scope.CurrAddr()
+	elseAddr := scope.CurrAddr()
 
-	if statement.Alternative != nil {
-		secondPatchAddress := elseAddress
-		scope.EmitInstr(instruction.Branch, 0)
-		elseAddress += instruction.Branch.Info().Size()
+	branchSize := instructions.OpBranch.Info().Size()
+	branchIfFalseSize := instructions.OpBranchIfFalse.Info().Size()
 
-		err = compiler.compileStatement(statement.Alternative)
+	if stmt.Alternative != nil {
+		secondPatchAddr := elseAddr
+		scope.EmitInstr(instructions.OpBranch, 0)
+		elseAddr += branchSize
+
+		err = compiler.compileStmt(stmt.Alternative)
 		if err != nil {
 			return err
 		}
 
-		outAddress := scope.CurrAddr()
-		scope.PatchInstrOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-instruction.Branch.Info().Size())
+		outAddr := scope.CurrAddr()
+		scope.PatchInstrOperand(secondPatchAddr, 0, outAddr-secondPatchAddr-branchSize)
 	}
 
-	scope.PatchInstrOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
+	scope.PatchInstrOperand(firstPatchAddr, 0, elseAddr-firstPatchAddr-branchIfFalseSize)
 
 	return nil
 }
 
-func (compiler *compiler) compileBlockStatement(statement statements.Block) error {
+func (compiler *compiler) compileBlock(stmt statements.Block) error {
 	scope := compiler.topScope()
 
 	blockScope := &scopes.Block{
@@ -92,8 +95,8 @@ func (compiler *compiler) compileBlockStatement(statement statements.Block) erro
 
 	compiler.pushScope(blockScope)
 
-	for _, statement := range statement.Statements {
-		err := compiler.compileStatement(statement)
+	for _, stmt := range stmt.Stmts {
+		err := compiler.compileStmt(stmt)
 		if err != nil {
 			return err
 		}
@@ -104,104 +107,104 @@ func (compiler *compiler) compileBlockStatement(statement statements.Block) erro
 	return nil
 }
 
-func (compiler *compiler) compileFunctionStatement(statement statements.Function) error {
-	functionScope := new(scopes.Function)
+func (compiler *compiler) compileFuncStmt(stmt statements.Func) error {
+	funcScope := new(scopes.Function)
 
-	parameterNames := make([]string, len(statement.Parameters))
-	for i, parameter := range statement.Parameters {
-		parameterNames[i] = parameter.String()
+	paramNames := make([]string, len(stmt.Params))
+	for i, param := range stmt.Params {
+		paramNames[i] = param.String()
 	}
 
-	err := functionScope.AddParams(parameterNames)
+	err := funcScope.AddParams(paramNames)
 	if err != nil {
 		return err
 	}
 
 	scope := compiler.topScope()
 
-	variableIndex, err := scope.AddVar(statement.Name.String(), false)
+	varIndex, err := scope.AddVar(stmt.Name.String(), false)
 	if err != nil {
 		return err
 	}
 
-	compiler.pushScope(functionScope)
-	err = compiler.compileStatement(statement.Body)
+	compiler.pushScope(funcScope)
+	err = compiler.compileStmt(stmt.Body)
 	if err != nil {
 		return err
 	}
 	compiler.popScope()
 
-	functionTemplate := functionScope.MakeFunction()
-	functionTemplate.Name = statement.Name.String()
+	funcTemplate := funcScope.MakeFunction()
+	funcTemplate.Name = stmt.Name.String()
 
-	functionIndex := compiler.addFunction(functionTemplate)
+	funcIndex := compiler.addFunc(funcTemplate)
 
-	if functionTemplate.IsClosure() {
-		scope.EmitInstr(instruction.NewFunction, functionIndex)
+	if funcTemplate.IsClosure() {
+		scope.EmitInstr(instructions.OpNewFunc, funcIndex)
 	} else {
-		functionObject := &bytecode.Function{
-			TemplateIndex: functionIndex,
+		functionObject := &bytecode.Func{
+			TemplateIndex: funcIndex,
 		}
 
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(functionObject))
+		scope.EmitInstr(instructions.OpPushConst, compiler.addConst(functionObject))
 	}
 
 	if scope.IsGlobal() {
-		scope.EmitInstr(instruction.PopGlobal, variableIndex)
+		scope.EmitInstr(instructions.OpPopGlobal, varIndex)
 	} else {
-		scope.EmitInstr(instruction.PopLocal, variableIndex)
+		scope.EmitInstr(instructions.OpPopLocal, varIndex)
 	}
 
 	return nil
 }
 
-func (compiler *compiler) compileVariableDeclaration(statement statements.VariableDeclaration) error {
-	err := compiler.compileExpression(statement.Value)
+func (compiler *compiler) compileVarDeclaration(stmt statements.VarDecl) error {
+	err := compiler.compileExpr(stmt.Value)
 	if err != nil {
 		return err
 	}
 
 	scope := compiler.topScope()
 
-	index, err := scope.AddVar(statement.Name.String(), statement.Mutable)
+	index, err := scope.AddVar(stmt.Name.String(), stmt.Mutable)
 	if err != nil {
 		return err
 	}
 
 	if scope.IsGlobal() {
-		scope.EmitInstr(instruction.PopGlobal, index)
+		scope.EmitInstr(instructions.OpPopGlobal, index)
 	} else {
-		scope.EmitInstr(instruction.PopLocal, index)
+		scope.EmitInstr(instructions.OpPopLocal, index)
 	}
 
 	return nil
 }
 
-func (compiler *compiler) compileWhileStatement(statement statements.While) error {
+func (compiler *compiler) compileWhile(stmt statements.While) error {
 	scope := compiler.topScope()
 
-	conditionAddress := scope.CurrAddr()
+	condAddr := scope.CurrAddr()
 
-	err := compiler.compileExpression(statement.Condition)
+	err := compiler.compileExpr(stmt.Cond)
 	if err != nil {
 		return err
 	}
 
-	conditionalBranchAddress := scope.CurrAddr()
+	condBranchAddr := scope.CurrAddr()
 
-	scope.EmitInstr(instruction.BranchIfFalse, 0)
+	scope.EmitInstr(instructions.OpBranchIfFalse, 0)
 
-	err = compiler.compileStatement(statement.Body)
+	err = compiler.compileStmt(stmt.Body)
 	if err != nil {
 		return err
 	}
 
-	bodyOutAddress := scope.CurrAddr()
-	loopOutAddress := bodyOutAddress + instruction.Branch.Info().Size()
+	bodyOutAddr := scope.CurrAddr()
+	loopOutAddr := bodyOutAddr + instructions.OpBranch.Info().Size()
 
-	scope.EmitInstr(instruction.Branch, conditionAddress-loopOutAddress)
+	scope.EmitInstr(instructions.OpBranch, condAddr-loopOutAddr)
 
-	scope.PatchInstrOperand(conditionalBranchAddress, 0, loopOutAddress-conditionalBranchAddress-instruction.BranchIfFalse.Info().Size())
+	scope.PatchInstrOperand(condBranchAddr, 0, loopOutAddr-condBranchAddr-instructions.OpBranchIfFalse.Info().Size())
 
 	return nil
 }

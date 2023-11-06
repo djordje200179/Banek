@@ -1,6 +1,6 @@
 package scopes
 
-import "banek/bytecode/instruction"
+import "banek/bytecode/instructions"
 
 type Var struct {
 	Name string
@@ -20,7 +20,7 @@ type Scope interface {
 	AddVar(name string, mutable bool) (int, error)
 	GetVar(name string) (Var, int)
 
-	EmitInstr(op instruction.Operation, operands ...int)
+	EmitInstr(opcode instructions.Opcode, operands ...int)
 	PatchInstrOperand(addr int, operandIndex int, newValue int)
 	CurrAddr() int
 

@@ -10,9 +10,15 @@ func (err ErrStackOverflow) Error() string {
 	return "stack overflow"
 }
 
+type ErrStackUnderflow struct{}
+
+func (err ErrStackUnderflow) Error() string {
+	return "stack underflow"
+}
+
 func (vm *vm) peek() (objects.Object, error) {
 	if vm.opSP <= 0 {
-		return nil, ErrStackOverflow{}
+		return nil, ErrStackUnderflow{}
 	}
 
 	return vm.opStack[vm.opSP-1], nil
@@ -31,7 +37,7 @@ func (vm *vm) push(object objects.Object) error {
 
 func (vm *vm) pop() (objects.Object, error) {
 	if vm.opSP <= 0 {
-		return nil, ErrStackOverflow{}
+		return nil, ErrStackUnderflow{}
 	}
 
 	vm.opSP--
@@ -42,7 +48,7 @@ func (vm *vm) pop() (objects.Object, error) {
 
 func (vm *vm) popMany(arr []objects.Object) error {
 	if vm.opSP < len(arr) {
-		return ErrStackOverflow{}
+		return ErrStackUnderflow{}
 	}
 
 	nextSP := vm.opSP - len(arr)

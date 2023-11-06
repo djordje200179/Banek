@@ -3,7 +3,7 @@ package tokens
 import "strings"
 
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 }
 

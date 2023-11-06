@@ -3,14 +3,13 @@ package expressions
 import "banek/ast"
 
 type Assignment struct {
-	Variable ast.Expression
-	Value    ast.Expression
+	Var, Value ast.Expression
 }
 
-func (assignment Assignment) String() string {
-	return assignment.Variable.String() + " = " + assignment.Value.String()
+func (expr Assignment) String() string {
+	return expr.Var.String() + " = " + expr.Value.String()
 }
 
-func (assignment Assignment) IsConstant() bool {
-	return assignment.Value.IsConstant()
+func (expr Assignment) IsConst() bool {
+	return expr.Value.IsConst()
 }

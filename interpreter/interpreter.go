@@ -7,36 +7,36 @@ import (
 	"runtime"
 )
 
-func Interpret(statementsChan <-chan ast.Statement, bufferSize int) <-chan results.Result {
-	resultsChan := make(chan results.Result, bufferSize)
+func Interpret(stmtsChan <-chan ast.Statement, bufferSize int) <-chan results.Result {
+	resChan := make(chan results.Result, bufferSize)
 
-	go evalThread(statementsChan, resultsChan)
+	go evalThread(stmtsChan, resChan)
 
-	return resultsChan
+	return resChan
 }
 
 type interpreter struct {
-	globalEnv environments.Environment
+	globalEnv environments.Env
 }
 
-var EnvFactory environments.EnvironmentFactory = environments.NewArrayEnvironment
+var EnvFactory environments.EnvFactory = environments.NewArrayEnv
 
-func evalThread(statementsChan <-chan ast.Statement, resultsChan chan<- results.Result) {
+func evalThread(stmtsChan <-chan ast.Statement, resChan chan<- results.Result) {
 	runtime.LockOSThread()
 
 	interpreter := &interpreter{
 		globalEnv: EnvFactory(nil, 0),
 	}
 
-	for statement := range statementsChan {
-		result, err := interpreter.evalStatement(interpreter.globalEnv, statement)
+	for stmt := range stmtsChan {
+		res, err := interpreter.evalStmt(interpreter.globalEnv, stmt)
 		if err != nil {
-			resultsChan <- results.Error{Err: err}
+			resChan <- results.Error{Err: err}
 			continue
 		}
 
-		resultsChan <- result
+		resChan <- res
 	}
 
-	close(resultsChan)
+	close(resChan)
 }

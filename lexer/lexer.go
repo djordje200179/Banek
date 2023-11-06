@@ -7,32 +7,39 @@ import (
 	"runtime"
 )
 
-func Tokenize(reader io.Reader, bufferSize int) <-chan tokens.Token {
-	tokenChannel := make(chan tokens.Token, bufferSize)
+func Tokenize(codeReader io.Reader, bufferSize int) <-chan tokens.Token {
+	tokenChan := make(chan tokens.Token, bufferSize)
 
-	go lexingThread(reader, tokenChannel)
+	go lexingThread(codeReader, tokenChan)
 
-	return tokenChannel
+	return tokenChan
 }
 
 type lexer struct {
-	reader *bufio.Reader
+	codeReader *bufio.Reader
 }
 
-func lexingThread(reader io.Reader, ch chan<- tokens.Token) {
+func lexingThread(codeReader io.Reader, tokenChan chan<- tokens.Token) {
 	runtime.LockOSThread()
 
+	var bufferedReader *bufio.Reader
+	if codeReaderBuffered, ok := codeReader.(*bufio.Reader); ok {
+		bufferedReader = codeReaderBuffered
+	} else {
+		bufferedReader = bufio.NewReader(codeReader)
+	}
+
 	lexer := lexer{
-		reader: bufio.NewReader(reader),
+		codeReader: bufferedReader,
 	}
 
 	for {
 		token := lexer.nextToken()
-		ch <- token
+		tokenChan <- token
 
 		if token.Type == tokens.EOF {
-			close(ch)
-			return
+			close(tokenChan)
+			break
 		}
 	}
 }

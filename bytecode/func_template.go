@@ -4,26 +4,27 @@ import (
 	"strings"
 )
 
-type CaptureInfo struct {
+type Capture struct {
 	Index int
 	Level int
 }
 
-type FunctionTemplate struct {
+type FuncTemplate struct {
 	Name string
 
 	Code Code
 
-	Parameters   []string
-	NumLocals    int
-	CapturesInfo []CaptureInfo
+	Params    []string
+	NumLocals int
+
+	Captures []Capture
 }
 
-func (template FunctionTemplate) IsClosure() bool {
-	return len(template.CapturesInfo) > 0
+func (template FuncTemplate) IsClosure() bool {
+	return len(template.Captures) > 0
 }
 
-func (template FunctionTemplate) String() string {
+func (template FuncTemplate) String() string {
 	var sb strings.Builder
 
 	if template.Name != "" {
@@ -33,7 +34,7 @@ func (template FunctionTemplate) String() string {
 	}
 
 	sb.WriteByte('(')
-	sb.WriteString(strings.Join(template.Parameters, ", "))
+	sb.WriteString(strings.Join(template.Params, ", "))
 	sb.WriteByte(')')
 	sb.WriteByte('\n')
 

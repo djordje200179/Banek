@@ -8,102 +8,102 @@ import (
 	"strconv"
 )
 
-func (parser *parser) parseExpression(precedence OperatorPrecedence) (ast.Expression, error) {
-	expressionParser := parser.prefixParsers[parser.currentToken.Type]
-	if expressionParser == nil {
-		return nil, ErrUnknownToken{TokenType: parser.currentToken.Type}
+func (parser *parser) parseExpr(precedence OperatorPrecedence) (ast.Expression, error) {
+	exprHandler := parser.prefixExprHandlers[parser.currToken.Type]
+	if exprHandler == nil {
+		return nil, ErrUnknownToken{TokenType: parser.currToken.Type}
 	}
 
-	leftExpression, err := expressionParser()
+	leftExpr, err := exprHandler()
 	if err != nil {
 		return nil, err
 	}
 
-	for parser.currentToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[parser.currentToken.Type] {
-		expressionParser := parser.infixParsers[parser.currentToken.Type]
-		if expressionParser == nil {
-			return leftExpression, nil
+	for parser.currToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[parser.currToken.Type] {
+		exprHandler := parser.infixExprHandlers[parser.currToken.Type]
+		if exprHandler == nil {
+			return leftExpr, nil
 		}
 
-		leftExpression, err = expressionParser(leftExpression)
+		leftExpr, err = exprHandler(leftExpr)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return leftExpression, nil
+	return leftExpr, nil
 }
 
 func (parser *parser) parseIdentifier() (ast.Expression, error) {
-	literal := parser.currentToken.Literal
+	literal := parser.currToken.Literal
 
 	parser.fetchToken()
 
 	return expressions.Identifier(literal), nil
 }
 
-func (parser *parser) parseIntegerLiteral() (ast.Expression, error) {
-	value, err := strconv.ParseInt(parser.currentToken.Literal, 0, 64)
+func (parser *parser) parseInteger() (ast.Expression, error) {
+	value, err := strconv.ParseInt(parser.currToken.Literal, 0, 64)
 	if err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	return expressions.ConstantLiteral{Value: objects.Integer(value)}, nil
+	return expressions.ConstLiteral{Value: objects.Integer(value)}, nil
 }
 
-func (parser *parser) parseBooleanLiteral() (ast.Expression, error) {
-	value, err := strconv.ParseBool(parser.currentToken.Literal)
+func (parser *parser) parseBoolean() (ast.Expression, error) {
+	value, err := strconv.ParseBool(parser.currToken.Literal)
 	if err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	return expressions.ConstantLiteral{Value: objects.Boolean(value)}, nil
+	return expressions.ConstLiteral{Value: objects.Boolean(value)}, nil
 }
 
-func (parser *parser) parseStringLiteral() (ast.Expression, error) {
-	value := parser.currentToken.Literal
+func (parser *parser) parseString() (ast.Expression, error) {
+	value := parser.currToken.Literal
 
 	parser.fetchToken()
 
-	return expressions.ConstantLiteral{Value: objects.String(value)}, nil
+	return expressions.ConstLiteral{Value: objects.String(value)}, nil
 }
 
-func (parser *parser) parseUndefinedLiteral() (ast.Expression, error) {
+func (parser *parser) parseUndefined() (ast.Expression, error) {
 	parser.fetchToken()
 
-	return expressions.ConstantLiteral{Value: objects.Undefined{}}, nil
+	return expressions.ConstLiteral{Value: objects.Undefined{}}, nil
 }
 
-func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
+func (parser *parser) parseArray() (ast.Expression, error) {
 	parser.fetchToken()
 
-	var elements expressions.ArrayLiteral
+	var elems expressions.ArrayLiteral
 
-	if parser.currentToken.Type == tokens.RightBracket {
+	if parser.currToken.Type == tokens.RightBracket {
 		parser.fetchToken()
-		return elements, nil
+		return elems, nil
 	}
 
-	argument, err := parser.parseExpression(Lowest)
+	elem, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	elements = append(elements, argument)
+	elems = append(elems, elem)
 
-	for parser.currentToken.Type == tokens.Comma {
+	for parser.currToken.Type == tokens.Comma {
 		parser.fetchToken()
 
-		argument, err = parser.parseExpression(Lowest)
+		elem, err = parser.parseExpr(Lowest)
 		if err != nil {
 			return nil, err
 		}
 
-		elements = append(elements, argument)
+		elems = append(elems, elem)
 	}
 
 	if err := parser.assertToken(tokens.RightBracket); err != nil {
@@ -112,52 +112,52 @@ func (parser *parser) parseArrayLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	return elements, nil
+	return elems, nil
 }
 
-func (parser *parser) parsePrefixOperation() (ast.Expression, error) {
-	operatorToken := parser.currentToken
+func (parser *parser) parseUnaryOp() (ast.Expression, error) {
+	opToken := parser.currToken
 
 	parser.fetchToken()
 
-	operand, err := parser.parseExpression(Prefix)
+	operand, err := parser.parseExpr(Prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.PrefixOperation{Operator: prefixOperations[operatorToken.Type], Operand: operand}, nil
+	return expressions.UnaryOp{Operation: unaryOps[opToken.Type], Operand: operand}, nil
 }
 
-func (parser *parser) parseInfixOperation(left ast.Expression) (ast.Expression, error) {
-	operatorToken := parser.currentToken
+func (parser *parser) parseBinaryOp(left ast.Expression) (ast.Expression, error) {
+	opToken := parser.currToken
 
-	precedence, ok := infixOperatorPrecedences[operatorToken.Type]
+	precedence, ok := infixOperatorPrecedences[opToken.Type]
 	if !ok {
-		return nil, ErrUnknownToken{TokenType: operatorToken.Type}
+		return nil, ErrUnknownToken{TokenType: opToken.Type}
 	}
 
 	parser.fetchToken()
 
-	right, err := parser.parseExpression(precedence)
+	right, err := parser.parseExpr(precedence)
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.InfixOperation{Left: left, Operator: infixOperations[operatorToken.Type], Right: right}, nil
+	return expressions.BinaryOp{Left: left, Operator: binaryOps[opToken.Type], Right: right}, nil
 }
 
 func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, error) {
-	var valueWrapper expressions.InfixOperation
+	var valueWrapper expressions.BinaryOp
 	hasWrapper := false
-	if parser.currentToken.Type != tokens.Assign {
-		operator := tokens.CharTokens[parser.currentToken.Type.String()[0:1]]
-		valueWrapper = expressions.InfixOperation{Left: variable, Operator: infixOperations[operator]}
+	if parser.currToken.Type != tokens.Assign {
+		op := tokens.CharTokens[parser.currToken.Type.String()[0:1]]
+		valueWrapper = expressions.BinaryOp{Left: variable, Operator: binaryOps[op]}
 		hasWrapper = true
 	}
 
 	parser.fetchToken()
 
-	value, err := parser.parseExpression(Lowest)
+	value, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -167,30 +167,30 @@ func (parser *parser) parseAssignment(variable ast.Expression) (ast.Expression, 
 		value = valueWrapper
 	}
 
-	return expressions.Assignment{Variable: variable, Value: value}, nil
+	return expressions.Assignment{Var: variable, Value: value}, nil
 }
 
-func (parser *parser) parseGroupedExpression() (ast.Expression, error) {
+func (parser *parser) parseGroupedExpr() (ast.Expression, error) {
 	parser.fetchToken()
 
-	expression, err := parser.parseExpression(Lowest)
+	expr, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParen); err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	return expression, nil
+	return expr, nil
 }
 
-func (parser *parser) parseIfExpression() (ast.Expression, error) {
+func (parser *parser) parseIfExpr() (ast.Expression, error) {
 	parser.fetchToken()
 
-	condition, err := parser.parseExpression(Lowest)
+	condition, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (parser *parser) parseIfExpression() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	consequence, err := parser.parseExpression(Lowest)
+	consequence, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -212,22 +212,22 @@ func (parser *parser) parseIfExpression() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	alternative, err := parser.parseExpression(Lowest)
+	alternative, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.If{Condition: condition, Consequence: consequence, Alternative: alternative}, nil
+	return expressions.If{Cond: condition, Consequence: consequence, Alternative: alternative}, nil
 }
 
-func (parser *parser) parseFunctionLiteral() (ast.Expression, error) {
+func (parser *parser) parseFuncLiteral() (ast.Expression, error) {
 	parser.fetchToken()
 
-	if err := parser.assertToken(tokens.LeftParenthesis); err != nil {
+	if err := parser.assertToken(tokens.LeftParen); err != nil {
 		return nil, err
 	}
 
-	parameters, err := parser.parseFunctionParameters()
+	params, err := parser.parseFuncParams()
 	if err != nil {
 		return nil, err
 	}
@@ -238,32 +238,32 @@ func (parser *parser) parseFunctionLiteral() (ast.Expression, error) {
 
 	parser.fetchToken()
 
-	expression, err := parser.parseExpression(Lowest)
+	expr, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.FunctionLiteral{Parameters: parameters, Body: expression}, nil
+	return expressions.FuncLiteral{Params: params, Body: expr}, nil
 }
 
-func (parser *parser) parseFunctionParameters() ([]expressions.Identifier, error) {
+func (parser *parser) parseFuncParams() ([]expressions.Identifier, error) {
 	parser.fetchToken()
 
-	if parser.currentToken.Type == tokens.RightParenthesis {
+	if parser.currToken.Type == tokens.RightParen {
 		parser.fetchToken()
 		return nil, nil
 	}
 
-	var parameters []expressions.Identifier
+	var params []expressions.Identifier
 
 	identifier, err := parser.parseIdentifier()
 	if err != nil {
 		return nil, err
 	}
 
-	parameters = append(parameters, identifier.(expressions.Identifier))
+	params = append(params, identifier.(expressions.Identifier))
 
-	for parser.currentToken.Type == tokens.Comma {
+	for parser.currToken.Type == tokens.Comma {
 		parser.fetchToken()
 
 		identifier, err = parser.parseIdentifier()
@@ -271,31 +271,31 @@ func (parser *parser) parseFunctionParameters() ([]expressions.Identifier, error
 			return nil, err
 		}
 
-		parameters = append(parameters, identifier.(expressions.Identifier))
+		params = append(params, identifier.(expressions.Identifier))
 	}
 
-	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParen); err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	return parameters, nil
+	return params, nil
 }
 
-func (parser *parser) parseCallExpression(function ast.Expression) (ast.Expression, error) {
-	arguments, err := parser.parseCallArguments()
+func (parser *parser) parseFuncCall(function ast.Expression) (ast.Expression, error) {
+	arguments, err := parser.parseFuncCallArgs()
 	if err != nil {
 		return nil, err
 	}
 
-	return expressions.FunctionCall{Function: function, Arguments: arguments}, nil
+	return expressions.FuncCall{Func: function, Args: arguments}, nil
 }
 
-func (parser *parser) parseIndexExpression(collection ast.Expression) (ast.Expression, error) {
+func (parser *parser) parseIndexExpr(collection ast.Expression) (ast.Expression, error) {
 	parser.fetchToken()
 
-	index, err := parser.parseExpression(Lowest)
+	index, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -306,42 +306,42 @@ func (parser *parser) parseIndexExpression(collection ast.Expression) (ast.Expre
 
 	parser.fetchToken()
 
-	return expressions.CollectionAccess{Collection: collection, Key: index}, nil
+	return expressions.CollIndex{Coll: collection, Key: index}, nil
 }
 
-func (parser *parser) parseCallArguments() ([]ast.Expression, error) {
+func (parser *parser) parseFuncCallArgs() ([]ast.Expression, error) {
 	parser.fetchToken()
 
-	if parser.currentToken.Type == tokens.RightParenthesis {
+	if parser.currToken.Type == tokens.RightParen {
 		parser.fetchToken()
 		return nil, nil
 	}
 
-	var arguments []ast.Expression
+	var args []ast.Expression
 
-	argument, err := parser.parseExpression(Lowest)
+	arg, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	arguments = append(arguments, argument)
+	args = append(args, arg)
 
-	for parser.currentToken.Type == tokens.Comma {
+	for parser.currToken.Type == tokens.Comma {
 		parser.fetchToken()
 
-		argument, err = parser.parseExpression(Lowest)
+		arg, err = parser.parseExpr(Lowest)
 		if err != nil {
 			return nil, err
 		}
 
-		arguments = append(arguments, argument)
+		args = append(args, arg)
 	}
 
-	if err := parser.assertToken(tokens.RightParenthesis); err != nil {
+	if err := parser.assertToken(tokens.RightParen); err != nil {
 		return nil, err
 	}
 
 	parser.fetchToken()
 
-	return arguments, nil
+	return args, nil
 }

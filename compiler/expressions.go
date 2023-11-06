@@ -4,125 +4,124 @@ import (
 	"banek/ast"
 	"banek/ast/expressions"
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/compiler/scopes"
 	"banek/exec/errors"
 	"banek/exec/objects"
 )
 
-func (compiler *compiler) compileExpression(expression ast.Expression) error {
+func (compiler *compiler) compileExpr(expr ast.Expression) error {
 	scope := compiler.topScope()
 
-	switch expression := expression.(type) {
-	case expressions.ConstantLiteral:
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(expression.Value))
+	switch expr := expr.(type) {
+	case expressions.ConstLiteral:
+		scope.EmitInstr(instructions.OpPushConst, compiler.addConst(expr.Value))
 		return nil
-	case expressions.InfixOperation:
-		return compiler.compileInfixOperation(expression)
-	case expressions.PrefixOperation:
-		return compiler.compilePrefixOperation(expression)
+	case expressions.BinaryOp:
+		return compiler.compileBinaryOp(expr)
+	case expressions.UnaryOp:
+		return compiler.compileUnaryOp(expr)
 	case expressions.If:
-		return compiler.compileIfExpression(expression)
+		return compiler.compileIfExpr(expr)
 	case expressions.ArrayLiteral:
-		for _, element := range expression {
-			err := compiler.compileExpression(element)
+		for _, elem := range expr {
+			err := compiler.compileExpr(elem)
 			if err != nil {
 				return err
 			}
 		}
 
-		scope.EmitInstr(instruction.NewArray, len(expression))
+		scope.EmitInstr(instructions.OpNewArray, len(expr))
 
 		return nil
-	case expressions.CollectionAccess:
-		err := compiler.compileExpression(expression.Collection)
+	case expressions.CollIndex:
+		err := compiler.compileExpr(expr.Coll)
 		if err != nil {
 			return err
 		}
 
-		err = compiler.compileExpression(expression.Key)
+		err = compiler.compileExpr(expr.Key)
 		if err != nil {
 			return err
 		}
 
-		scope.EmitInstr(instruction.PushCollectionElement)
+		scope.EmitInstr(instructions.OpPushCollElem)
 
 		return nil
 	case expressions.Assignment:
-		return compiler.compileAssigmentExpression(expression)
-	case expressions.FunctionCall:
-		for _, argument := range expression.Arguments {
-			err := compiler.compileExpression(argument)
+		return compiler.compileAssigment(expr)
+	case expressions.FuncCall:
+		for _, arg := range expr.Args {
+			err := compiler.compileExpr(arg)
 			if err != nil {
 				return err
 			}
 		}
 
-		err := compiler.compileExpression(expression.Function)
+		err := compiler.compileExpr(expr.Func)
 		if err != nil {
 			return err
 		}
 
-		scope.EmitInstr(instruction.Call, len(expression.Arguments))
+		scope.EmitInstr(instructions.OpCall, len(expr.Args))
 
 		return nil
-	case expressions.FunctionLiteral:
-		return compiler.compileFunctionLiteral(expression)
+	case expressions.FuncLiteral:
+		return compiler.compileFuncLiteral(expr)
 	case expressions.Identifier:
-		return compiler.compileIdentifier(expression)
+		return compiler.compileIdentifier(expr)
 	default:
-		return ast.ErrUnknownExpression{Expression: expression}
+		return ast.ErrUnknownExpr{Expr: expr}
 	}
 }
 
-func (compiler *compiler) compileIfExpression(expression expressions.If) error {
-	err := compiler.compileExpression(expression.Condition)
+func (compiler *compiler) compileIfExpr(expression expressions.If) error {
+	err := compiler.compileExpr(expression.Cond)
 	if err != nil {
 		return err
 	}
 
 	scope := compiler.topScope()
 
-	firstPatchAddress := scope.CurrAddr()
-	scope.EmitInstr(instruction.BranchIfFalse, 0)
+	firstPatchAddr := scope.CurrAddr()
+	scope.EmitInstr(instructions.OpBranchIfFalse, 0)
 
-	err = compiler.compileExpression(expression.Consequence)
+	err = compiler.compileExpr(expression.Consequence)
 	if err != nil {
 		return err
 	}
 
-	elseAddress := scope.CurrAddr()
+	branchSize := instructions.OpBranch.Info().Size()
+	branchIfFalseSize := instructions.OpBranchIfFalse.Info().Size()
 
-	branchSize := instruction.Branch.Info().Size()
+	secondPatchAddr := scope.CurrAddr()
+	scope.EmitInstr(instructions.OpBranch, 0)
+	elseAddr := secondPatchAddr + branchSize
 
-	secondPatchAddress := elseAddress
-	scope.EmitInstr(instruction.Branch, 0)
-	elseAddress += branchSize
-
-	err = compiler.compileExpression(expression.Alternative)
+	err = compiler.compileExpr(expression.Alternative)
 	if err != nil {
 		return err
 	}
 
-	outAddress := scope.CurrAddr()
-	scope.PatchInstrOperand(secondPatchAddress, 0, outAddress-secondPatchAddress-branchSize)
+	outAddr := scope.CurrAddr()
 
-	scope.PatchInstrOperand(firstPatchAddress, 0, elseAddress-firstPatchAddress-instruction.BranchIfFalse.Info().Size())
+	scope.PatchInstrOperand(secondPatchAddr, 0, outAddr-secondPatchAddr-branchSize)
+	scope.PatchInstrOperand(firstPatchAddr, 0, elseAddr-firstPatchAddr-branchIfFalseSize)
 
 	return nil
 }
 
-func (compiler *compiler) compileAssigmentExpression(expression expressions.Assignment) error {
-	err := compiler.compileExpression(expression.Value)
+func (compiler *compiler) compileAssigment(expr expressions.Assignment) error {
+	err := compiler.compileExpr(expr.Value)
 	if err != nil {
 		return err
 	}
 
 	scope := compiler.topScope()
 
-	scope.EmitInstr(instruction.PushDuplicate)
+	scope.EmitInstr(instructions.OpPushDup)
 
-	switch variable := expression.Variable.(type) {
+	switch variable := expr.Var.(type) {
 	case expressions.Identifier:
 		varName := variable.String()
 
@@ -150,22 +149,22 @@ func (compiler *compiler) compileAssigmentExpression(expression expressions.Assi
 		}
 
 		if varScope.IsGlobal() {
-			scope.EmitInstr(instruction.PopGlobal, varIndex)
+			scope.EmitInstr(instructions.OpPopGlobal, varIndex)
 			return nil
 		} else if varScope == scope {
-			scope.EmitInstr(instruction.PopLocal, varIndex)
+			scope.EmitInstr(instructions.OpPopLocal, varIndex)
 			return nil
 		}
 
 		capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-		functionScope, ok := varScope.(*scopes.Function)
+		funcScope, ok := varScope.(*scopes.Function)
 		if !ok {
 			block := varScope.(*scopes.Block)
 			for {
 				nextScope := block.Parent
 
-				functionScope, ok = nextScope.(*scopes.Function)
+				funcScope, ok = nextScope.(*scopes.Function)
 				if ok {
 					break
 				}
@@ -174,34 +173,34 @@ func (compiler *compiler) compileAssigmentExpression(expression expressions.Assi
 			}
 		}
 
-		capturedVariableIndex := functionScope.AddCapturedVar(capturedVarLevel, varIndex)
-		scope.EmitInstr(instruction.PopCaptured, capturedVariableIndex)
+		capturedVarIndex := funcScope.AddCapturedVar(capturedVarLevel, varIndex)
+		scope.EmitInstr(instructions.OpPopCaptured, capturedVarIndex)
 
 		return nil
-	case expressions.CollectionAccess:
-		err := compiler.compileExpression(variable.Collection)
+	case expressions.CollIndex:
+		err := compiler.compileExpr(variable.Coll)
 		if err != nil {
 			return err
 		}
 
-		err = compiler.compileExpression(variable.Key)
+		err = compiler.compileExpr(variable.Key)
 		if err != nil {
 			return err
 		}
 
-		scope.EmitInstr(instruction.PopCollectionElement)
+		scope.EmitInstr(instructions.OpPopCollElem)
 
 		return nil
 	default:
-		return errors.ErrInvalidOperand{Operation: "=", LeftOperand: objects.Unknown} // TODO: fix right operand
+		return errors.ErrInvalidOp{Operator: "=", LeftOperand: objects.Unknown{}} // TODO: fix right operand
 	}
 }
 
-func (compiler *compiler) compileFunctionLiteral(expression expressions.FunctionLiteral) error {
+func (compiler *compiler) compileFuncLiteral(expr expressions.FuncLiteral) error {
 	funcScope := new(scopes.Function)
 
-	paramNames := make([]string, len(expression.Parameters))
-	for i, param := range expression.Parameters {
+	paramNames := make([]string, len(expr.Params))
+	for i, param := range expr.Params {
 		paramNames[i] = param.String()
 	}
 
@@ -211,39 +210,39 @@ func (compiler *compiler) compileFunctionLiteral(expression expressions.Function
 	}
 
 	compiler.pushScope(funcScope)
-	err = compiler.compileExpression(expression.Body)
+	err = compiler.compileExpr(expr.Body)
 	if err != nil {
 		return err
 	}
-	funcScope.EmitInstr(instruction.Return)
+	funcScope.EmitInstr(instructions.OpReturn)
 	compiler.popScope()
 
-	functionTemplate := funcScope.MakeFunction()
+	funcTemplate := funcScope.MakeFunction()
 
-	functionIndex := compiler.addFunction(functionTemplate)
+	funcIndex := compiler.addFunc(funcTemplate)
 
 	scope := compiler.topScope()
 
-	if functionTemplate.IsClosure() {
-		scope.EmitInstr(instruction.NewFunction, functionIndex)
+	if funcTemplate.IsClosure() {
+		scope.EmitInstr(instructions.OpNewFunc, funcIndex)
 	} else {
-		functionObject := &bytecode.Function{
-			TemplateIndex: functionIndex,
+		funcObject := &bytecode.Func{
+			TemplateIndex: funcIndex,
 		}
 
-		scope.EmitInstr(instruction.PushConst, compiler.addConstant(functionObject))
+		scope.EmitInstr(instructions.OpPushConst, compiler.addConst(funcObject))
 	}
 
 	return nil
 }
 
-func (compiler *compiler) compileIdentifier(expression expressions.Identifier) error {
-	varName := expression.String()
+func (compiler *compiler) compileIdentifier(expr expressions.Identifier) error {
+	varName := expr.String()
 
 	scope := compiler.topScope()
 
 	if index := objects.BuiltinFindIndex(varName); index != -1 {
-		scope.EmitInstr(instruction.PushBuiltin, index)
+		scope.EmitInstr(instructions.OpPushBuiltin, index)
 		return nil
 	}
 
@@ -267,22 +266,22 @@ func (compiler *compiler) compileIdentifier(expression expressions.Identifier) e
 	}
 
 	if varScope.IsGlobal() {
-		scope.EmitInstr(instruction.PushGlobal, varIndex)
+		scope.EmitInstr(instructions.OpPushGlobal, varIndex)
 		return nil
 	} else if varScope == scope {
-		scope.EmitInstr(instruction.PushLocal, varIndex)
+		scope.EmitInstr(instructions.OpPushLocal, varIndex)
 		return nil
 	}
 
-	capturedVariableLevel := len(compiler.scopes) - 2 - varScopeIndex
+	capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-	functionScope, ok := varScope.(*scopes.Function)
+	funcScope, ok := varScope.(*scopes.Function)
 	if !ok {
 		block := varScope.(*scopes.Block)
 		for {
 			nextScope := block.Parent
 
-			functionScope, ok = nextScope.(*scopes.Function)
+			funcScope, ok = nextScope.(*scopes.Function)
 			if ok {
 				break
 			}
@@ -291,8 +290,37 @@ func (compiler *compiler) compileIdentifier(expression expressions.Identifier) e
 		}
 	}
 
-	capturedVariableIndex := functionScope.AddCapturedVar(capturedVariableLevel, varIndex)
-	scope.EmitInstr(instruction.PushCaptured, capturedVariableIndex)
+	capturedVarIndex := funcScope.AddCapturedVar(capturedVarLevel, varIndex)
+	scope.EmitInstr(instructions.OpPushCaptured, capturedVarIndex)
+
+	return nil
+}
+
+func (compiler *compiler) compileBinaryOp(expression expressions.BinaryOp) error {
+	err := compiler.compileExpr(expression.Left)
+	if err != nil {
+		return err
+	}
+
+	err = compiler.compileExpr(expression.Right)
+	if err != nil {
+		return err
+	}
+
+	container := compiler.topScope()
+	container.EmitInstr(instructions.OpBinaryOp, int(expression.Operator))
+
+	return nil
+}
+
+func (compiler *compiler) compileUnaryOp(expression expressions.UnaryOp) error {
+	err := compiler.compileExpr(expression.Operand)
+	if err != nil {
+		return err
+	}
+
+	container := compiler.topScope()
+	container.EmitInstr(instructions.OpUnaryOp, int(expression.Operation))
 
 	return nil
 }

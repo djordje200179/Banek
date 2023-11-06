@@ -6,27 +6,27 @@ import (
 )
 
 type While struct {
-	Condition ast.Expression
+	Cond ast.Expression
 
 	Body ast.Statement
 }
 
-func (statement While) String() string {
+func (stmt While) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("while")
-	sb.WriteString(statement.Condition.String())
+	sb.WriteString(stmt.Cond.String())
 	sb.WriteString(" do {\n")
-	sb.WriteString(statement.Body.String())
+	sb.WriteString(stmt.Body.String())
 	sb.WriteString("\n}")
 
 	return sb.String()
 }
 
-func (statement While) HasSideEffects() bool {
-	if !statement.Condition.IsConstant() {
+func (stmt While) HasSideEffects() bool {
+	if !stmt.Cond.IsConst() {
 		return true
 	}
 
-	return statement.Body.HasSideEffects()
+	return stmt.Body.HasSideEffects()
 }

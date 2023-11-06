@@ -2,6 +2,5 @@ package expressions
 
 type Identifier string
 
-func (identifier Identifier) String() string { return string(identifier) }
-
-func (identifier Identifier) IsConstant() bool { return false }
+func (expr Identifier) String() string { return string(expr) }
+func (expr Identifier) IsConst() bool  { return false }

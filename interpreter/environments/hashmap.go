@@ -5,20 +5,20 @@ import (
 	"banek/exec/objects"
 )
 
-type hashmapEnvironment struct {
+type hashmapEnv struct {
 	values map[string]variable
 
-	outer Environment
+	outer Env
 }
 
-func NewHashmapEnvironment(outer Environment, capacity int) Environment {
-	return &hashmapEnvironment{
+func NewHashmapEnv(outer Env, capacity int) Env {
+	return &hashmapEnv{
 		values: make(map[string]variable, capacity),
 		outer:  outer,
 	}
 }
 
-func (env *hashmapEnvironment) Get(name string) (objects.Object, error) {
+func (env *hashmapEnv) Get(name string) (objects.Object, error) {
 	obj, ok := env.values[name]
 	if ok {
 		return obj.Object, nil
@@ -29,7 +29,7 @@ func (env *hashmapEnvironment) Get(name string) (objects.Object, error) {
 	}
 }
 
-func (env *hashmapEnvironment) Define(name string, value objects.Object, mutable bool) error {
+func (env *hashmapEnv) Define(name string, value objects.Object, mutable bool) error {
 	if _, ok := env.values[name]; ok {
 		return errors.ErrIdentifierAlreadyDefined{Identifier: name}
 	}
@@ -39,9 +39,9 @@ func (env *hashmapEnvironment) Define(name string, value objects.Object, mutable
 	return nil
 }
 
-func (env *hashmapEnvironment) Set(name string, value objects.Object) error {
-	if varEntry, ok := env.values[name]; ok {
-		if !varEntry.Mutable {
+func (env *hashmapEnv) Set(name string, value objects.Object) error {
+	if entry, ok := env.values[name]; ok {
+		if !entry.Mutable {
 			return errors.ErrIdentifierNotMutable{Identifier: name}
 		}
 
@@ -55,7 +55,7 @@ func (env *hashmapEnvironment) Set(name string, value objects.Object) error {
 	}
 }
 
-func (env *hashmapEnvironment) Delete(name string) error {
+func (env *hashmapEnv) Delete(name string) error {
 	if _, ok := env.values[name]; !ok {
 		if env.outer != nil {
 			return env.outer.Delete(name)
@@ -69,6 +69,6 @@ func (env *hashmapEnvironment) Delete(name string) error {
 	return nil
 }
 
-func (env *hashmapEnvironment) Clear() {
+func (env *hashmapEnv) Clear() {
 	clear(env.values)
 }

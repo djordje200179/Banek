@@ -2,7 +2,7 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/objects"
 	"strconv"
 	"sync"
@@ -12,9 +12,9 @@ type scope struct {
 	code bytecode.Code
 	pc   int
 
-	variables []objects.Object
+	vars []objects.Object
 
-	function *bytecode.Function
+	function *bytecode.Func
 
 	parent *scope
 }
@@ -25,89 +25,89 @@ var scopePool = sync.Pool{
 	},
 }
 
-type ErrVariableOutOfScope struct {
+type ErrVarOutOfScope struct {
 	Index int
 }
 
-func (err ErrVariableOutOfScope) Error() string {
+func (err ErrVarOutOfScope) Error() string {
 	return "variable out of scope: " + strconv.Itoa(err.Index)
 }
 
 func (vm *vm) getGlobal(index int) (objects.Object, error) {
-	if index >= len(vm.globalScope.variables) {
-		return nil, ErrVariableOutOfScope{index}
+	if index >= len(vm.globalScope.vars) {
+		return nil, ErrVarOutOfScope{index}
 	}
 
-	return vm.globalScope.variables[index], nil
+	return vm.globalScope.vars[index], nil
 }
 
 func (vm *vm) setGlobal(index int, value objects.Object) error {
-	if index >= len(vm.globalScope.variables) {
-		return ErrVariableOutOfScope{index}
+	if index >= len(vm.globalScope.vars) {
+		return ErrVarOutOfScope{index}
 	}
 
-	vm.globalScope.variables[index] = value
+	vm.globalScope.vars[index] = value
 
 	return nil
 }
 
 func (vm *vm) getLocal(index int) (objects.Object, error) {
-	if index >= len(vm.currentScope.variables) {
-		return nil, ErrVariableOutOfScope{index}
+	if index >= len(vm.currScope.vars) {
+		return nil, ErrVarOutOfScope{index}
 	}
 
-	return vm.currentScope.variables[index], nil
+	return vm.currScope.vars[index], nil
 }
 
 func (vm *vm) setLocal(index int, value objects.Object) error {
-	if index >= len(vm.currentScope.variables) {
-		return ErrVariableOutOfScope{index}
+	if index >= len(vm.currScope.vars) {
+		return ErrVarOutOfScope{index}
 	}
 
-	vm.currentScope.variables[index] = value
+	vm.currScope.vars[index] = value
 
 	return nil
 }
 
 func (vm *vm) getCaptured(index int) (objects.Object, error) {
-	if index >= len(vm.currentScope.function.Captures) {
-		return nil, ErrVariableOutOfScope{index}
+	if index >= len(vm.currScope.function.Captures) {
+		return nil, ErrVarOutOfScope{index}
 	}
 
-	return *vm.currentScope.function.Captures[index], nil
+	return *vm.currScope.function.Captures[index], nil
 }
 
 func (vm *vm) setCaptured(index int, value objects.Object) error {
-	if index >= len(vm.currentScope.function.Captures) {
-		return ErrVariableOutOfScope{index}
+	if index >= len(vm.currScope.function.Captures) {
+		return ErrVarOutOfScope{index}
 	}
 
-	*vm.currentScope.function.Captures[index] = value
+	*vm.currScope.function.Captures[index] = value
 
 	return nil
 }
 
 func (vm *vm) hasCode() bool {
-	return vm.currentScope.pc < len(vm.currentScope.code)
+	return vm.currScope.pc < len(vm.currScope.code)
 }
 
-func (vm *vm) readOperation() instruction.Operation {
-	operation := instruction.Operation(vm.currentScope.code[vm.currentScope.pc])
+func (vm *vm) readOpcode() instructions.Opcode {
+	opcode := instructions.Opcode(vm.currScope.code[vm.currScope.pc])
 
-	vm.currentScope.pc++
+	vm.currScope.pc++
 
-	return operation
+	return opcode
 }
 
 func (vm *vm) readOperand(width int) int {
-	rawOperand := vm.currentScope.code[vm.currentScope.pc : vm.currentScope.pc+width]
-	operand := instruction.ReadOperandValue(rawOperand, width)
+	rawOperand := vm.currScope.code[vm.currScope.pc : vm.currScope.pc+width]
+	operand := instructions.ReadOperandValue(rawOperand, width)
 
-	vm.currentScope.pc += width
+	vm.currScope.pc += width
 
 	return operand
 }
 
 func (vm *vm) movePC(offset int) {
-	vm.currentScope.pc += offset
+	vm.currScope.pc += offset
 }

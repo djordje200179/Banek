@@ -8,10 +8,10 @@ type Statement interface {
 	HasSideEffects() bool
 }
 
-type ErrUnknownStatement struct {
-	Statement Statement
+type ErrUnknownStmt struct {
+	Stmt Statement
 }
 
-func (err ErrUnknownStatement) Error() string {
-	return "unknown statement: " + err.Statement.String()
+func (err ErrUnknownStmt) Error() string {
+	return "unknown statement: " + err.Stmt.String()
 }

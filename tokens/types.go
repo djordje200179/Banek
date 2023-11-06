@@ -1,9 +1,9 @@
 package tokens
 
-type TokenType int
+type Type byte
 
 const (
-	Illegal TokenType = iota
+	Illegal Type = iota
 	EOF
 
 	Identifier
@@ -32,23 +32,23 @@ const (
 
 	Equals
 	NotEquals
-	LessThan
-	GreaterThan
-	LessThanOrEquals
-	GreaterThanOrEquals
+	Less
+	Greater
+	LessEquals
+	GreaterEquals
 
 	Comma
 	SemiColon
 
-	LeftParenthesis
-	RightParenthesis
+	LeftParen
+	RightParen
 	LeftBrace
 	RightBrace
 	LeftBracket
 	RightBracket
 
-	Function
-	LambdaFunction
+	Func
+	LambdaFunc
 
 	Let
 	Mut
@@ -63,7 +63,7 @@ const (
 	Do
 )
 
-var tokenTypeRepresentations = []string{
+var typeStrings = [...]string{
 	Illegal: "illegal",
 	EOF:     "EOF",
 
@@ -91,25 +91,25 @@ var tokenTypeRepresentations = []string{
 
 	Arrow: "->",
 
-	Equals:              "==",
-	NotEquals:           "!=",
-	LessThan:            "<",
-	GreaterThan:         ">",
-	LessThanOrEquals:    "<=",
-	GreaterThanOrEquals: ">=",
+	Equals:        "==",
+	NotEquals:     "!=",
+	Less:          "<",
+	Greater:       ">",
+	LessEquals:    "<=",
+	GreaterEquals: ">=",
 
 	Comma:     ",",
 	SemiColon: ";",
 
-	LeftParenthesis:  "(",
-	RightParenthesis: ")",
-	LeftBrace:        "{",
-	RightBrace:       "}",
-	LeftBracket:      "[",
-	RightBracket:     "]",
+	LeftParen:    "(",
+	RightParen:   ")",
+	LeftBrace:    "{",
+	RightBrace:   "}",
+	LeftBracket:  "[",
+	RightBracket: "]",
 
-	Function:       "function",
-	LambdaFunction: "fn",
+	Func:       "func",
+	LambdaFunc: "fn",
 
 	Let: "let",
 	Mut: "mut",
@@ -124,6 +124,6 @@ var tokenTypeRepresentations = []string{
 	Do:    "do",
 }
 
-func (tokenType TokenType) String() string {
-	return tokenTypeRepresentations[tokenType]
+func (t Type) String() string {
+	return typeStrings[t]
 }

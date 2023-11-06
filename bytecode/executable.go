@@ -9,8 +9,8 @@ import (
 type Executable struct {
 	Code Code
 
-	ConstantsPool []objects.Object
-	FunctionsPool []FunctionTemplate
+	ConstsPool []objects.Object
+	FuncsPool  []FuncTemplate
 
 	NumGlobals int
 }
@@ -18,12 +18,12 @@ type Executable struct {
 func (executable Executable) String() string {
 	var sb strings.Builder
 
-	replacePairs := make([]string, len(executable.ConstantsPool)*2)
-	for i, constant := range executable.ConstantsPool {
+	replacePairs := make([]string, len(executable.ConstsPool)*2)
+	for i, constant := range executable.ConstsPool {
 		replacePairs[i*2] = "=" + strconv.Itoa(i)
 
-		if functionObject, ok := constant.(*Function); ok {
-			replacePairs[i*2+1] = executable.FunctionsPool[functionObject.TemplateIndex].Name
+		if functionObject, ok := constant.(*Func); ok {
+			replacePairs[i*2+1] = executable.FuncsPool[functionObject.TemplateIndex].Name
 		} else {
 			replacePairs[i*2+1] = constant.String()
 		}
@@ -35,7 +35,7 @@ func (executable Executable) String() string {
 	sb.WriteByte('\n')
 
 	sb.WriteString("Functions:\n")
-	for _, function := range executable.FunctionsPool {
+	for _, function := range executable.FuncsPool {
 		sb.WriteString(replacer.Replace(function.String()))
 		sb.WriteByte('\n')
 	}

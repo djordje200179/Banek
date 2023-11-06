@@ -6,22 +6,22 @@ import (
 	"slices"
 )
 
-type arrayEnvironment struct {
+type arrayEnv struct {
 	keys   []string
 	values []variable
 
-	outer Environment
+	outer Env
 }
 
-func NewArrayEnvironment(outer Environment, capacity int) Environment {
-	return &arrayEnvironment{
+func NewArrayEnv(outer Env, capacity int) Env {
+	return &arrayEnv{
 		keys:   make([]string, 0, capacity),
 		values: make([]variable, 0, capacity),
 		outer:  outer,
 	}
 }
 
-func (env *arrayEnvironment) Get(name string) (objects.Object, error) {
+func (env *arrayEnv) Get(name string) (objects.Object, error) {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -34,7 +34,7 @@ func (env *arrayEnvironment) Get(name string) (objects.Object, error) {
 	return env.values[index].Object, nil
 }
 
-func (env *arrayEnvironment) Define(name string, value objects.Object, mutable bool) error {
+func (env *arrayEnv) Define(name string, value objects.Object, mutable bool) error {
 	if slices.Index(env.keys, name) != -1 {
 		return errors.ErrIdentifierAlreadyDefined{Identifier: name}
 	}
@@ -45,7 +45,7 @@ func (env *arrayEnvironment) Define(name string, value objects.Object, mutable b
 	return nil
 }
 
-func (env *arrayEnvironment) Set(name string, value objects.Object) error {
+func (env *arrayEnv) Set(name string, value objects.Object) error {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -64,7 +64,7 @@ func (env *arrayEnvironment) Set(name string, value objects.Object) error {
 	return nil
 }
 
-func (env *arrayEnvironment) Delete(name string) error {
+func (env *arrayEnv) Delete(name string) error {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -80,7 +80,7 @@ func (env *arrayEnvironment) Delete(name string) error {
 	return nil
 }
 
-func (env *arrayEnvironment) Clear() {
+func (env *arrayEnv) Clear() {
 	env.keys = nil
 	env.values = nil
 }

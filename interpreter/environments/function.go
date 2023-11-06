@@ -7,21 +7,21 @@ import (
 	"strings"
 )
 
-type Function struct {
-	Parameters []expressions.Identifier
-	Body       ast.Statement
+type Func struct {
+	Params []expressions.Identifier
+	Body   ast.Statement
 
-	Env Environment
+	Env Env
 }
 
-func (function *Function) Type() string          { return "function" }
-func (function *Function) Clone() objects.Object { return function }
+func (function *Func) Type() string          { return "function" }
+func (function *Func) Clone() objects.Object { return function }
 
-func (function *Function) String() string {
+func (function *Func) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("fn(")
-	for i, param := range function.Parameters {
+	for i, param := range function.Params {
 		if i != 0 {
 			sb.WriteString(", ")
 		}

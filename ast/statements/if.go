@@ -6,32 +6,32 @@ import (
 )
 
 type If struct {
-	Condition ast.Expression
+	Cond ast.Expression
 
 	Consequence, Alternative ast.Statement
 }
 
-func (statement If) String() string {
+func (stmt If) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("if ")
-	sb.WriteString(statement.Condition.String())
+	sb.WriteString(stmt.Cond.String())
 	sb.WriteString(" then {\n")
-	sb.WriteString(statement.Consequence.String())
+	sb.WriteString(stmt.Consequence.String())
 	sb.WriteString("\n}")
-	if statement.Alternative != nil {
+	if stmt.Alternative != nil {
 		sb.WriteString(" else {\n")
-		sb.WriteString(statement.Alternative.String())
+		sb.WriteString(stmt.Alternative.String())
 		sb.WriteString("\n}")
 	}
 
 	return sb.String()
 }
 
-func (statement If) HasSideEffects() bool {
-	if !statement.Condition.IsConstant() {
+func (stmt If) HasSideEffects() bool {
+	if !stmt.Cond.IsConst() {
 		return true
 	}
 
-	return statement.Consequence.HasSideEffects() || statement.Alternative.HasSideEffects()
+	return stmt.Consequence.HasSideEffects() || stmt.Alternative.HasSideEffects()
 }

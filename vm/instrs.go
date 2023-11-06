@@ -2,13 +2,13 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
 )
 
-func (vm *vm) opPushDuplicate() error {
+func (vm *vm) opPushDup() error {
 	value, err := vm.peek()
 	if err != nil {
 		return err
@@ -20,7 +20,7 @@ func (vm *vm) opPushDuplicate() error {
 func (vm *vm) opPushConst() error {
 	constIndex := vm.readOperand(2)
 
-	constant, err := vm.getConstant(constIndex)
+	constant, err := vm.getConst(constIndex)
 	if err != nil {
 		return err
 	}
@@ -72,18 +72,18 @@ func (vm *vm) opPushCaptured() error {
 	return vm.push(captured)
 }
 
-func (vm *vm) opPushCollectionElement() error {
+func (vm *vm) opPushCollElem() error {
 	key, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	collection, err := vm.pop()
+	coll, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	value, err := operations.EvalCollectionGet(collection, key)
+	value, err := operations.EvalCollGet(coll, key)
 	if err != nil {
 		return err
 	}
@@ -139,13 +139,13 @@ func (vm *vm) opPopCaptured() error {
 	return vm.setCaptured(capturedIndex, captured)
 }
 
-func (vm *vm) opPopCollectionElement() error {
+func (vm *vm) opPopCollElem() error {
 	key, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	collection, err := vm.pop()
+	coll, err := vm.pop()
 	if err != nil {
 		return err
 	}
@@ -155,11 +155,11 @@ func (vm *vm) opPopCollectionElement() error {
 		return err
 	}
 
-	return operations.EvalCollectionSet(collection, key, value)
+	return operations.EvalCollSet(coll, key, value)
 }
 
-func (vm *vm) opInfixOperation() error {
-	operation := operations.InfixOperationType(vm.readOperand(1))
+func (vm *vm) opBinaryOp() error {
+	operator := operations.BinaryOperator(vm.readOperand(1))
 
 	right, err := vm.pop()
 	if err != nil {
@@ -171,7 +171,7 @@ func (vm *vm) opInfixOperation() error {
 		return err
 	}
 
-	result, err := operations.EvalInfixOperation(left, right, operation)
+	result, err := operations.EvalBinary(left, right, operator)
 	if err != nil {
 		return err
 	}
@@ -179,15 +179,15 @@ func (vm *vm) opInfixOperation() error {
 	return vm.push(result)
 }
 
-func (vm *vm) opPrefixOperation() error {
-	operation := operations.PrefixOperationType(vm.readOperand(1))
+func (vm *vm) opUnaryOp() error {
+	operator := operations.UnaryOperator(vm.readOperand(1))
 
 	operand, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	result, err := operations.EvalPrefixOperation(operand, operation)
+	result, err := operations.EvalUnary(operand, operator)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (vm *vm) opBranchIfFalse() error {
 
 	boolOperand, ok := operand.(objects.Boolean)
 	if !ok {
-		return errors.ErrInvalidOperand{Operation: instruction.BranchIfFalse.String(), LeftOperand: boolOperand}
+		return errors.ErrInvalidOp{Operator: instructions.OpBranchIfFalse.String(), LeftOperand: boolOperand}
 	}
 
 	if !boolOperand {
@@ -236,22 +236,22 @@ func (vm *vm) opNewArray() error {
 	return vm.push(arr)
 }
 
-func (vm *vm) opNewFunction() error {
+func (vm *vm) opNewFunc() error {
 	templateIndex := vm.readOperand(2)
 
-	template := vm.program.FunctionsPool[templateIndex]
+	template := vm.program.FuncsPool[templateIndex]
 
-	captures := make([]*objects.Object, len(template.CapturesInfo))
-	for i, captureInfo := range template.CapturesInfo {
-		capturedVariableScope := vm.currentScope
+	captures := make([]*objects.Object, len(template.Captures))
+	for i, captureInfo := range template.Captures {
+		capturedVariableScope := vm.currScope
 		for j := 0; j < captureInfo.Level; j++ {
 			capturedVariableScope = capturedVariableScope.parent
 		}
 
-		captures[i] = &capturedVariableScope.variables[captureInfo.Index]
+		captures[i] = &capturedVariableScope.vars[captureInfo.Index]
 	}
 
-	function := &bytecode.Function{
+	function := &bytecode.Func{
 		TemplateIndex: templateIndex,
 		Captures:      captures,
 	}
@@ -260,61 +260,61 @@ func (vm *vm) opNewFunction() error {
 }
 
 func (vm *vm) opCall() error {
-	argumentsCount := vm.readOperand(1)
+	numArgs := vm.readOperand(1)
 
-	functionObject, err := vm.pop()
+	funcObject, err := vm.pop()
 	if err != nil {
 		return err
 	}
 
-	arguments := make([]objects.Object, argumentsCount)
-	err = vm.popMany(arguments)
+	args := make([]objects.Object, numArgs)
+	err = vm.popMany(args)
 	if err != nil {
 		return err
 	}
 
-	switch function := functionObject.(type) {
-	case *bytecode.Function:
-		functionTemplate := vm.program.FunctionsPool[function.TemplateIndex]
+	switch function := funcObject.(type) {
+	case *bytecode.Func:
+		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
 
-		if len(arguments) < len(functionTemplate.Parameters) {
-			oldArguments := arguments
-			arguments = make([]objects.Object, len(functionTemplate.Parameters))
+		if len(args) < len(funcTemplate.Params) {
+			oldArgs := args
+			args = make([]objects.Object, len(funcTemplate.Params))
 
-			copy(arguments, oldArguments)
-			for i := len(oldArguments); i < len(functionTemplate.Parameters); i++ {
-				arguments[i] = objects.Undefined{}
+			copy(args, oldArgs)
+			for i := len(oldArgs); i < len(funcTemplate.Params); i++ {
+				args[i] = objects.Undefined{}
 			}
-		} else if len(arguments) > len(functionTemplate.Parameters) {
-			arguments = arguments[:len(functionTemplate.Parameters)]
+		} else if len(args) > len(funcTemplate.Params) {
+			args = args[:len(funcTemplate.Params)]
 		}
 
-		functionScope := scopePool.Get().(*scope)
-		functionScope.code = functionTemplate.Code
-		functionScope.pc = 0
-		functionScope.variables = arguments
-		functionScope.parent = vm.currentScope
-		functionScope.function = function
+		funcScope := scopePool.Get().(*scope)
+		funcScope.code = funcTemplate.Code
+		funcScope.pc = 0
+		funcScope.vars = args
+		funcScope.parent = vm.currScope
+		funcScope.function = function
 
-		vm.currentScope = functionScope
+		vm.currScope = funcScope
 
 		return nil
-	case objects.BuiltinFunction:
-		result, err := function.Function(arguments...)
+	case objects.BuiltinFunc:
+		result, err := function.Func(args...)
 		if err != nil {
 			return err
 		}
 
 		return vm.push(result)
 	default:
-		return errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
+		return errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
 	}
 }
 
 func (vm *vm) opReturn() error {
-	removedScope := vm.currentScope
+	removedScope := vm.currScope
 
-	vm.currentScope = vm.currentScope.parent
+	vm.currScope = vm.currScope.parent
 
 	scopePool.Put(removedScope)
 

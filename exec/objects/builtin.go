@@ -2,33 +2,40 @@ package objects
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 )
 
-type BuiltinFunction struct {
-	Name     string
-	Function func(args ...Object) (Object, error)
+type BuiltinFunc struct {
+	Name string
+
+	Func func(args ...Object) (Object, error)
 }
 
-func (builtin BuiltinFunction) Type() string   { return "builtin" }
-func (builtin BuiltinFunction) Clone() Object  { return builtin }
-func (builtin BuiltinFunction) String() string { return builtin.Name }
+func (builtin BuiltinFunc) Type() string   { return "builtin" }
+func (builtin BuiltinFunc) Clone() Object  { return builtin }
+func (builtin BuiltinFunc) String() string { return builtin.Name }
 
-type ErrIncorrectArgumentNumber struct {
+type ErrIncorrectArgNum struct {
 	Expected int
 	Got      int
 }
 
-func (err ErrIncorrectArgumentNumber) Error() string {
-	return fmt.Sprintf("incorrect number of arguments: expected %d, got %d", err.Expected, err.Got)
+func (err ErrIncorrectArgNum) Error() string {
+	var sb strings.Builder
+
+	sb.WriteString("incorrect number of arguments: expected ")
+	sb.WriteString(strconv.Itoa(err.Expected))
+	sb.WriteString(", got ")
+	sb.WriteString(strconv.Itoa(err.Got))
+
+	return sb.String()
 }
 
-var Builtins = []BuiltinFunction{
+var Builtins = [...]BuiltinFunc{
 	{
 		Name: "print",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			var sb strings.Builder
 
 			for _, arg := range args {
@@ -42,7 +49,7 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "println",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			var sb strings.Builder
 
 			for _, arg := range args {
@@ -56,9 +63,9 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "read",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			if len(args) != 0 {
-				return nil, ErrIncorrectArgumentNumber{Expected: 0, Got: len(args)}
+				return nil, ErrIncorrectArgNum{Expected: 0, Got: len(args)}
 			}
 
 			var input string
@@ -72,9 +79,9 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "readln",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			if len(args) != 0 {
-				return nil, ErrIncorrectArgumentNumber{Expected: 0, Got: len(args)}
+				return nil, ErrIncorrectArgNum{Expected: 0, Got: len(args)}
 			}
 
 			var input string
@@ -88,9 +95,9 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "len",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			if len(args) != 1 {
-				return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+				return nil, ErrIncorrectArgNum{Expected: 1, Got: len(args)}
 			}
 
 			switch arg := args[0].(type) {
@@ -105,9 +112,9 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "str",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			if len(args) != 1 {
-				return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+				return nil, ErrIncorrectArgNum{Expected: 1, Got: len(args)}
 			}
 
 			return String(args[0].String()), nil
@@ -115,9 +122,9 @@ var Builtins = []BuiltinFunction{
 	},
 	{
 		Name: "int",
-		Function: func(args ...Object) (Object, error) {
+		Func: func(args ...Object) (Object, error) {
 			if len(args) != 1 {
-				return nil, ErrIncorrectArgumentNumber{Expected: 1, Got: len(args)}
+				return nil, ErrIncorrectArgNum{Expected: 1, Got: len(args)}
 			}
 
 			switch arg := args[0].(type) {
@@ -144,7 +151,11 @@ var Builtins = []BuiltinFunction{
 }
 
 func BuiltinFindIndex(name string) int {
-	return slices.IndexFunc(Builtins, func(builtin BuiltinFunction) bool {
-		return builtin.Name == name
-	})
+	for i, builtin := range &Builtins {
+		if builtin.Name == name {
+			return i
+		}
+	}
+
+	return -1
 }

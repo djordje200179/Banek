@@ -1,8 +1,8 @@
 package tokens
 
-var keywords = map[string]TokenType{
-	"function": Function,
-	"fn":       LambdaFunction,
+var keywords = map[string]Type{
+	"func": Func,
+	"fn":   LambdaFunc,
 
 	"let": Let,
 	"mut": Mut,
@@ -21,7 +21,7 @@ var keywords = map[string]TokenType{
 	"undefined": Undefined,
 }
 
-func LookupIdentifier(identifier string) TokenType {
+func LookupIdentifier(identifier string) Type {
 	if tokenType, ok := keywords[identifier]; ok {
 		return tokenType
 	}

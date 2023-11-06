@@ -8,35 +8,35 @@ import (
 	"banek/interpreter/environments"
 )
 
-func (interpreter *interpreter) evalAssignment(env environments.Environment, expression expressions.Assignment) (objects.Object, error) {
-	value, err := interpreter.evalExpression(env, expression.Value)
+func (interpreter *interpreter) evalAssignment(env environments.Env, expr expressions.Assignment) (objects.Object, error) {
+	value, err := interpreter.evalExpr(env, expr.Value)
 	if err != nil {
 		return nil, err
 	}
 
-	switch variable := expression.Variable.(type) {
+	switch variable := expr.Var.(type) {
 	case expressions.Identifier:
 		err := env.Set(variable.String(), value)
 		if err != nil {
 			return nil, err
 		}
-	case expressions.CollectionAccess:
-		collection, err := interpreter.evalExpression(env, variable.Collection)
+	case expressions.CollIndex:
+		collection, err := interpreter.evalExpr(env, variable.Coll)
 		if err != nil {
 			return nil, err
 		}
 
-		key, err := interpreter.evalExpression(env, variable.Key)
+		key, err := interpreter.evalExpr(env, variable.Key)
 		if err != nil {
 			return nil, err
 		}
 
-		err = operations.EvalCollectionSet(collection, key, value)
+		err = operations.EvalCollSet(collection, key, value)
 		if err != nil {
 			return nil, err
 		}
 	default:
-		return nil, errors.ErrInvalidOperand{Operation: "=", LeftOperand: objects.Unknown, RightOperand: value}
+		return nil, errors.ErrInvalidOp{Operator: "=", LeftOperand: objects.Unknown{}, RightOperand: value}
 	}
 
 	return value, nil

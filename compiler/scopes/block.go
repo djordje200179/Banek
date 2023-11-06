@@ -1,7 +1,7 @@
 package scopes
 
 import (
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"fmt"
 )
 
@@ -30,8 +30,8 @@ func (scope *Block) GetVar(name string) (Var, int) {
 	return scope.Parent.GetVar(name)
 }
 
-func (scope *Block) EmitInstr(op instruction.Operation, operands ...int) {
-	scope.Parent.EmitInstr(op, operands...)
+func (scope *Block) EmitInstr(opcode instructions.Opcode, operands ...int) {
+	scope.Parent.EmitInstr(opcode, operands...)
 }
 
 func (scope *Block) PatchInstrOperand(addr int, operandIndex int, newValue int) {

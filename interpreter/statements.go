@@ -8,35 +8,35 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalStatement(env environments.Environment, statement ast.Statement) (results.Result, error) {
-	switch statement := statement.(type) {
-	case statements.Expression:
-		return interpreter.evalExpression(env, statement.Expression)
+func (interpreter *interpreter) evalStmt(env environments.Env, stmt ast.Statement) (results.Result, error) {
+	switch stmt := stmt.(type) {
+	case statements.Expr:
+		return interpreter.evalExpr(env, stmt.Expr)
 	case statements.If:
-		condition, err := interpreter.evalExpression(env, statement.Condition)
+		cond, err := interpreter.evalExpr(env, stmt.Cond)
 		if err != nil {
 			return nil, err
 		}
 
-		if condition == objects.Boolean(true) {
-			return interpreter.evalStatement(env, statement.Consequence)
-		} else if statement.Alternative != nil {
-			return interpreter.evalStatement(env, statement.Alternative)
+		if cond == objects.Boolean(true) {
+			return interpreter.evalStmt(env, stmt.Consequence)
+		} else if stmt.Alternative != nil {
+			return interpreter.evalStmt(env, stmt.Alternative)
 		} else {
-			return results.None, nil
+			return results.None{}, nil
 		}
 	case statements.While:
 		for {
-			condition, err := interpreter.evalExpression(env, statement.Condition)
+			cond, err := interpreter.evalExpr(env, stmt.Cond)
 			if err != nil {
 				return nil, err
 			}
 
-			if condition != objects.Boolean(true) {
+			if cond != objects.Boolean(true) {
 				break
 			}
 
-			result, err := interpreter.evalStatement(env, statement.Body)
+			result, err := interpreter.evalStmt(env, stmt.Body)
 			if err != nil {
 				return nil, err
 			}
@@ -47,52 +47,52 @@ func (interpreter *interpreter) evalStatement(env environments.Environment, stat
 			}
 		}
 
-		return results.None, nil
+		return results.None{}, nil
 	case statements.Block:
 		blockEnv := EnvFactory(env, 0)
-		return interpreter.evalBlockStatement(blockEnv, statement)
+		return interpreter.evalBlockStatement(blockEnv, stmt)
 	case statements.Return:
-		value, err := interpreter.evalExpression(env, statement.Value)
+		value, err := interpreter.evalExpr(env, stmt.Value)
 		if err != nil {
 			return nil, err
 		}
 
 		return results.Return{Value: value}, nil
-	case statements.VariableDeclaration:
-		value, err := interpreter.evalExpression(env, statement.Value)
+	case statements.VarDecl:
+		value, err := interpreter.evalExpr(env, stmt.Value)
 		if err != nil {
 			return nil, err
 		}
 
-		err = env.Define(statement.Name.String(), value, statement.Mutable)
+		err = env.Define(stmt.Name.String(), value, stmt.Mutable)
 		if err != nil {
 			return nil, err
 		}
 
-		return results.None, nil
-	case statements.Function:
-		value := &environments.Function{
-			Parameters: statement.Parameters,
-			Body:       statement.Body,
-			Env:        env,
+		return results.None{}, nil
+	case statements.Func:
+		value := &environments.Func{
+			Params: stmt.Params,
+			Body:   stmt.Body,
+			Env:    env,
 		}
 
-		err := env.Define(statement.Name.String(), value, false)
+		err := env.Define(stmt.Name.String(), value, false)
 		if err != nil {
 			return nil, err
 		}
 
-		return results.None, nil
-	case statements.Error:
-		return nil, results.Error{Err: statement.Err}
+		return results.None{}, nil
+	case statements.Invalid:
+		return nil, results.Error{Err: stmt.Err}
 	default:
-		return nil, ast.ErrUnknownStatement{Statement: statement}
+		return nil, ast.ErrUnknownStmt{Stmt: stmt}
 	}
 }
 
-func (interpreter *interpreter) evalBlockStatement(env environments.Environment, block statements.Block) (results.Result, error) {
-	for _, statement := range block.Statements {
-		result, err := interpreter.evalStatement(env, statement)
+func (interpreter *interpreter) evalBlockStatement(env environments.Env, block statements.Block) (results.Result, error) {
+	for _, stmt := range block.Stmts {
+		result, err := interpreter.evalStmt(env, stmt)
 		if err != nil {
 			return nil, err
 		}
@@ -103,5 +103,5 @@ func (interpreter *interpreter) evalBlockStatement(env environments.Environment,
 		}
 	}
 
-	return results.None, nil
+	return results.None{}, nil
 }

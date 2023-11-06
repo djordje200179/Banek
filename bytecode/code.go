@@ -1,7 +1,7 @@
 package bytecode
 
 import (
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/operations"
 	"fmt"
 	"strconv"
@@ -14,28 +14,39 @@ func (code Code) String() string {
 	var sb strings.Builder
 
 	for pc := 0; pc < len(code); {
-		operation, operandValues, width := instruction.ReadInstruction(code[pc:])
-		opInfo := operation.Info()
+		opcode, operands, width := instructions.ReadInstr(code[pc:])
+		instrInfo := opcode.Info()
 
-		operandsStr := make([]string, len(operandValues))
-		for i, operandValue := range operandValues {
-			operand := opInfo.Operands[i]
+		sb.WriteString(fmt.Sprintf("%04d", pc))
+		sb.WriteString(": ")
+		sb.WriteString(opcode.String())
+
+		for i, operandValue := range operands {
+			if i > 0 {
+				sb.WriteByte(',')
+			} else {
+				sb.WriteByte(' ')
+			}
+
+			operand := instrInfo.Operands[i]
 
 			switch operand.Type {
-			case instruction.Constant:
-				operandsStr[i] = "=" + strconv.Itoa(operandValue)
-			case instruction.Literal:
-				operandsStr[i] = strconv.Itoa(operandValue)
-			case instruction.Function:
-				operandsStr[i] = "#" + strconv.Itoa(operandValue)
-			case instruction.InfixOperation:
-				operandsStr[i] = operations.InfixOperationType(operandValue).String()
-			case instruction.PrefixOperation:
-				operandsStr[i] = operations.PrefixOperationType(operandValue).String()
+			case instructions.OperandConstant:
+				sb.WriteByte('=')
+				sb.WriteString(strconv.Itoa(operandValue))
+			case instructions.OperandLiteral:
+				sb.WriteString(strconv.Itoa(operandValue))
+			case instructions.OperandFunc:
+				sb.WriteByte('#')
+				sb.WriteString(strconv.Itoa(operandValue))
+			case instructions.OperandInfixOp:
+				sb.WriteString(operations.BinaryOperator(operandValue).String())
+			case instructions.OperandPrefixOp:
+				sb.WriteString(operations.UnaryOperator(operandValue).String())
 			}
 		}
 
-		sb.WriteString(fmt.Sprintf("%04d %s %s\n", pc, operation, strings.Join(operandsStr, ",")))
+		sb.WriteByte('\n')
 
 		pc += width
 	}

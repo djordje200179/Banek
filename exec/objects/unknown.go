@@ -1,9 +1,7 @@
 package objects
 
-type unknown struct{}
+type Unknown struct{}
 
-func (unknown unknown) Type() string   { return "unknown" }
-func (unknown unknown) Clone() Object  { return unknown }
-func (unknown unknown) String() string { return "unknown" }
-
-var Unknown Object = unknown{}
+func (unknown Unknown) Type() string   { return "Unknown" }
+func (unknown Unknown) Clone() Object  { return unknown }
+func (unknown Unknown) String() string { return "Unknown" }

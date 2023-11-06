@@ -9,7 +9,7 @@ import (
 func (lexer *lexer) readIdentifier() string {
 	var sb strings.Builder
 
-	firstChar, _, _ := lexer.reader.ReadRune()
+	firstChar, _, _ := lexer.codeReader.ReadRune()
 	sb.WriteRune(firstChar)
 
 	for {
@@ -19,7 +19,7 @@ func (lexer *lexer) readIdentifier() string {
 		} else if ch == 0 {
 			break
 		} else {
-			_ = lexer.reader.UnreadRune()
+			_ = lexer.codeReader.UnreadRune()
 			break
 		}
 	}
@@ -37,7 +37,7 @@ func (lexer *lexer) readNumber() string {
 		} else if ch == 0 {
 			break
 		} else {
-			_ = lexer.reader.UnreadRune()
+			_ = lexer.codeReader.UnreadRune()
 			break
 		}
 	}

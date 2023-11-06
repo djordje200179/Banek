@@ -6,26 +6,26 @@ import (
 )
 
 type Block struct {
-	Statements []ast.Statement
+	Stmts []ast.Statement
 }
 
-func (block Block) String() string {
+func (stmt Block) String() string {
 	var sb strings.Builder
 
-	for i, singleStatement := range block.Statements {
+	for i, stmt := range stmt.Stmts {
 		if i != 0 {
 			sb.WriteByte('\n')
 		}
 
-		sb.WriteString(singleStatement.String())
+		sb.WriteString(stmt.String())
 	}
 
 	return sb.String()
 }
 
-func (block Block) HasSideEffects() bool {
-	for _, singleStatement := range block.Statements {
-		if singleStatement.HasSideEffects() {
+func (stmt Block) HasSideEffects() bool {
+	for _, stmt := range stmt.Stmts {
+		if stmt.HasSideEffects() {
 			return true
 		}
 	}

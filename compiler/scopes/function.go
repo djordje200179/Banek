@@ -2,7 +2,7 @@ package scopes
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/errors"
 	"slices"
 )
@@ -10,7 +10,7 @@ import (
 type Function struct {
 	params   []string
 	vars     []Var
-	captures []bytecode.CaptureInfo
+	captures []bytecode.Capture
 
 	code bytecode.Code
 
@@ -65,7 +65,7 @@ func (scope *Function) GetVar(name string) (Var, int) {
 }
 
 func (scope *Function) AddCapturedVar(level, index int) int {
-	captureInfo := bytecode.CaptureInfo{Index: index, Level: level}
+	captureInfo := bytecode.Capture{Index: index, Level: level}
 
 	if captureIndex := slices.Index(scope.captures, captureInfo); captureIndex != -1 {
 		return captureIndex
@@ -76,18 +76,18 @@ func (scope *Function) AddCapturedVar(level, index int) int {
 	return len(scope.captures) - 1
 }
 
-func (scope *Function) EmitInstr(op instruction.Operation, operands ...int) {
-	inst := instruction.MakeInstruction(op, operands...)
+func (scope *Function) EmitInstr(opcode instructions.Opcode, operands ...int) {
+	instr := instructions.MakeInstr(opcode, operands...)
 
-	newCode := make(bytecode.Code, len(scope.code)+len(inst))
+	newCode := make(bytecode.Code, len(scope.code)+len(instr))
 	copy(newCode, scope.code)
-	copy(newCode[len(scope.code):], inst)
+	copy(newCode[len(scope.code):], instr)
 
 	scope.code = newCode
 }
 
 func (scope *Function) PatchInstrOperand(addr int, operandIndex int, newValue int) {
-	op := instruction.Operation(scope.code[addr])
+	op := instructions.Opcode(scope.code[addr])
 	opInfo := op.Info()
 
 	instCode := scope.code[addr : addr+opInfo.Size()]
@@ -95,7 +95,7 @@ func (scope *Function) PatchInstrOperand(addr int, operandIndex int, newValue in
 	operandWidth := opInfo.Operands[operandIndex].Width
 	operandOffset := opInfo.OperandOffset(operandIndex)
 
-	copy(instCode[operandOffset:], instruction.MakeOperandValue(newValue, operandWidth))
+	copy(instCode[operandOffset:], instructions.MakeOperandValue(newValue, operandWidth))
 
 }
 
@@ -107,12 +107,12 @@ func (scope *Function) IsGlobal() bool {
 	return false
 }
 
-func (scope *Function) MakeFunction() bytecode.FunctionTemplate {
-	return bytecode.FunctionTemplate{
+func (scope *Function) MakeFunction() bytecode.FuncTemplate {
+	return bytecode.FuncTemplate{
 		Code: scope.code,
 
-		Parameters:   scope.params,
-		NumLocals:    len(scope.vars),
-		CapturesInfo: scope.captures,
+		Params:    scope.params,
+		NumLocals: len(scope.vars),
+		Captures:  scope.captures,
 	}
 }

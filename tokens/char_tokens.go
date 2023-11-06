@@ -1,6 +1,6 @@
 package tokens
 
-var CharTokens = map[string]TokenType{
+var CharTokens = map[string]Type{
 	"+": Plus,
 	"-": Minus,
 	"*": Asterisk,
@@ -14,8 +14,8 @@ var CharTokens = map[string]TokenType{
 	",": Comma,
 	";": SemiColon,
 
-	"(": LeftParenthesis,
-	")": RightParenthesis,
+	"(": LeftParen,
+	")": RightParen,
 	"{": LeftBrace,
 	"}": RightBrace,
 	"[": LeftBracket,
@@ -23,10 +23,10 @@ var CharTokens = map[string]TokenType{
 
 	"==": Equals,
 	"!=": NotEquals,
-	"<=": LessThanOrEquals,
-	">=": GreaterThanOrEquals,
-	"<":  LessThan,
-	">":  GreaterThan,
+	"<=": LessEquals,
+	">=": GreaterEquals,
+	"<":  Less,
+	">":  Greater,
 
 	"=":  Assign,
 	"+=": PlusAssign,

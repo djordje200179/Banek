@@ -7,24 +7,24 @@ import (
 
 type ArrayLiteral []ast.Expression
 
-func (literal ArrayLiteral) String() string {
+func (expr ArrayLiteral) String() string {
 	var sb strings.Builder
 
-	elementsRepresentation := make([]string, len(literal))
-	for i, element := range literal {
-		elementsRepresentation[i] = element.String()
+	elemStrings := make([]string, len(expr))
+	for i, elem := range expr {
+		elemStrings[i] = elem.String()
 	}
 
 	sb.WriteByte('[')
-	sb.WriteString(strings.Join(elementsRepresentation, ", "))
+	sb.WriteString(strings.Join(elemStrings, ", "))
 	sb.WriteByte(']')
 
 	return sb.String()
 }
 
-func (literal ArrayLiteral) IsConstant() bool {
-	for _, element := range literal {
-		if !element.IsConstant() {
+func (expr ArrayLiteral) IsConst() bool {
+	for _, elem := range expr {
+		if !elem.IsConst() {
 			return false
 		}
 	}

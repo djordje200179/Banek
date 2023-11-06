@@ -2,7 +2,7 @@ package scopes
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instruction"
+	"banek/bytecode/instructions"
 	"banek/exec/errors"
 	"slices"
 )
@@ -41,18 +41,18 @@ func (scope *Global) GetVar(name string) (Var, int) {
 	return scope.vars[index], index
 }
 
-func (scope *Global) EmitInstr(op instruction.Operation, operands ...int) {
-	inst := instruction.MakeInstruction(op, operands...)
+func (scope *Global) EmitInstr(opcode instructions.Opcode, operands ...int) {
+	instr := instructions.MakeInstr(opcode, operands...)
 
-	newCode := make(bytecode.Code, len(scope.code)+len(inst))
+	newCode := make(bytecode.Code, len(scope.code)+len(instr))
 	copy(newCode, scope.code)
-	copy(newCode[len(scope.code):], inst)
+	copy(newCode[len(scope.code):], instr)
 
 	scope.code = newCode
 }
 
 func (scope *Global) PatchInstrOperand(addr int, operandIndex int, newValue int) {
-	op := instruction.Operation(scope.code[addr])
+	op := instructions.Opcode(scope.code[addr])
 	opInfo := op.Info()
 
 	instCode := scope.code[addr : addr+opInfo.Size()]
@@ -60,7 +60,7 @@ func (scope *Global) PatchInstrOperand(addr int, operandIndex int, newValue int)
 	operandWidth := opInfo.Operands[operandIndex].Width
 	operandOffset := opInfo.OperandOffset(operandIndex)
 
-	copy(instCode[operandOffset:], instruction.MakeOperandValue(newValue, operandWidth))
+	copy(instCode[operandOffset:], instructions.MakeOperandValue(newValue, operandWidth))
 
 }
 

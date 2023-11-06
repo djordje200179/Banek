@@ -4,14 +4,14 @@ import (
 	"banek/ast"
 )
 
-type Expression struct {
-	Expression ast.Expression
+type Expr struct {
+	Expr ast.Expression
 }
 
-func (statement Expression) String() string {
-	return statement.Expression.String()
+func (stmt Expr) String() string {
+	return stmt.Expr.String()
 }
 
-func (statement Expression) HasSideEffects() bool {
+func (stmt Expr) HasSideEffects() bool {
 	return true
 }

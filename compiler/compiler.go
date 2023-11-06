@@ -9,21 +9,21 @@ import (
 )
 
 type compiler struct {
-	constants []objects.Object
-	functions []bytecode.FunctionTemplate
+	consts []objects.Object
+	funcs  []bytecode.FuncTemplate
 
 	globalScope scopes.Global
 	scopes      []scopes.Scope
 }
 
-func Compile(statementsChannel <-chan ast.Statement) (bytecode.Executable, error) {
+func Compile(stmtsChan <-chan ast.Statement) (bytecode.Executable, error) {
 	compiler := &compiler{
 		scopes: make([]scopes.Scope, 1),
 	}
 	compiler.scopes[0] = &compiler.globalScope
 
-	for statement := range statementsChannel {
-		err := compiler.compileStatement(statement)
+	for stmt := range stmtsChan {
+		err := compiler.compileStmt(stmt)
 		if err != nil {
 			return bytecode.Executable{}, err
 		}
@@ -32,20 +32,20 @@ func Compile(statementsChannel <-chan ast.Statement) (bytecode.Executable, error
 	return compiler.makeExecutable(), nil
 }
 
-func (compiler *compiler) addConstant(object objects.Object) int {
-	if index := slices.Index(compiler.constants, object); index != -1 {
+func (compiler *compiler) addConst(object objects.Object) int {
+	if index := slices.Index(compiler.consts, object); index != -1 {
 		return index
 	}
 
-	index := len(compiler.constants)
-	compiler.constants = append(compiler.constants, object)
+	index := len(compiler.consts)
+	compiler.consts = append(compiler.consts, object)
 
 	return index
 }
 
-func (compiler *compiler) addFunction(template bytecode.FunctionTemplate) int {
-	index := len(compiler.functions)
-	compiler.functions = append(compiler.functions, template)
+func (compiler *compiler) addFunc(template bytecode.FuncTemplate) int {
+	index := len(compiler.funcs)
+	compiler.funcs = append(compiler.funcs, template)
 
 	return index
 }
@@ -64,8 +64,8 @@ func (compiler *compiler) pushScope(scope scopes.Scope) {
 
 func (compiler *compiler) makeExecutable() bytecode.Executable {
 	executable := compiler.globalScope.MakeExecutable()
-	executable.ConstantsPool = compiler.constants
-	executable.FunctionsPool = compiler.functions
+	executable.ConstsPool = compiler.consts
+	executable.FuncsPool = compiler.funcs
 
 	return executable
 }

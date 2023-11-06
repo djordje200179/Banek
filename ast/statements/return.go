@@ -10,16 +10,16 @@ type Return struct {
 	Value ast.Expression
 }
 
-func (statement Return) String() string {
+func (stmt Return) String() string {
 	var sb strings.Builder
 
 	sb.WriteString(tokens.Return.String())
 	sb.WriteByte(' ')
-	sb.WriteString(statement.Value.String())
+	sb.WriteString(stmt.Value.String())
 
 	return sb.String()
 }
 
-func (statement Return) HasSideEffects() bool {
-	return !statement.Value.IsConstant()
+func (stmt Return) HasSideEffects() bool {
+	return !stmt.Value.IsConst()
 }

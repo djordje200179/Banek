@@ -11,47 +11,70 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalExpression(env environments.Environment, expression ast.Expression) (objects.Object, error) {
-	switch expression := expression.(type) {
-	case expressions.ConstantLiteral:
-		return expression.Value, nil
+func (interpreter *interpreter) evalExpr(env environments.Env, expr ast.Expression) (objects.Object, error) {
+	switch expr := expr.(type) {
+	case expressions.ConstLiteral:
+		return expr.Value, nil
 	case expressions.ArrayLiteral:
-		return interpreter.evalArrayLiteral(env, expression)
-	case expressions.PrefixOperation:
-		return interpreter.evalPrefixOperation(env, expression)
-	case expressions.InfixOperation:
-		return interpreter.evalInfixOperation(env, expression)
+		return interpreter.evalArrayLiteral(env, expr)
+	case expressions.UnaryOp:
+		return interpreter.evalUnaryOp(env, expr)
+	case expressions.BinaryOp:
+		return interpreter.evalBinaryOp(env, expr)
 	case expressions.Assignment:
-		return interpreter.evalAssignment(env, expression)
+		return interpreter.evalAssignment(env, expr)
 	case expressions.If:
-		condition, err := interpreter.evalExpression(env, expression.Condition)
+		cond, err := interpreter.evalExpr(env, expr.Cond)
 		if err != nil {
 			return nil, err
 		}
 
-		if condition == objects.Boolean(true) {
-			return interpreter.evalExpression(env, expression.Consequence)
+		if cond == objects.Boolean(true) {
+			return interpreter.evalExpr(env, expr.Consequence)
 		} else {
-			return interpreter.evalExpression(env, expression.Alternative)
+			return interpreter.evalExpr(env, expr.Alternative)
 		}
 	case expressions.Identifier:
-		return interpreter.evalIdentifier(env, expression)
-	case expressions.FunctionLiteral:
-		return &environments.Function{
-			Parameters: expression.Parameters,
-			Body:       statements.Return{Value: expression.Body},
-			Env:        env,
+		return interpreter.evalIdentifier(env, expr)
+	case expressions.FuncLiteral:
+		return &environments.Func{
+			Params: expr.Params,
+			Body:   statements.Return{Value: expr.Body},
+			Env:    env,
 		}, nil
-	case expressions.FunctionCall:
-		return interpreter.evalFunctionCall(env, expression)
-	case expressions.CollectionAccess:
-		return interpreter.evalCollectionAccess(env, expression)
+	case expressions.FuncCall:
+		return interpreter.evalFuncCall(env, expr)
+	case expressions.CollIndex:
+		return interpreter.evalCollIndex(env, expr)
 	default:
-		return nil, ast.ErrUnknownExpression{Expression: expression}
+		return nil, ast.ErrUnknownExpr{Expr: expr}
 	}
 }
 
-func (interpreter *interpreter) evalIdentifier(env environments.Environment, identifier expressions.Identifier) (objects.Object, error) {
+func (interpreter *interpreter) evalBinaryOp(env environments.Env, expr expressions.BinaryOp) (objects.Object, error) {
+	right, err := interpreter.evalExpr(env, expr.Right)
+	if err != nil {
+		return nil, err
+	}
+
+	left, err := interpreter.evalExpr(env, expr.Left)
+	if err != nil {
+		return nil, err
+	}
+
+	return operations.EvalBinary(left, right, expr.Operator)
+}
+
+func (interpreter *interpreter) evalUnaryOp(env environments.Env, expr expressions.UnaryOp) (objects.Object, error) {
+	operand, err := interpreter.evalExpr(env, expr.Operand)
+	if err != nil {
+		return nil, err
+	}
+
+	return operations.EvalUnary(operand, expr.Operation)
+}
+
+func (interpreter *interpreter) evalIdentifier(env environments.Env, identifier expressions.Identifier) (objects.Object, error) {
 	if index := objects.BuiltinFindIndex(identifier.String()); index != -1 {
 		return objects.Builtins[index], nil
 	}
@@ -64,22 +87,22 @@ func (interpreter *interpreter) evalIdentifier(env environments.Environment, ide
 	return value, nil
 }
 
-func (interpreter *interpreter) evalFunctionCall(env environments.Environment, functionCall expressions.FunctionCall) (objects.Object, error) {
-	functionObject, err := interpreter.evalExpression(env, functionCall.Function)
+func (interpreter *interpreter) evalFuncCall(env environments.Env, funcCall expressions.FuncCall) (objects.Object, error) {
+	funcObject, err := interpreter.evalExpr(env, funcCall.Func)
 	if err != nil {
 		return nil, err
 	}
 
-	args, err := interpreter.evalFunctionArguments(env, functionCall.Arguments)
+	args, err := interpreter.evalFuncArgs(env, funcCall.Args)
 	if err != nil {
 		return nil, err
 	}
 
-	switch function := functionObject.(type) {
-	case *environments.Function:
-		functionEnv := EnvFactory(function.Env, len(function.Parameters))
-		for i, param := range function.Parameters {
-			err = functionEnv.Define(param.String(), args[i], true)
+	switch function := funcObject.(type) {
+	case *environments.Func:
+		funcEnv := EnvFactory(function.Env, len(function.Params))
+		for i, param := range function.Params {
+			err = funcEnv.Define(param.String(), args[i], true)
 			if err != nil {
 				return nil, err
 			}
@@ -87,33 +110,33 @@ func (interpreter *interpreter) evalFunctionCall(env environments.Environment, f
 
 		switch body := function.Body.(type) {
 		case statements.Return:
-			return interpreter.evalExpression(functionEnv, body.Value)
+			return interpreter.evalExpr(funcEnv, body.Value)
 		case statements.Block:
-			result, err := interpreter.evalBlockStatement(functionEnv, body)
+			result, err := interpreter.evalBlockStatement(funcEnv, body)
 			if err != nil {
 				return nil, err
 			}
 
-			returnValue, ok := result.(results.Return)
+			ret, ok := result.(results.Return)
 			if !ok {
 				return objects.Undefined{}, nil
 			}
 
-			return returnValue.Value, nil
+			return ret.Value, nil
 		default:
-			return nil, ast.ErrUnknownStatement{Statement: body}
+			return nil, ast.ErrUnknownStmt{Stmt: body}
 		}
-	case objects.BuiltinFunction:
-		return function.Function(args...)
+	case objects.BuiltinFunc:
+		return function.Func(args...)
 	default:
-		return nil, errors.ErrInvalidOperand{Operation: "call", LeftOperand: functionObject}
+		return nil, errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
 	}
 }
 
-func (interpreter *interpreter) evalFunctionArguments(env environments.Environment, expressions []ast.Expression) ([]objects.Object, error) {
-	args := make([]objects.Object, len(expressions))
-	for i, rawArg := range expressions {
-		arg, err := interpreter.evalExpression(env, rawArg)
+func (interpreter *interpreter) evalFuncArgs(env environments.Env, rawArgs []ast.Expression) ([]objects.Object, error) {
+	args := make([]objects.Object, len(rawArgs))
+	for i, rawArg := range rawArgs {
+		arg, err := interpreter.evalExpr(env, rawArg)
 		if err != nil {
 			return nil, err
 		}
@@ -124,38 +147,38 @@ func (interpreter *interpreter) evalFunctionArguments(env environments.Environme
 	return args, nil
 }
 
-func (interpreter *interpreter) evalArrayLiteral(env environments.Environment, expression expressions.ArrayLiteral) (objects.Array, error) {
-	elements := make([]objects.Object, len(expression))
-	for i, elementExpression := range expression {
-		element, err := interpreter.evalExpression(env, elementExpression)
+func (interpreter *interpreter) evalArrayLiteral(env environments.Env, expr expressions.ArrayLiteral) (objects.Array, error) {
+	elems := make([]objects.Object, len(expr))
+	for i, elemExpr := range expr {
+		elem, err := interpreter.evalExpr(env, elemExpr)
 		if err != nil {
 			return nil, err
 		}
 
-		elements[i] = element
+		elems[i] = elem
 	}
 
-	return elements, nil
+	return elems, nil
 }
 
-func (interpreter *interpreter) evalCollectionAccess(env environments.Environment, expression expressions.CollectionAccess) (objects.Object, error) {
-	collection, err := interpreter.evalExpression(env, expression.Collection)
+func (interpreter *interpreter) evalCollIndex(env environments.Env, expr expressions.CollIndex) (objects.Object, error) {
+	coll, err := interpreter.evalExpr(env, expr.Coll)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := interpreter.evalExpression(env, expression.Key)
+	key, err := interpreter.evalExpr(env, expr.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	return operations.EvalCollectionGet(collection, key)
+	return operations.EvalCollGet(coll, key)
 }
 
-func (interpreter *interpreter) evalArrayAccess(array objects.Array, indexObject objects.Object) (objects.Object, error) {
+func (interpreter *interpreter) evalArrayIndex(array objects.Array, indexObject objects.Object) (objects.Object, error) {
 	index, ok := indexObject.(objects.Integer)
 	if !ok {
-		return nil, errors.ErrInvalidOperand{Operation: "index", LeftOperand: array, RightOperand: indexObject}
+		return nil, errors.ErrInvalidOp{Operator: "index", LeftOperand: array, RightOperand: indexObject}
 	}
 
 	if index < 0 {

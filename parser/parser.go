@@ -8,83 +8,83 @@ import (
 )
 
 type (
-	prefixParser    func() (ast.Expression, error)
-	infixParser     func(ast.Expression) (ast.Expression, error)
-	statementParser func() (ast.Statement, error)
+	prefixExprHandler func() (ast.Expression, error)
+	infixExprHandler  func(ast.Expression) (ast.Expression, error)
+	stmtHandler       func() (ast.Statement, error)
 )
 
 type parser struct {
-	tokenChannel <-chan tokens.Token
+	tokenChan <-chan tokens.Token
 
-	currentToken tokens.Token
+	currToken tokens.Token
 
-	prefixParsers    map[tokens.TokenType]prefixParser
-	infixParsers     map[tokens.TokenType]infixParser
-	statementParsers map[tokens.TokenType]statementParser
+	prefixExprHandlers map[tokens.Type]prefixExprHandler
+	infixExprHandlers  map[tokens.Type]infixExprHandler
+	stmtHandlers       map[tokens.Type]stmtHandler
 }
 
-func Parse(tokenChannel <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
-	statementChannel := make(chan ast.Statement, bufferSize)
+func Parse(tokenChan <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
+	stmtChan := make(chan ast.Statement, bufferSize)
 
-	go parsingThread(tokenChannel, statementChannel)
+	go parsingThread(tokenChan, stmtChan)
 
-	return statementChannel
+	return stmtChan
 }
 
-func parsingThread(tokenChannel <-chan tokens.Token, statementChannel chan<- ast.Statement) {
+func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Statement) {
 	runtime.LockOSThread()
 
-	parser := &parser{tokenChannel: tokenChannel}
-	parser.initSubParsers()
+	parser := &parser{tokenChan: tokenChan}
+	parser.initHandlers()
 
 	parser.fetchToken()
 
-	for parser.currentToken.Type != tokens.EOF {
-		statement, err := parser.parseStatement()
+	for parser.currToken.Type != tokens.EOF {
+		stmt, err := parser.parseStmt()
 		if err != nil {
-			statement = statements.Error{Err: err}
+			stmt = statements.Invalid{Err: err}
 		}
 
-		statementChannel <- statement
+		stmtChan <- stmt
 	}
 
-	close(statementChannel)
+	close(stmtChan)
 }
 
-func (parser *parser) initSubParsers() {
-	parser.prefixParsers = map[tokens.TokenType]prefixParser{
+func (parser *parser) initHandlers() {
+	parser.prefixExprHandlers = map[tokens.Type]prefixExprHandler{
 		tokens.Identifier: parser.parseIdentifier,
 
-		tokens.Integer:   parser.parseIntegerLiteral,
-		tokens.Boolean:   parser.parseBooleanLiteral,
-		tokens.String:    parser.parseStringLiteral,
-		tokens.Undefined: parser.parseUndefinedLiteral,
+		tokens.Integer:   parser.parseInteger,
+		tokens.Boolean:   parser.parseBoolean,
+		tokens.String:    parser.parseString,
+		tokens.Undefined: parser.parseUndefined,
 
-		tokens.Minus: parser.parsePrefixOperation,
-		tokens.Bang:  parser.parsePrefixOperation,
+		tokens.Minus: parser.parseUnaryOp,
+		tokens.Bang:  parser.parseUnaryOp,
 
-		tokens.LeftParenthesis: parser.parseGroupedExpression,
+		tokens.LeftParen: parser.parseGroupedExpr,
 
-		tokens.If:             parser.parseIfExpression,
-		tokens.LambdaFunction: parser.parseFunctionLiteral,
+		tokens.If:         parser.parseIfExpr,
+		tokens.LambdaFunc: parser.parseFuncLiteral,
 
-		tokens.LeftBracket: parser.parseArrayLiteral,
+		tokens.LeftBracket: parser.parseArray,
 	}
 
-	parser.infixParsers = map[tokens.TokenType]infixParser{
-		tokens.Equals:              parser.parseInfixOperation,
-		tokens.NotEquals:           parser.parseInfixOperation,
-		tokens.LessThan:            parser.parseInfixOperation,
-		tokens.GreaterThan:         parser.parseInfixOperation,
-		tokens.LessThanOrEquals:    parser.parseInfixOperation,
-		tokens.GreaterThanOrEquals: parser.parseInfixOperation,
+	parser.infixExprHandlers = map[tokens.Type]infixExprHandler{
+		tokens.Equals:        parser.parseBinaryOp,
+		tokens.NotEquals:     parser.parseBinaryOp,
+		tokens.Less:          parser.parseBinaryOp,
+		tokens.Greater:       parser.parseBinaryOp,
+		tokens.LessEquals:    parser.parseBinaryOp,
+		tokens.GreaterEquals: parser.parseBinaryOp,
 
-		tokens.Plus:     parser.parseInfixOperation,
-		tokens.Minus:    parser.parseInfixOperation,
-		tokens.Asterisk: parser.parseInfixOperation,
-		tokens.Slash:    parser.parseInfixOperation,
-		tokens.Modulo:   parser.parseInfixOperation,
-		tokens.Caret:    parser.parseInfixOperation,
+		tokens.Plus:     parser.parseBinaryOp,
+		tokens.Minus:    parser.parseBinaryOp,
+		tokens.Asterisk: parser.parseBinaryOp,
+		tokens.Slash:    parser.parseBinaryOp,
+		tokens.Modulo:   parser.parseBinaryOp,
+		tokens.Caret:    parser.parseBinaryOp,
 
 		tokens.Assign:         parser.parseAssignment,
 		tokens.PlusAssign:     parser.parseAssignment,
@@ -94,17 +94,17 @@ func (parser *parser) initSubParsers() {
 		tokens.ModuloAssign:   parser.parseAssignment,
 		tokens.CaretAssign:    parser.parseAssignment,
 
-		tokens.LeftParenthesis: parser.parseCallExpression,
-		tokens.LeftBracket:     parser.parseIndexExpression,
+		tokens.LeftParen:   parser.parseFuncCall,
+		tokens.LeftBracket: parser.parseIndexExpr,
 	}
 
-	parser.statementParsers = map[tokens.TokenType]statementParser{
-		tokens.Let: parser.parseVariableDeclarationStatement,
+	parser.stmtHandlers = map[tokens.Type]stmtHandler{
+		tokens.Let: parser.parseVarDeclaration,
 
-		tokens.Return:    parser.parseReturnStatement,
-		tokens.LeftBrace: parser.parseBlockStatement,
-		tokens.Function:  parser.parseFunctionStatement,
-		tokens.If:        parser.parseIfStatement,
-		tokens.While:     parser.parseWhileStatement,
+		tokens.Return:    parser.parseReturn,
+		tokens.LeftBrace: parser.parseBlock,
+		tokens.Func:      parser.parseFuncStmt,
+		tokens.If:        parser.parseIfStmt,
+		tokens.While:     parser.parseWhile,
 	}
 }

@@ -1,4 +1,4 @@
-package instruction
+package instructions
 
 import (
 	"encoding/binary"
@@ -7,12 +7,12 @@ import (
 type OperandType byte
 
 const (
-	Constant OperandType = iota
-	Literal
-	Function
+	OperandConstant OperandType = iota
+	OperandLiteral
+	OperandFunc
 
-	InfixOperation
-	PrefixOperation
+	OperandInfixOp
+	OperandPrefixOp
 )
 
 type OperandInfo struct {
@@ -26,7 +26,7 @@ func MakeOperandValue(value int, width int) []byte {
 	case 1:
 		code[0] = byte(value)
 	case 2:
-		binary.PutVarint(code, int64(value))
+		binary.LittleEndian.PutUint16(code, uint16(value))
 	default:
 		return nil
 	}
@@ -39,8 +39,7 @@ func ReadOperandValue(code []byte, width int) int {
 	case 1:
 		return int(code[0])
 	case 2:
-		value, _ := binary.Varint(code)
-		return int(value)
+		return int(int16(binary.LittleEndian.Uint16(code)))
 	}
 
 	return 0
