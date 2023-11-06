@@ -70,23 +70,27 @@ func (err ErrUnknownInstr) Error() string {
 }
 
 func (vm *vm) run() error {
-	for vm.currScope != nil {
-		for vm.currScope.hasCode() {
-			scope := vm.currScope
+	for {
+		scope := vm.currScope
 
-			opcode := scope.readOpcode()
-			if opcode == instructions.OpInvalid || opcode >= instructions.Opcode(len(ops)) {
-				return ErrUnknownInstr{InstrType: opcode}
-			}
-
-			err := ops[opcode](vm, scope)
-			if err != nil {
-				return err
-			}
+		opcode := scope.readOpcode()
+		if opcode == instructions.OpInvalid || opcode >= instructions.Opcode(len(ops)) {
+			return ErrUnknownInstr{InstrType: opcode}
 		}
 
-		vm.popScope()
-	}
+		err := ops[opcode](vm, scope)
+		if err != nil {
+			return err
+		}
 
-	return nil
+		scope = vm.currScope
+
+		if !scope.hasCode() {
+			if scope == &vm.globalScope {
+				return nil
+			}
+
+			vm.popScope()
+		}
+	}
 }
