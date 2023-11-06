@@ -10,6 +10,7 @@ var CharTokens = map[string]Type{
 	"!": Bang,
 
 	"->": Arrow,
+	"|":  VerticalBar,
 
 	",": Comma,
 	";": SemiColon,

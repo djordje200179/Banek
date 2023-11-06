@@ -65,8 +65,8 @@ func (parser *parser) initHandlers() {
 
 		tokens.LeftParen: parser.parseGroupedExpr,
 
-		tokens.If:         parser.parseIfExpr,
-		tokens.LambdaFunc: parser.parseFuncLiteral,
+		tokens.If:          parser.parseIfExpr,
+		tokens.VerticalBar: parser.parseFuncLiteral,
 
 		tokens.LeftBracket: parser.parseArray,
 	}

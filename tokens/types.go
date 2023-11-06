@@ -28,8 +28,6 @@ const (
 	Caret
 	Bang
 
-	Arrow
-
 	Equals
 	NotEquals
 	Less
@@ -48,12 +46,13 @@ const (
 	RightBracket
 
 	Func
-	LambdaFunc
+	Return
+
+	VerticalBar
+	Arrow
 
 	Let
 	Mut
-
-	Return
 
 	If
 	Else
@@ -89,8 +88,6 @@ var typeStrings = [...]string{
 	Caret:    "^",
 	Bang:     "!",
 
-	Arrow: "->",
-
 	Equals:        "==",
 	NotEquals:     "!=",
 	Less:          "<",
@@ -108,13 +105,14 @@ var typeStrings = [...]string{
 	LeftBracket:  "[",
 	RightBracket: "]",
 
-	Func:       "func",
-	LambdaFunc: "fn",
+	Func:   "func",
+	Return: "return",
+
+	Arrow:       "->",
+	VerticalBar: "|",
 
 	Let: "let",
 	Mut: "mut",
-
-	Return: "return",
 
 	If:   "if",
 	Else: "else",

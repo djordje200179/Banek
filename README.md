@@ -59,7 +59,7 @@ is not known until runtime. The following types are supported:
 let num = 1;
 let s = "Hello, world!";
 let arr = [1, 2, 3];
-let fun = fn() -> 1;
+let fun = || -> 1;
 ```
 
 #### Mutability
@@ -113,11 +113,11 @@ When declared as a statement, keyword `function` and the name of the function
 is used. When declared as a lambda expression, the keyword `fn` is used.
 
 ```banek
-function foo() {
+func foo() {
     return 1;
 }
 
-let doubler = fn(num) -> num * 2;
+let doubler = |num| -> num * 2;
 ```
 
 #### Closure
@@ -125,8 +125,8 @@ let doubler = fn(num) -> num * 2;
 Functions can access and capture variables from the outer scope. 
 
 ```banek
-function adder(increment) {
-    return fn(num) -> num + increment;
+func adder(increment) {
+    return |num| -> num + increment;
 }
 
 let addOne = adder(1);
@@ -140,11 +140,11 @@ Functions are first-class citizens, meaning that they can be passed as
 any other value.
 
 ```banek
-function getter() {
+func getter() {
     return 1;
 }
 
-function foo(getter) {
+func foo(getter) {
     print(getter());
 }
 ```
@@ -159,7 +159,7 @@ set to `undefined`. If a function is called with too many arguments, the extra
 arguments are ignored.
 
 ```banek
-function foo(a, b) {
+func foo(a, b) {
     return a + b;
 }
 ```

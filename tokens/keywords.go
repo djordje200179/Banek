@@ -1,13 +1,11 @@
 package tokens
 
 var keywords = map[string]Type{
-	"func": Func,
-	"fn":   LambdaFunc,
+	"func":   Func,
+	"return": Return,
 
 	"let": Let,
 	"mut": Mut,
-
-	"return": Return,
 
 	"if":   If,
 	"else": Else,

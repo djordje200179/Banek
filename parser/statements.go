@@ -126,7 +126,9 @@ func (parser *parser) parseFuncStmt() (ast.Statement, error) {
 		return nil, err
 	}
 
-	params, err := parser.parseFuncParams()
+	parser.fetchToken()
+
+	params, err := parser.parseFuncParams(tokens.RightParen)
 	if err != nil {
 		return nil, err
 	}

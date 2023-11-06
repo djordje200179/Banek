@@ -223,11 +223,7 @@ func (parser *parser) parseIfExpr() (ast.Expression, error) {
 func (parser *parser) parseFuncLiteral() (ast.Expression, error) {
 	parser.fetchToken()
 
-	if err := parser.assertToken(tokens.LeftParen); err != nil {
-		return nil, err
-	}
-
-	params, err := parser.parseFuncParams()
+	params, err := parser.parseFuncParams(tokens.VerticalBar)
 	if err != nil {
 		return nil, err
 	}
@@ -246,10 +242,8 @@ func (parser *parser) parseFuncLiteral() (ast.Expression, error) {
 	return expressions.FuncLiteral{Params: params, Body: expr}, nil
 }
 
-func (parser *parser) parseFuncParams() ([]expressions.Identifier, error) {
-	parser.fetchToken()
-
-	if parser.currToken.Type == tokens.RightParen {
+func (parser *parser) parseFuncParams(end tokens.Type) ([]expressions.Identifier, error) {
+	if parser.currToken.Type == end {
 		parser.fetchToken()
 		return nil, nil
 	}
@@ -274,7 +268,7 @@ func (parser *parser) parseFuncParams() ([]expressions.Identifier, error) {
 		params = append(params, identifier.(expressions.Identifier))
 	}
 
-	if err := parser.assertToken(tokens.RightParen); err != nil {
+	if err := parser.assertToken(end); err != nil {
 		return nil, err
 	}
 

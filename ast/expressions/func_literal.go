@@ -14,7 +14,7 @@ type FuncLiteral struct {
 func (expr FuncLiteral) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.LambdaFunc.String())
+	sb.WriteString(tokens.Func.String())
 
 	sb.WriteByte('(')
 	for i, param := range expr.Params {
