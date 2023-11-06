@@ -14,11 +14,11 @@ type vm struct {
 	opStack [stackSize]objects.Object
 	opSP    int
 
-	globalScope scope
-	currScope   *scope
+	globalScope Scope
+	currScope   *Scope
 }
 
-type opHandler func(*vm) error
+type opHandler func(vm *vm, scope *Scope) error
 
 var ops = [...]opHandler{
 	instructions.OpPushDup:      (*vm).opPushDup,
@@ -51,7 +51,7 @@ var ops = [...]opHandler{
 func Execute(program bytecode.Executable) error {
 	vm := &vm{
 		program: program,
-		globalScope: scope{
+		globalScope: Scope{
 			vars: make([]objects.Object, program.NumGlobals),
 			code: program.Code,
 		},
@@ -71,22 +71,21 @@ func (err ErrUnknownInstr) Error() string {
 
 func (vm *vm) run() error {
 	for vm.currScope != nil {
-		for vm.hasCode() {
-			opcode := vm.readOpcode()
+		for vm.currScope.hasCode() {
+			scope := vm.currScope
+
+			opcode := scope.readOpcode()
 			if opcode == instructions.OpInvalid || opcode >= instructions.Opcode(len(ops)) {
 				return ErrUnknownInstr{InstrType: opcode}
 			}
 
-			err := ops[opcode](vm)
+			err := ops[opcode](vm, scope)
 			if err != nil {
 				return err
 			}
 		}
 
-		err := vm.opReturn()
-		if err != nil {
-			return err
-		}
+		vm.popScope()
 	}
 
 	return nil

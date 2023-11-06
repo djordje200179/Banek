@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-type scope struct {
+type Scope struct {
 	code bytecode.Code
 	pc   int
 
@@ -16,12 +16,12 @@ type scope struct {
 
 	function *bytecode.Func
 
-	parent *scope
+	parent *Scope
 }
 
 var scopePool = sync.Pool{
 	New: func() interface{} {
-		return &scope{}
+		return &Scope{}
 	},
 }
 
@@ -30,7 +30,7 @@ type ErrVarOutOfScope struct {
 }
 
 func (err ErrVarOutOfScope) Error() string {
-	return "variable out of scope: " + strconv.Itoa(err.Index)
+	return "variable out of Scope: " + strconv.Itoa(err.Index)
 }
 
 func (vm *vm) getGlobal(index int) (objects.Object, error) {
@@ -51,63 +51,98 @@ func (vm *vm) setGlobal(index int, value objects.Object) error {
 	return nil
 }
 
-func (vm *vm) getLocal(index int) (objects.Object, error) {
-	if index >= len(vm.currScope.vars) {
+func (scope *Scope) getLocal(index int) (objects.Object, error) {
+	if index >= len(scope.vars) {
 		return nil, ErrVarOutOfScope{index}
 	}
 
-	return vm.currScope.vars[index], nil
+	return scope.vars[index], nil
 }
 
-func (vm *vm) setLocal(index int, value objects.Object) error {
-	if index >= len(vm.currScope.vars) {
+func (scope *Scope) setLocal(index int, value objects.Object) error {
+	if index >= len(scope.vars) {
 		return ErrVarOutOfScope{index}
 	}
 
-	vm.currScope.vars[index] = value
+	scope.vars[index] = value
 
 	return nil
 }
 
-func (vm *vm) getCaptured(index int) (objects.Object, error) {
-	if index >= len(vm.currScope.function.Captures) {
+func (scope *Scope) getCaptured(index int) (objects.Object, error) {
+	if index >= len(scope.function.Captures) {
 		return nil, ErrVarOutOfScope{index}
 	}
 
-	return *vm.currScope.function.Captures[index], nil
+	return *scope.function.Captures[index], nil
 }
 
-func (vm *vm) setCaptured(index int, value objects.Object) error {
-	if index >= len(vm.currScope.function.Captures) {
+func (scope *Scope) setCaptured(index int, value objects.Object) error {
+	if index >= len(scope.function.Captures) {
 		return ErrVarOutOfScope{index}
 	}
 
-	*vm.currScope.function.Captures[index] = value
+	*scope.function.Captures[index] = value
 
 	return nil
 }
 
-func (vm *vm) hasCode() bool {
-	return vm.currScope.pc < len(vm.currScope.code)
+func (scope *Scope) hasCode() bool {
+	return scope.pc < len(scope.code)
 }
 
-func (vm *vm) readOpcode() instructions.Opcode {
-	opcode := instructions.Opcode(vm.currScope.code[vm.currScope.pc])
+func (scope *Scope) readOpcode() instructions.Opcode {
+	opcode := instructions.Opcode(scope.code[scope.pc])
 
-	vm.currScope.pc++
+	scope.pc++
 
 	return opcode
 }
 
-func (vm *vm) readOperand(width int) int {
-	rawOperand := vm.currScope.code[vm.currScope.pc : vm.currScope.pc+width]
+func (scope *Scope) readOperand(width int) int {
+	rawOperand := scope.code[scope.pc : scope.pc+width]
 	operand := instructions.ReadOperandValue(rawOperand, width)
 
-	vm.currScope.pc += width
+	scope.pc += width
 
 	return operand
 }
 
-func (vm *vm) movePC(offset int) {
-	vm.currScope.pc += offset
+func (scope *Scope) movePC(offset int) {
+	scope.pc += offset
+}
+
+func (vm *vm) pushScope(function *bytecode.Func, args []objects.Object) {
+	funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
+
+	if len(args) > len(funcTemplate.Params) {
+		args = args[:len(funcTemplate.Params)]
+	}
+
+	funcScope := scopePool.Get().(*Scope)
+
+	funcScope.code = funcTemplate.Code
+	funcScope.pc = 0
+	funcScope.parent = vm.currScope
+	funcScope.function = function
+
+	if funcTemplate.NumLocals > len(args) {
+		funcScope.vars = make([]objects.Object, funcTemplate.NumLocals)
+		copy(funcScope.vars, args)
+		for i := len(args); i < len(funcScope.vars); i++ {
+			funcScope.vars[i] = objects.Undefined{}
+		}
+	} else {
+		funcScope.vars = args
+	}
+
+	vm.currScope = funcScope
+}
+
+func (vm *vm) popScope() {
+	removedScope := vm.currScope
+
+	vm.currScope = vm.currScope.parent
+
+	scopePool.Put(removedScope)
 }
