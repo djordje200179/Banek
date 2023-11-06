@@ -50,8 +50,6 @@ func EvalFile(file *os.File) {
 		switch result := result.(type) {
 		case results.Error:
 			HandleError(result)
-		case objects.Object:
-			fmt.Println(result)
 		}
 	}
 }
