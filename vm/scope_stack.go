@@ -52,5 +52,8 @@ func (stack *scopeStack) popScope() {
 
 	stack.currScope = stack.currScope.parent
 
+	returnObjectArray(removedScope.vars)
+	removedScope.vars = nil
+
 	scopePool.Put(removedScope)
 }
