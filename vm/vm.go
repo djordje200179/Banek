@@ -6,19 +6,14 @@ import (
 	"banek/exec/objects"
 )
 
-const stackSize = 4 * 1024
-
 type vm struct {
 	program bytecode.Executable
 
-	opStack [stackSize]objects.Object
-	opSP    int
-
-	globalScope Scope
-	currScope   *Scope
+	operandStack
+	scopeStack
 }
 
-type opHandler func(vm *vm, scope *Scope) error
+type opHandler func(vm *vm, scope *scope) error
 
 var ops = [...]opHandler{
 	instructions.OpPushDup:      (*vm).opPushDup,
@@ -51,9 +46,11 @@ var ops = [...]opHandler{
 func Execute(program bytecode.Executable) error {
 	vm := &vm{
 		program: program,
-		globalScope: Scope{
-			vars: make([]objects.Object, program.NumGlobals),
-			code: program.Code,
+		scopeStack: scopeStack{
+			globalScope: scope{
+				vars: make([]objects.Object, program.NumGlobals),
+				code: program.Code,
+			},
 		},
 	}
 	vm.currScope = &vm.globalScope
