@@ -15,13 +15,13 @@ type operandStack struct {
 type ErrStackOverflow struct{}
 
 func (err ErrStackOverflow) Error() string {
-	return "operandStack overflow"
+	return "stack overflow"
 }
 
 type ErrStackUnderflow struct{}
 
 func (err ErrStackUnderflow) Error() string {
-	return "operandStack underflow"
+	return "stack underflow"
 }
 
 func (stack *operandStack) peek() (objects.Object, error) {

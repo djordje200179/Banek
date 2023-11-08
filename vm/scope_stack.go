@@ -45,13 +45,19 @@ var scopeVarsPools = [...]sync.Pool{
 }
 
 func getScopeVars(size int) []objects.Object {
+	if size >= len(scopeVarsPools) {
+		return make([]objects.Object, size)
+	}
+
 	arr := scopeVarsPools[size].Get().(*objects.Object)
 
 	return unsafe.Slice(arr, size)
 }
 
 func returnScopeVars(arr []objects.Object) {
-	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
+	if len(arr) < len(scopeVarsPools) {
+		scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
+	}
 }
 
 func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *bytecode.Func, funcTemplate bytecode.FuncTemplate) *scope {
@@ -63,13 +69,9 @@ func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *by
 	funcScope.function = function
 	funcScope.funcTemplate = funcTemplate
 
-	if varsNum < len(scopeVarsPools) {
-		funcScope.vars = getScopeVars(varsNum)
-	} else {
-		funcScope.vars = make([]objects.Object, varsNum)
-		for i := range funcScope.vars {
-			funcScope.vars[i] = objects.Undefined{}
-		}
+	funcScope.vars = getScopeVars(varsNum)
+	for i := range funcScope.vars {
+		funcScope.vars[i] = objects.Undefined{}
 	}
 
 	stack.currScope = funcScope

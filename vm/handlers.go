@@ -267,25 +267,35 @@ func (vm *vm) opCall(scope *scope) error {
 		return err
 	}
 
-	args := getScopeVars(numArgs)
-	err = vm.popMany(args)
-	if err != nil {
-		return err
-	}
-
 	switch function := funcObject.(type) {
 	case *bytecode.Func:
 		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
 
-		if len(args) > len(funcTemplate.Params) {
-			args = args[:len(funcTemplate.Params)]
+		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
+
+		for numArgs > len(funcTemplate.Params) {
+			_, err = vm.pop()
+			if err != nil {
+				return err
+			}
+
+			numArgs--
 		}
 
-		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
-		copy(funcScope.vars, args)
+		args := funcScope.vars[:numArgs]
+		err = vm.popMany(args)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	case objects.BuiltinFunc:
+		args := make([]objects.Object, numArgs)
+		err = vm.popMany(args)
+		if err != nil {
+			return err
+		}
+
 		result, err := function.Func(args...)
 		if err != nil {
 			return err
