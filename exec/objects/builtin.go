@@ -16,6 +16,15 @@ func (builtin BuiltinFunc) Type() Type     { return TypeBuiltin }
 func (builtin BuiltinFunc) Clone() Object  { return builtin }
 func (builtin BuiltinFunc) String() string { return builtin.Name }
 
+func (builtin BuiltinFunc) Equals(other Object) bool {
+	otherBuiltin, ok := other.(BuiltinFunc)
+	if !ok {
+		return false
+	}
+
+	return builtin.Name == otherBuiltin.Name
+}
+
 type ErrIncorrectArgNum struct {
 	Expected int
 	Got      int

@@ -3,7 +3,6 @@ package operations
 import (
 	"banek/exec/errors"
 	"banek/exec/objects"
-	"slices"
 	"strings"
 )
 
@@ -199,15 +198,9 @@ func evalBinaryModulo(left, right objects.Object) (objects.Object, error) {
 }
 
 func evalBinaryEquals(left, right objects.Object) (objects.Object, error) {
-	switch left := left.(type) {
-	case objects.Array:
-		switch right := right.(type) {
-		case objects.Array:
-			return objects.Boolean(slices.Equal(left, right)), nil
-		}
-	}
+	equality := left.Equals(right)
 
-	return objects.Boolean(left == right), nil
+	return objects.Boolean(equality), nil
 }
 
 func evalBinaryNotEquals(left, right objects.Object) (objects.Object, error) {

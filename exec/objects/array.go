@@ -11,6 +11,15 @@ type Array []Object
 func (array Array) Type() Type    { return TypeArray }
 func (array Array) Clone() Object { return slices.Clone(array) }
 
+func (array Array) Equals(other Object) bool {
+	otherArray, ok := other.(Array)
+	if !ok {
+		return false
+	}
+
+	return slices.Equal(array, otherArray)
+}
+
 func (array Array) String() string {
 	var sb strings.Builder
 

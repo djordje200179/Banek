@@ -33,7 +33,7 @@ func Compile(stmtsChan <-chan ast.Statement) (bytecode.Executable, error) {
 }
 
 func (compiler *compiler) addConst(object objects.Object) int {
-	if index := slices.Index(compiler.consts, object); index != -1 {
+	if index := slices.IndexFunc(compiler.consts, object.Equals); index != -1 {
 		return index
 	}
 
