@@ -12,7 +12,7 @@ type Func struct {
 	Params []expressions.Identifier
 	Body   ast.Statement
 
-	Env Env
+	Env *Env
 }
 
 func (function *Func) Type() objects.Type    { return objects.TypeFunction }

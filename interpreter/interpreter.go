@@ -16,16 +16,14 @@ func Interpret(stmtsChan <-chan ast.Statement, bufferSize int) <-chan results.Re
 }
 
 type interpreter struct {
-	globalEnv environments.Env
+	globalEnv *environments.Env
 }
-
-var EnvFactory environments.EnvFactory = environments.NewArrayEnv
 
 func evalThread(stmtsChan <-chan ast.Statement, resChan chan<- results.Result) {
 	runtime.LockOSThread()
 
 	interpreter := &interpreter{
-		globalEnv: EnvFactory(nil, 0),
+		globalEnv: environments.New(nil, 0),
 	}
 
 	for stmt := range stmtsChan {

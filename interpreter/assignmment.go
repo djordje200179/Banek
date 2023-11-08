@@ -8,7 +8,7 @@ import (
 	"banek/interpreter/environments"
 )
 
-func (interpreter *interpreter) evalAssignment(env environments.Env, expr expressions.Assignment) (objects.Object, error) {
+func (interpreter *interpreter) evalAssignment(env *environments.Env, expr expressions.Assignment) (objects.Object, error) {
 	value, err := interpreter.evalExpr(env, expr.Value)
 	if err != nil {
 		return nil, err

@@ -11,7 +11,7 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalExpr(env environments.Env, expr ast.Expression) (objects.Object, error) {
+func (interpreter *interpreter) evalExpr(env *environments.Env, expr ast.Expression) (objects.Object, error) {
 	switch expr := expr.(type) {
 	case expressions.ConstLiteral:
 		return expr.Value, nil
@@ -51,7 +51,7 @@ func (interpreter *interpreter) evalExpr(env environments.Env, expr ast.Expressi
 	}
 }
 
-func (interpreter *interpreter) evalBinaryOp(env environments.Env, expr expressions.BinaryOp) (objects.Object, error) {
+func (interpreter *interpreter) evalBinaryOp(env *environments.Env, expr expressions.BinaryOp) (objects.Object, error) {
 	right, err := interpreter.evalExpr(env, expr.Right)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (interpreter *interpreter) evalBinaryOp(env environments.Env, expr expressi
 	return operations.EvalBinary(left, right, expr.Operator)
 }
 
-func (interpreter *interpreter) evalUnaryOp(env environments.Env, expr expressions.UnaryOp) (objects.Object, error) {
+func (interpreter *interpreter) evalUnaryOp(env *environments.Env, expr expressions.UnaryOp) (objects.Object, error) {
 	operand, err := interpreter.evalExpr(env, expr.Operand)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (interpreter *interpreter) evalUnaryOp(env environments.Env, expr expressio
 	return operations.EvalUnary(operand, expr.Operation)
 }
 
-func (interpreter *interpreter) evalIdentifier(env environments.Env, identifier expressions.Identifier) (objects.Object, error) {
+func (interpreter *interpreter) evalIdentifier(env *environments.Env, identifier expressions.Identifier) (objects.Object, error) {
 	if index := objects.BuiltinFindIndex(identifier.String()); index != -1 {
 		return objects.Builtins[index], nil
 	}
@@ -87,7 +87,7 @@ func (interpreter *interpreter) evalIdentifier(env environments.Env, identifier 
 	return value, nil
 }
 
-func (interpreter *interpreter) evalFuncCall(env environments.Env, funcCall expressions.FuncCall) (objects.Object, error) {
+func (interpreter *interpreter) evalFuncCall(env *environments.Env, funcCall expressions.FuncCall) (objects.Object, error) {
 	funcObject, err := interpreter.evalExpr(env, funcCall.Func)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (interpreter *interpreter) evalFuncCall(env environments.Env, funcCall expr
 
 	switch function := funcObject.(type) {
 	case *environments.Func:
-		funcEnv := EnvFactory(function.Env, len(function.Params))
+		funcEnv := environments.New(function.Env, len(function.Params))
 		for i, param := range function.Params {
 			err = funcEnv.Define(param.String(), args[i], true)
 			if err != nil {
@@ -133,7 +133,7 @@ func (interpreter *interpreter) evalFuncCall(env environments.Env, funcCall expr
 	}
 }
 
-func (interpreter *interpreter) evalFuncArgs(env environments.Env, rawArgs []ast.Expression) ([]objects.Object, error) {
+func (interpreter *interpreter) evalFuncArgs(env *environments.Env, rawArgs []ast.Expression) ([]objects.Object, error) {
 	args := make([]objects.Object, len(rawArgs))
 	for i, rawArg := range rawArgs {
 		arg, err := interpreter.evalExpr(env, rawArg)
@@ -147,7 +147,7 @@ func (interpreter *interpreter) evalFuncArgs(env environments.Env, rawArgs []ast
 	return args, nil
 }
 
-func (interpreter *interpreter) evalArrayLiteral(env environments.Env, expr expressions.ArrayLiteral) (objects.Array, error) {
+func (interpreter *interpreter) evalArrayLiteral(env *environments.Env, expr expressions.ArrayLiteral) (objects.Array, error) {
 	elems := make([]objects.Object, len(expr))
 	for i, elemExpr := range expr {
 		elem, err := interpreter.evalExpr(env, elemExpr)
@@ -161,7 +161,7 @@ func (interpreter *interpreter) evalArrayLiteral(env environments.Env, expr expr
 	return elems, nil
 }
 
-func (interpreter *interpreter) evalCollIndex(env environments.Env, expr expressions.CollIndex) (objects.Object, error) {
+func (interpreter *interpreter) evalCollIndex(env *environments.Env, expr expressions.CollIndex) (objects.Object, error) {
 	coll, err := interpreter.evalExpr(env, expr.Coll)
 	if err != nil {
 		return nil, err

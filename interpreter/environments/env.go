@@ -4,24 +4,39 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"slices"
+	"sync"
 )
 
-type arrayEnv struct {
+type variable struct {
+	objects.Object
+	Mutable bool
+}
+
+type Env struct {
 	keys   []string
 	values []variable
 
-	outer Env
+	outer *Env
 }
 
-func NewArrayEnv(outer Env, capacity int) Env {
-	return &arrayEnv{
-		keys:   make([]string, 0, capacity),
-		values: make([]variable, 0, capacity),
-		outer:  outer,
-	}
+var envPool = sync.Pool{
+	New: func() any {
+		return &Env{}
+	},
 }
 
-func (env *arrayEnv) Get(name string) (objects.Object, error) {
+func New(outer *Env, capacity int) *Env {
+	//env := envPool.Get().(*Env)
+	env := new(Env)
+
+	env.keys = make([]string, 0, capacity)
+	env.values = make([]variable, 0, capacity)
+	env.outer = outer
+
+	return env
+}
+
+func (env *Env) Get(name string) (objects.Object, error) {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -34,7 +49,7 @@ func (env *arrayEnv) Get(name string) (objects.Object, error) {
 	return env.values[index].Object, nil
 }
 
-func (env *arrayEnv) Define(name string, value objects.Object, mutable bool) error {
+func (env *Env) Define(name string, value objects.Object, mutable bool) error {
 	if slices.Index(env.keys, name) != -1 {
 		return errors.ErrIdentifierAlreadyDefined{Identifier: name}
 	}
@@ -45,7 +60,7 @@ func (env *arrayEnv) Define(name string, value objects.Object, mutable bool) err
 	return nil
 }
 
-func (env *arrayEnv) Set(name string, value objects.Object) error {
+func (env *Env) Set(name string, value objects.Object) error {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -64,7 +79,7 @@ func (env *arrayEnv) Set(name string, value objects.Object) error {
 	return nil
 }
 
-func (env *arrayEnv) Delete(name string) error {
+func (env *Env) Delete(name string) error {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
@@ -80,7 +95,7 @@ func (env *arrayEnv) Delete(name string) error {
 	return nil
 }
 
-func (env *arrayEnv) Clear() {
+func (env *Env) Clear() {
 	env.keys = nil
 	env.values = nil
 }

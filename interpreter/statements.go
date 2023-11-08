@@ -8,7 +8,7 @@ import (
 	"banek/interpreter/results"
 )
 
-func (interpreter *interpreter) evalStmt(env environments.Env, stmt ast.Statement) (results.Result, error) {
+func (interpreter *interpreter) evalStmt(env *environments.Env, stmt ast.Statement) (results.Result, error) {
 	switch stmt := stmt.(type) {
 	case statements.Expr:
 		return interpreter.evalExpr(env, stmt.Expr)
@@ -49,7 +49,7 @@ func (interpreter *interpreter) evalStmt(env environments.Env, stmt ast.Statemen
 
 		return results.None{}, nil
 	case statements.Block:
-		blockEnv := EnvFactory(env, 0)
+		blockEnv := environments.New(env, 0)
 		return interpreter.evalBlockStatement(blockEnv, stmt)
 	case statements.Return:
 		value, err := interpreter.evalExpr(env, stmt.Value)
@@ -90,7 +90,7 @@ func (interpreter *interpreter) evalStmt(env environments.Env, stmt ast.Statemen
 	}
 }
 
-func (interpreter *interpreter) evalBlockStatement(env environments.Env, block statements.Block) (results.Result, error) {
+func (interpreter *interpreter) evalBlockStatement(env *environments.Env, block statements.Block) (results.Result, error) {
 	for _, stmt := range block.Stmts {
 		result, err := interpreter.evalStmt(env, stmt)
 		if err != nil {
