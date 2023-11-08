@@ -58,23 +58,11 @@ func Execute(program bytecode.Executable) error {
 	return vm.run()
 }
 
-type ErrUnknownInstr struct {
-	InstrType instructions.Opcode
-}
-
-func (err ErrUnknownInstr) Error() string {
-	return "unknown instruction " + err.InstrType.String()
-}
-
 func (vm *vm) run() error {
 	for {
 		scope := vm.currScope
 
 		opcode := scope.readOpcode()
-		if opcode == instructions.OpInvalid || opcode >= instructions.Opcode(len(ops)) {
-			return ErrUnknownInstr{InstrType: opcode}
-		}
-
 		err := ops[opcode](vm, scope)
 		if err != nil {
 			return err

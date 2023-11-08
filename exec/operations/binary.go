@@ -46,7 +46,7 @@ var binaryOperatorNames = [...]string{
 	BinaryGreaterEquals: ">=",
 }
 
-var binaryOps = [...]binaryOp{
+var BinaryOps = [...]binaryOp{
 	BinaryPlus:     evalBinaryPlus,
 	BinaryMinus:    evalBinaryMinus,
 	BinaryAsterisk: evalBinaryAsterisk,
@@ -60,14 +60,6 @@ var binaryOps = [...]binaryOp{
 	BinaryGreater:       evalBinaryGreater,
 	BinaryLessEquals:    evalBinaryLessEquals,
 	BinaryGreaterEquals: evalBinaryGreaterEquals,
-}
-
-func EvalBinary(left, right objects.Object, operator BinaryOperator) (objects.Object, error) {
-	if operator >= BinaryOperator(len(binaryOps)) {
-		return nil, errors.ErrUnknownOperator{Operator: operator.String()}
-	}
-
-	return binaryOps[operator](left, right)
 }
 
 func evalBinaryPlus(left, right objects.Object) (objects.Object, error) {

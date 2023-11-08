@@ -23,17 +23,9 @@ var unaryOperatorNames = [...]string{
 	UnaryBang:  "!",
 }
 
-var unaryOps = [...]unaryOp{
+var UnaryOps = [...]unaryOp{
 	UnaryMinus: evalUnaryMinus,
 	UnaryBang:  evalUnaryBang,
-}
-
-func EvalUnary(operand objects.Object, operator UnaryOperator) (objects.Object, error) {
-	if operator >= UnaryOperator(len(unaryOps)) {
-		return nil, errors.ErrUnknownOperator{Operator: operator.String()}
-	}
-
-	return unaryOps[operator](operand)
 }
 
 func evalUnaryMinus(operand objects.Object) (objects.Object, error) {

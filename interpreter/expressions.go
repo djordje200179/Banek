@@ -62,7 +62,11 @@ func (interpreter *interpreter) evalBinaryOp(env *environments.Env, expr express
 		return nil, err
 	}
 
-	return operations.EvalBinary(left, right, expr.Operator)
+	if expr.Operator >= operations.BinaryOperator(len(operations.BinaryOps)) {
+		return nil, errors.ErrUnknownOperator{Operator: expr.Operator.String()}
+	}
+
+	return operations.BinaryOps[expr.Operator](left, right)
 }
 
 func (interpreter *interpreter) evalUnaryOp(env *environments.Env, expr expressions.UnaryOp) (objects.Object, error) {
@@ -71,7 +75,11 @@ func (interpreter *interpreter) evalUnaryOp(env *environments.Env, expr expressi
 		return nil, err
 	}
 
-	return operations.EvalUnary(operand, expr.Operation)
+	if expr.Operation >= operations.UnaryOperator(len(operations.UnaryOps)) {
+		return nil, errors.ErrUnknownOperator{Operator: expr.Operation.String()}
+	}
+
+	return operations.UnaryOps[expr.Operation](operand)
 }
 
 func (interpreter *interpreter) evalIdentifier(env *environments.Env, identifier expressions.Identifier) (objects.Object, error) {
