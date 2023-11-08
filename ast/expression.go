@@ -15,3 +15,11 @@ type ErrUnknownExpr struct {
 func (err ErrUnknownExpr) Error() string {
 	return "unknown expression: " + err.Expr.String()
 }
+
+type ErrInvalidAssignment struct {
+	Variable Expression
+}
+
+func (err ErrInvalidAssignment) Error() string {
+	return "invalid assignment to " + err.Variable.String()
+}

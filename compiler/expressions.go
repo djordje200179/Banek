@@ -192,7 +192,7 @@ func (compiler *compiler) compileAssigment(expr expressions.Assignment) error {
 
 		return nil
 	default:
-		return errors.ErrInvalidOp{Operator: "=", LeftOperand: objects.Unknown{}} // TODO: fix right operand
+		return ast.ErrInvalidAssignment{Variable: expr.Var}
 	}
 }
 

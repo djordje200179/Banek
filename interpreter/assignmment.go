@@ -1,8 +1,8 @@
 package interpreter
 
 import (
+	"banek/ast"
 	"banek/ast/expressions"
-	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
 	"banek/interpreter/environments"
@@ -36,7 +36,7 @@ func (interpreter *interpreter) evalAssignment(env environments.Env, expr expres
 			return nil, err
 		}
 	default:
-		return nil, errors.ErrInvalidOp{Operator: "=", LeftOperand: objects.Unknown{}, RightOperand: value}
+		return nil, ast.ErrInvalidAssignment{Variable: expr.Var}
 	}
 
 	return value, nil
