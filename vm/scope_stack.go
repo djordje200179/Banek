@@ -55,9 +55,11 @@ func getScopeVars(size int) []objects.Object {
 }
 
 func returnScopeVars(arr []objects.Object) {
-	if len(arr) < len(scopeVarsPools) {
-		scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
+	if len(arr) >= len(scopeVarsPools) {
+		return
 	}
+
+	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
 }
 
 func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *bytecode.Func, funcTemplate bytecode.FuncTemplate) *scope {
@@ -84,7 +86,7 @@ func (stack *scopeStack) popScope() {
 
 	stack.currScope = stack.currScope.parent
 
-	if removedScope.funcTemplate.IsCaptured {
+	if !removedScope.funcTemplate.IsCaptured {
 		returnScopeVars(removedScope.vars)
 	}
 
