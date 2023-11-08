@@ -72,7 +72,7 @@ var InstrInfos = [...]InstrInfo{
 	OpInvalid: {"INVALID", []OperandInfo{}},
 
 	OpPushDup:      {"PUSH.D", []OperandInfo{}},
-	OpPushConst:    {"PUSH.C", []OperandInfo{{2, OperandConstant}}},
+	OpPushConst:    {"PUSH.C", []OperandInfo{{2, OperandConst}}},
 	OpPushLocal:    {"PUSH.L", []OperandInfo{{1, OperandLiteral}}},
 	OpPushGlobal:   {"PUSH.G", []OperandInfo{{1, OperandLiteral}}},
 	OpPushCaptured: {"PUSH.O", []OperandInfo{{1, OperandLiteral}}},
@@ -85,8 +85,8 @@ var InstrInfos = [...]InstrInfo{
 	OpPopCaptured: {"POP.O", []OperandInfo{{1, OperandLiteral}}},
 	OpPopCollElem: {"POP.CE", []OperandInfo{}},
 
-	OpBinaryOp: {"OP.I", []OperandInfo{{1, OperandInfixOp}}},
-	OpUnaryOp:  {"OP.P", []OperandInfo{{1, OperandPrefixOp}}},
+	OpBinaryOp: {"OP.I", []OperandInfo{{1, OperandBinaryOp}}},
+	OpUnaryOp:  {"OP.P", []OperandInfo{{1, OperandUnaryOp}}},
 
 	OpBranch:        {"BR", []OperandInfo{{2, OperandLiteral}}},
 	OpBranchIfFalse: {"BR.F", []OperandInfo{{2, OperandLiteral}}},

@@ -7,12 +7,12 @@ import (
 type OperandType byte
 
 const (
-	OperandConstant OperandType = iota
+	OperandConst OperandType = iota
 	OperandLiteral
 	OperandFunc
 
-	OperandInfixOp
-	OperandPrefixOp
+	OperandBinaryOp
+	OperandUnaryOp
 )
 
 type OperandInfo struct {

@@ -31,7 +31,7 @@ func (code Code) String() string {
 			operand := instrInfo.Operands[i]
 
 			switch operand.Type {
-			case instructions.OperandConstant:
+			case instructions.OperandConst:
 				sb.WriteByte('=')
 				sb.WriteString(strconv.Itoa(operandValue))
 			case instructions.OperandLiteral:
@@ -39,9 +39,9 @@ func (code Code) String() string {
 			case instructions.OperandFunc:
 				sb.WriteByte('#')
 				sb.WriteString(strconv.Itoa(operandValue))
-			case instructions.OperandInfixOp:
+			case instructions.OperandBinaryOp:
 				sb.WriteString(operations.BinaryOperator(operandValue).String())
-			case instructions.OperandPrefixOp:
+			case instructions.OperandUnaryOp:
 				sb.WriteString(operations.UnaryOperator(operandValue).String())
 			}
 		}
