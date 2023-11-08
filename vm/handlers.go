@@ -279,13 +279,6 @@ func (vm *vm) opCall(scope *scope) error {
 
 		if len(args) > len(funcTemplate.Params) {
 			args = args[:len(funcTemplate.Params)]
-		} else if len(args) < len(funcTemplate.Params) {
-			oldArgs := args
-			args = make([]objects.Object, len(funcTemplate.Params))
-			copy(args, oldArgs)
-			for i := len(oldArgs); i < len(args); i++ {
-				args[i] = objects.Undefined{}
-			}
 		}
 
 		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
