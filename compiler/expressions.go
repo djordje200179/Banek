@@ -275,11 +275,13 @@ func (compiler *compiler) compileIdentifier(expr expressions.Identifier) error {
 		return nil
 	}
 
+	varScope.MarkCaptured()
+
 	capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-	funcScope, ok := varScope.(*scopes.Function)
+	funcScope, ok := scope.(*scopes.Function)
 	if !ok {
-		block := varScope.(*scopes.Block)
+		block := scope.(*scopes.Block)
 		for {
 			nextScope := block.Parent
 

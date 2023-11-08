@@ -46,4 +46,6 @@ func (scope *Block) IsGlobal() bool {
 	return scope.Parent.IsGlobal()
 }
 
-func (scope *Block) MarkCaptured() {}
+func (scope *Block) MarkCaptured() {
+	scope.Parent.MarkCaptured()
+}
