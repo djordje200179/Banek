@@ -18,22 +18,12 @@ var scopePool = sync.Pool{
 	},
 }
 
-func (stack *scopeStack) getGlobal(index int) (objects.Object, error) {
-	if index >= len(stack.globalScope.vars) {
-		return nil, ErrVarOutOfScope{index}
-	}
-
-	return stack.globalScope.vars[index], nil
+func (stack *scopeStack) getGlobal(index int) objects.Object {
+	return stack.globalScope.vars[index]
 }
 
-func (stack *scopeStack) setGlobal(index int, value objects.Object) error {
-	if index >= len(stack.globalScope.vars) {
-		return ErrVarOutOfScope{index}
-	}
-
+func (stack *scopeStack) setGlobal(index int, value objects.Object) {
 	stack.globalScope.vars[index] = value
-
-	return nil
 }
 
 var scopeVarsPools = [...]sync.Pool{

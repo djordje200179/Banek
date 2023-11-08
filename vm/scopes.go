@@ -4,7 +4,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instructions"
 	"banek/exec/objects"
-	"strconv"
 )
 
 type scope struct {
@@ -19,48 +18,20 @@ type scope struct {
 	parent *scope
 }
 
-type ErrVarOutOfScope struct {
-	Index int
+func (scope *scope) getLocal(index int) objects.Object {
+	return scope.vars[index]
 }
 
-func (err ErrVarOutOfScope) Error() string {
-	return "variable out of scope: " + strconv.Itoa(err.Index)
-}
-
-func (scope *scope) getLocal(index int) (objects.Object, error) {
-	if index >= len(scope.vars) {
-		return nil, ErrVarOutOfScope{index}
-	}
-
-	return scope.vars[index], nil
-}
-
-func (scope *scope) setLocal(index int, value objects.Object) error {
-	if index >= len(scope.vars) {
-		return ErrVarOutOfScope{index}
-	}
-
+func (scope *scope) setLocal(index int, value objects.Object) {
 	scope.vars[index] = value
-
-	return nil
 }
 
-func (scope *scope) getCaptured(index int) (objects.Object, error) {
-	if index >= len(scope.function.Captures) {
-		return nil, ErrVarOutOfScope{index}
-	}
-
-	return *scope.function.Captures[index], nil
+func (scope *scope) getCaptured(index int) objects.Object {
+	return *scope.function.Captures[index]
 }
 
-func (scope *scope) setCaptured(index int, value objects.Object) error {
-	if index >= len(scope.function.Captures) {
-		return ErrVarOutOfScope{index}
-	}
-
+func (scope *scope) setCaptured(index int, value objects.Object) {
 	*scope.function.Captures[index] = value
-
-	return nil
 }
 
 func (scope *scope) hasCode() bool {
