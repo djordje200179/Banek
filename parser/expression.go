@@ -125,7 +125,7 @@ func (parser *parser) parseUnaryOp() (ast.Expression, error) {
 		return nil, err
 	}
 
-	return expressions.UnaryOp{Operation: unaryOps[opToken.Type], Operand: operand}, nil
+	return expressions.UnaryOp{Operator: unaryOps[opToken.Type], Operand: operand}, nil
 }
 
 func (parser *parser) parseBinaryOp(left ast.Expression) (ast.Expression, error) {

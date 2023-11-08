@@ -7,7 +7,7 @@ import (
 )
 
 type UnaryOp struct {
-	Operation operations.UnaryOperator
+	Operator operations.UnaryOperator
 
 	Operand ast.Expression
 }
@@ -16,7 +16,7 @@ func (expr UnaryOp) String() string {
 	var sb strings.Builder
 
 	sb.WriteByte('(')
-	sb.WriteString(expr.Operation.String())
+	sb.WriteString(expr.Operator.String())
 	sb.WriteString(expr.Operand.String())
 	sb.WriteByte(')')
 

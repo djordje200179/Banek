@@ -324,7 +324,7 @@ func (compiler *compiler) compileUnaryOp(expression expressions.UnaryOp) error {
 	}
 
 	container := compiler.topScope()
-	container.EmitInstr(instructions.OpUnaryOp, int(expression.Operation))
+	container.EmitInstr(instructions.OpUnaryOp, int(expression.Operator))
 
 	return nil
 }

@@ -75,11 +75,11 @@ func (interpreter *interpreter) evalUnaryOp(env *environments.Env, expr expressi
 		return nil, err
 	}
 
-	if expr.Operation >= operations.UnaryOperator(len(operations.UnaryOps)) {
-		return nil, errors.ErrUnknownOperator{Operator: expr.Operation.String()}
+	if expr.Operator >= operations.UnaryOperator(len(operations.UnaryOps)) {
+		return nil, errors.ErrUnknownOperator{Operator: expr.Operator.String()}
 	}
 
-	return operations.UnaryOps[expr.Operation](operand)
+	return operations.UnaryOps[expr.Operator](operand)
 }
 
 func (interpreter *interpreter) evalIdentifier(env *environments.Env, identifier expressions.Identifier) (objects.Object, error) {
