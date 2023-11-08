@@ -174,20 +174,3 @@ func (interpreter *interpreter) evalCollIndex(env environments.Env, expr express
 
 	return operations.EvalCollGet(coll, key)
 }
-
-func (interpreter *interpreter) evalArrayIndex(array objects.Array, indexObject objects.Object) (objects.Object, error) {
-	index, ok := indexObject.(objects.Integer)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: "index", LeftOperand: array, RightOperand: indexObject}
-	}
-
-	if index < 0 {
-		index = objects.Integer(len(array)) + index
-	}
-
-	if index < 0 || index >= objects.Integer(len(array)) {
-		return nil, objects.ErrIndexOutOfBounds{Index: int(index), Size: len(array)}
-	}
-
-	return array[index], nil
-}

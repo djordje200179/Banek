@@ -10,3 +10,13 @@ type Object interface {
 	Equals(other Object) bool
 	fmt.Stringer
 }
+
+type Coll interface {
+	Object
+
+	Size() int
+
+	AcceptsKey(key Object) bool
+	Get(key Object) (Object, error)
+	Set(key, value Object) error
+}

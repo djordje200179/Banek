@@ -35,6 +35,34 @@ func (array Array) String() string {
 	return sb.String()
 }
 
+func (array Array) Size() int {
+	return len(array)
+}
+
+func (array Array) AcceptsKey(key Object) bool {
+	_, ok := key.(Integer)
+	return ok
+}
+
+func (array Array) Get(key Object) (Object, error) {
+	index := key.(Integer)
+	if index < 0 || int(index) >= len(array) {
+		return nil, ErrIndexOutOfBounds{int(index), len(array)}
+	}
+
+	return array[index], nil
+}
+
+func (array Array) Set(key, value Object) error {
+	index := key.(Integer)
+	if index < 0 || int(index) >= len(array) {
+		return ErrIndexOutOfBounds{int(index), len(array)}
+	}
+
+	array[index] = value
+	return nil
+}
+
 type ErrIndexOutOfBounds struct {
 	Index int
 	Size  int
