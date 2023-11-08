@@ -12,7 +12,7 @@ type BuiltinFunc struct {
 	Func func(args ...Object) (Object, error)
 }
 
-func (builtin BuiltinFunc) Type() string   { return "builtin" }
+func (builtin BuiltinFunc) Type() Type     { return TypeBuiltin }
 func (builtin BuiltinFunc) Clone() Object  { return builtin }
 func (builtin BuiltinFunc) String() string { return builtin.Name }
 

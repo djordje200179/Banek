@@ -5,7 +5,7 @@ import (
 )
 
 type Object interface {
-	Type() string
+	Type() Type
 	Clone() Object
 
 	fmt.Stringer

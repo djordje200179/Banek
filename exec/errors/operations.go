@@ -28,19 +28,19 @@ func (err ErrInvalidOp) Error() string {
 		sb.WriteString("invalid operands for ")
 		sb.WriteString(err.Operator)
 		sb.WriteString(": ")
-		sb.WriteString(err.LeftOperand.Type())
+		sb.WriteString(err.LeftOperand.String())
 		sb.WriteString(" and ")
-		sb.WriteString(err.RightOperand.Type())
+		sb.WriteString(err.RightOperand.String())
 	case err.LeftOperand != nil:
 		sb.WriteString("invalid operand for ")
 		sb.WriteString(err.Operator)
 		sb.WriteString(": ")
-		sb.WriteString(err.LeftOperand.Type())
+		sb.WriteString(err.LeftOperand.String())
 	case err.RightOperand != nil:
 		sb.WriteString("invalid operand for ")
 		sb.WriteString(err.Operator)
 		sb.WriteString(": ")
-		sb.WriteString(err.RightOperand.Type())
+		sb.WriteString(err.RightOperand.String())
 	}
 
 	return sb.String()

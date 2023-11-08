@@ -11,7 +11,7 @@ type Func struct {
 	Captures []*objects.Object
 }
 
-func (function *Func) Type() string          { return "function" }
+func (function *Func) Type() objects.Type    { return objects.TypeFunction }
 func (function *Func) Clone() objects.Object { return function }
 
 func (function *Func) String() string {

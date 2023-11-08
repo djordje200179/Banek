@@ -8,7 +8,7 @@ import (
 
 type Array []Object
 
-func (array Array) Type() string  { return "array" }
+func (array Array) Type() Type    { return TypeArray }
 func (array Array) Clone() Object { return slices.Clone(array) }
 
 func (array Array) String() string {
