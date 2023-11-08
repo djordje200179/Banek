@@ -109,8 +109,15 @@ print(len([1, 2, 3])); // Prints 3
 #### Visibility
 
 Functions are declared either by statements or as lambda expressions.
-When declared as a statement, keyword `function` and the name of the function
-is used. When declared as a lambda expression, the keyword `fn` is used.
+
+When declared as a statement, keyword `func` and the name of the function
+should be given, followed by the arguments in parentheses and the body
+of the function in curly brackets.
+
+When declared as a lambda expression, vertical bars are used instead of
+parentheses around the arguments, after which an arrow is used to separate
+the arguments from the body. The body can be only one expression, and it is 
+implicitly returned.
 
 ```banek
 func foo() {
