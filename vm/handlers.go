@@ -6,8 +6,6 @@ import (
 	"banek/exec/errors"
 	"banek/exec/objects"
 	"banek/exec/operations"
-	"sync"
-	"unsafe"
 )
 
 func (vm *vm) opPushDup(_ *scope) error {
@@ -261,24 +259,6 @@ func (vm *vm) opNewFunc(scope *scope) error {
 	return vm.push(function)
 }
 
-var objectArrayPools = [...]sync.Pool{
-	{New: func() any { return (*objects.Object)(nil) }},
-	{New: func() any { return &(new([1]objects.Object)[0]) }},
-	{New: func() any { return &(new([2]objects.Object)[0]) }},
-	{New: func() any { return &(new([3]objects.Object)[0]) }},
-	{New: func() any { return &(new([4]objects.Object)[0]) }},
-}
-
-func getObjectArray(size int) []objects.Object {
-	arr := objectArrayPools[size].Get().(*objects.Object)
-
-	return unsafe.Slice(arr, size)
-}
-
-func returnObjectArray(arr []objects.Object) {
-	objectArrayPools[len(arr)].Put(unsafe.SliceData(arr))
-}
-
 func (vm *vm) opCall(scope *scope) error {
 	numArgs := scope.readOperand(1)
 
@@ -287,7 +267,7 @@ func (vm *vm) opCall(scope *scope) error {
 		return err
 	}
 
-	args := getObjectArray(numArgs)
+	args := getScopeVars(numArgs)
 	err = vm.popMany(args)
 	if err != nil {
 		return err
@@ -299,20 +279,17 @@ func (vm *vm) opCall(scope *scope) error {
 
 		if len(args) > len(funcTemplate.Params) {
 			args = args[:len(funcTemplate.Params)]
-		}
-
-		var locals []objects.Object
-		if funcTemplate.NumLocals > len(args) {
-			locals = getObjectArray(funcTemplate.NumLocals)
-			copy(locals, args)
-			for i := len(args); i < len(locals); i++ {
-				locals[i] = objects.Undefined{}
+		} else if len(args) < len(funcTemplate.Params) {
+			oldArgs := args
+			args = make([]objects.Object, len(funcTemplate.Params))
+			copy(args, oldArgs)
+			for i := len(oldArgs); i < len(args); i++ {
+				args[i] = objects.Undefined{}
 			}
-		} else {
-			locals = args
 		}
 
-		vm.pushScope(funcTemplate.Code, locals, function)
+		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
+		copy(funcScope.vars, args)
 
 		return nil
 	case objects.BuiltinFunc:

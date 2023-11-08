@@ -156,6 +156,8 @@ func (compiler *compiler) compileAssigment(expr expressions.Assignment) error {
 			return nil
 		}
 
+		varScope.MarkCaptured()
+
 		capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
 		funcScope, ok := varScope.(*scopes.Function)

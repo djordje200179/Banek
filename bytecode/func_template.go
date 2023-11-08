@@ -14,8 +14,9 @@ type FuncTemplate struct {
 
 	Code Code
 
-	Params    []string
-	NumLocals int
+	Params     []string
+	NumLocals  int
+	IsCaptured bool
 
 	Captures []Capture
 }

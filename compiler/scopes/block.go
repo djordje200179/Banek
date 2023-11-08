@@ -45,3 +45,5 @@ func (scope *Block) CurrAddr() int {
 func (scope *Block) IsGlobal() bool {
 	return scope.Parent.IsGlobal()
 }
+
+func (scope *Block) MarkCaptured() {}

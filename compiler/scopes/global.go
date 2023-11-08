@@ -72,6 +72,8 @@ func (scope *Global) IsGlobal() bool {
 	return true
 }
 
+func (scope *Global) MarkCaptured() {}
+
 func (scope *Global) MakeExecutable() bytecode.Executable {
 	return bytecode.Executable{
 		Code: scope.code,

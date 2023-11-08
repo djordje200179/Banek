@@ -12,6 +12,8 @@ type Function struct {
 	vars     []Var
 	captures []bytecode.Capture
 
+	isCaptured bool
+
 	code bytecode.Code
 
 	blocksCounter
@@ -107,6 +109,10 @@ func (scope *Function) IsGlobal() bool {
 	return false
 }
 
+func (scope *Function) MarkCaptured() {
+	scope.isCaptured = true
+}
+
 func (scope *Function) MakeFunction() bytecode.FuncTemplate {
 	return bytecode.FuncTemplate{
 		Code: scope.code,
@@ -114,5 +120,7 @@ func (scope *Function) MakeFunction() bytecode.FuncTemplate {
 		Params:    scope.params,
 		NumLocals: len(scope.vars),
 		Captures:  scope.captures,
+
+		IsCaptured: scope.isCaptured,
 	}
 }

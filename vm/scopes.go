@@ -13,7 +13,8 @@ type scope struct {
 
 	vars []objects.Object
 
-	function *bytecode.Func
+	function     *bytecode.Func
+	funcTemplate bytecode.FuncTemplate
 
 	parent *scope
 }
