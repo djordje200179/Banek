@@ -1,7 +1,7 @@
 package bytecode
 
 import (
-	"banek/exec/objects"
+	"banek/runtime/types"
 	"strconv"
 	"strings"
 )
@@ -9,7 +9,7 @@ import (
 type Executable struct {
 	Code Code
 
-	ConstsPool []objects.Object
+	ConstsPool []types.Obj
 	FuncsPool  []FuncTemplate
 
 	NumGlobals int

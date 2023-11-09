@@ -2,25 +2,25 @@ package interpreter
 
 import (
 	"banek/ast"
-	"banek/ast/expressions"
-	"banek/exec/objects"
-	"banek/exec/operations"
-	"banek/interpreter/environments"
+	"banek/ast/exprs"
+	"banek/interpreter/envs"
+	"banek/runtime/ops"
+	"banek/runtime/types"
 )
 
-func (interpreter *interpreter) evalAssignment(env *environments.Env, expr expressions.Assignment) (objects.Object, error) {
+func (interpreter *interpreter) evalAssignment(env *envs.Env, expr exprs.Assignment) (types.Obj, error) {
 	value, err := interpreter.evalExpr(env, expr.Value)
 	if err != nil {
 		return nil, err
 	}
 
 	switch variable := expr.Var.(type) {
-	case expressions.Identifier:
+	case exprs.Identifier:
 		err := env.Set(variable.String(), value)
 		if err != nil {
 			return nil, err
 		}
-	case expressions.CollIndex:
+	case exprs.CollIndex:
 		collection, err := interpreter.evalExpr(env, variable.Coll)
 		if err != nil {
 			return nil, err
@@ -31,7 +31,7 @@ func (interpreter *interpreter) evalAssignment(env *environments.Env, expr expre
 			return nil, err
 		}
 
-		err = operations.EvalCollSet(collection, key, value)
+		err = ops.EvalCollSet(collection, key, value)
 		if err != nil {
 			return nil, err
 		}

@@ -1,16 +1,17 @@
 package bytecode
 
 import (
-	"banek/exec/objects"
+	"banek/runtime/builtins"
+	"banek/runtime/objs"
 	"encoding/gob"
 )
 
 func init() {
-	gob.Register(objects.Array{})
-	gob.Register(objects.Boolean(false))
-	gob.Register(objects.BuiltinFunc{})
-	gob.Register(objects.Integer(0))
-	gob.Register(objects.String(""))
-	gob.Register(objects.Undefined{})
+	gob.Register(objs.Array{})
+	gob.Register(objs.Bool(false))
+	gob.Register(builtins.BuiltinFunc{})
+	gob.Register(objs.Int(0))
+	gob.Register(objs.Str(""))
+	gob.Register(objs.Undefined{})
 	gob.Register(&Func{})
 }

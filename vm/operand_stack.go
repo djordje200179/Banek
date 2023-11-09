@@ -1,13 +1,11 @@
 package vm
 
-import (
-	"banek/exec/objects"
-)
+import "banek/runtime/types"
 
 const stackSize = 4 * 1024
 
 type operandStack struct {
-	array [stackSize]objects.Object
+	array [stackSize]types.Obj
 
 	ptr int
 }
@@ -24,7 +22,7 @@ func (err ErrStackUnderflow) Error() string {
 	return "stack underflow"
 }
 
-func (stack *operandStack) peek() (objects.Object, error) {
+func (stack *operandStack) peek() (types.Obj, error) {
 	if stack.ptr <= 0 {
 		return nil, ErrStackUnderflow{}
 	}
@@ -32,7 +30,7 @@ func (stack *operandStack) peek() (objects.Object, error) {
 	return stack.array[stack.ptr-1], nil
 }
 
-func (stack *operandStack) push(object objects.Object) error {
+func (stack *operandStack) push(object types.Obj) error {
 	if stack.ptr >= stackSize {
 		return ErrStackOverflow{}
 	}
@@ -43,7 +41,7 @@ func (stack *operandStack) push(object objects.Object) error {
 	return nil
 }
 
-func (stack *operandStack) popOne() (objects.Object, error) {
+func (stack *operandStack) popOne() (types.Obj, error) {
 	if stack.ptr <= 0 {
 		return nil, ErrStackUnderflow{}
 	}
@@ -56,7 +54,7 @@ func (stack *operandStack) popOne() (objects.Object, error) {
 	return elem, nil
 }
 
-func (stack *operandStack) popTwo() (objects.Object, objects.Object, error) {
+func (stack *operandStack) popTwo() (types.Obj, types.Obj, error) {
 	if stack.ptr <= 1 {
 		return nil, nil, ErrStackUnderflow{}
 	}
@@ -72,7 +70,7 @@ func (stack *operandStack) popTwo() (objects.Object, objects.Object, error) {
 	return firstElem, secondElem, nil
 }
 
-func (stack *operandStack) popMany(arr []objects.Object) error {
+func (stack *operandStack) popMany(arr []types.Obj) error {
 	if stack.ptr < len(arr) {
 		return ErrStackUnderflow{}
 	}

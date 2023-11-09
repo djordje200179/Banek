@@ -2,8 +2,8 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instructions"
-	"banek/exec/objects"
+	"banek/bytecode/instrs"
+	"banek/runtime/types"
 )
 
 type vm struct {
@@ -13,34 +13,34 @@ type vm struct {
 	scopeStack
 }
 
-type opHandler func(vm *vm, scope *scope) error
+type handler func(vm *vm, scope *scope) error
 
-var ops = [...]opHandler{
-	instructions.OpPushDup:      (*vm).opPushDup,
-	instructions.OpPushConst:    (*vm).opPushConst,
-	instructions.OpPushLocal:    (*vm).opPushLocal,
-	instructions.OpPushGlobal:   (*vm).opPushGlobal,
-	instructions.OpPushCaptured: (*vm).opPushCaptured,
-	instructions.OpPushBuiltin:  (*vm).opPushBuiltin,
-	instructions.OpPushCollElem: (*vm).opPushCollElem,
+var handlers = [...]handler{
+	instrs.OpPushDup:      (*vm).opPushDup,
+	instrs.OpPushConst:    (*vm).opPushConst,
+	instrs.OpPushLocal:    (*vm).opPushLocal,
+	instrs.OpPushGlobal:   (*vm).opPushGlobal,
+	instrs.OpPushCaptured: (*vm).opPushCaptured,
+	instrs.OpPushBuiltin:  (*vm).opPushBuiltin,
+	instrs.OpPushCollElem: (*vm).opPushCollElem,
 
-	instructions.OpPop:         (*vm).opPop,
-	instructions.OpPopLocal:    (*vm).opPopLocal,
-	instructions.OpPopGlobal:   (*vm).opPopGlobal,
-	instructions.OpPopCaptured: (*vm).opPopCaptured,
-	instructions.OpPopCollElem: (*vm).opPopCollElem,
+	instrs.OpPop:         (*vm).opPop,
+	instrs.OpPopLocal:    (*vm).opPopLocal,
+	instrs.OpPopGlobal:   (*vm).opPopGlobal,
+	instrs.OpPopCaptured: (*vm).opPopCaptured,
+	instrs.OpPopCollElem: (*vm).opPopCollElem,
 
-	instructions.OpBinaryOp: (*vm).opBinaryOp,
-	instructions.OpUnaryOp:  (*vm).opUnaryOp,
+	instrs.OpBinaryOp: (*vm).opBinaryOp,
+	instrs.OpUnaryOp:  (*vm).opUnaryOp,
 
-	instructions.OpBranch:        (*vm).opBranch,
-	instructions.OpBranchIfFalse: (*vm).opBranchIfFalse,
+	instrs.OpBranch:        (*vm).opBranch,
+	instrs.OpBranchIfFalse: (*vm).opBranchIfFalse,
 
-	instructions.OpCall:   (*vm).opCall,
-	instructions.OpReturn: (*vm).opReturn,
+	instrs.OpCall:   (*vm).opCall,
+	instrs.OpReturn: (*vm).opReturn,
 
-	instructions.OpNewArray: (*vm).opNewArray,
-	instructions.OpNewFunc:  (*vm).opNewFunc,
+	instrs.OpNewArray: (*vm).opNewArray,
+	instrs.OpNewFunc:  (*vm).opNewFunc,
 }
 
 func Execute(program bytecode.Executable) error {
@@ -48,7 +48,7 @@ func Execute(program bytecode.Executable) error {
 		program: program,
 		scopeStack: scopeStack{
 			globalScope: scope{
-				vars: make([]objects.Object, program.NumGlobals),
+				vars: make([]types.Obj, program.NumGlobals),
 				code: program.Code,
 			},
 		},
@@ -63,7 +63,7 @@ func (vm *vm) run() error {
 		scope := vm.currScope
 
 		opcode := scope.readOpcode()
-		err := ops[opcode](vm, scope)
+		err := handlers[opcode](vm, scope)
 		if err != nil {
 			return err
 		}

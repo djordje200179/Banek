@@ -1,8 +1,8 @@
 package bytecode
 
 import (
-	"banek/bytecode/instructions"
-	"banek/exec/operations"
+	"banek/bytecode/instrs"
+	"banek/runtime/ops"
 	"fmt"
 	"strconv"
 	"strings"
@@ -14,7 +14,7 @@ func (code Code) String() string {
 	var sb strings.Builder
 
 	for pc := 0; pc < len(code); {
-		opcode, operands, width := instructions.ReadInstr(code[pc:])
+		opcode, operands, width := instrs.ReadInstr(code[pc:])
 		instrInfo := opcode.Info()
 
 		sb.WriteString(fmt.Sprintf("%04d", pc))
@@ -31,18 +31,18 @@ func (code Code) String() string {
 			operand := instrInfo.Operands[i]
 
 			switch operand.Type {
-			case instructions.OperandConst:
+			case instrs.OperandConst:
 				sb.WriteByte('=')
 				sb.WriteString(strconv.Itoa(operandValue))
-			case instructions.OperandLiteral:
+			case instrs.OperandLiteral:
 				sb.WriteString(strconv.Itoa(operandValue))
-			case instructions.OperandFunc:
+			case instrs.OperandFunc:
 				sb.WriteByte('#')
 				sb.WriteString(strconv.Itoa(operandValue))
-			case instructions.OperandBinaryOp:
-				sb.WriteString(operations.BinaryOperator(operandValue).String())
-			case instructions.OperandUnaryOp:
-				sb.WriteString(operations.UnaryOperator(operandValue).String())
+			case instrs.OperandBinaryOp:
+				sb.WriteString(ops.BinaryOperator(operandValue).String())
+			case instrs.OperandUnaryOp:
+				sb.WriteString(ops.UnaryOperator(operandValue).String())
 			}
 		}
 

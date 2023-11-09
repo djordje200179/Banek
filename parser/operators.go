@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"banek/exec/operations"
+	"banek/runtime/ops"
 	"banek/tokens"
 )
 
@@ -44,23 +44,23 @@ var infixOperatorPrecedences = map[tokens.Type]OperatorPrecedence{
 	tokens.SlashAssign:    Assignment,
 }
 
-var binaryOps = map[tokens.Type]operations.BinaryOperator{
-	tokens.Plus:     operations.BinaryPlus,
-	tokens.Minus:    operations.BinaryMinus,
-	tokens.Asterisk: operations.BinaryAsterisk,
-	tokens.Slash:    operations.BinarySlash,
-	tokens.Modulo:   operations.BinaryModulo,
-	tokens.Caret:    operations.BinaryCaret,
+var binaryOps = map[tokens.Type]ops.BinaryOperator{
+	tokens.Plus:     ops.BinaryPlus,
+	tokens.Minus:    ops.BinaryMinus,
+	tokens.Asterisk: ops.BinaryAsterisk,
+	tokens.Slash:    ops.BinarySlash,
+	tokens.Modulo:   ops.BinaryModulo,
+	tokens.Caret:    ops.BinaryCaret,
 
-	tokens.Equals:        operations.BinaryEquals,
-	tokens.NotEquals:     operations.BinaryNotEquals,
-	tokens.Less:          operations.BinaryLess,
-	tokens.Greater:       operations.BinaryGreater,
-	tokens.LessEquals:    operations.BinaryLessEquals,
-	tokens.GreaterEquals: operations.BinaryGreaterEquals,
+	tokens.Equals:        ops.BinaryEquals,
+	tokens.NotEquals:     ops.BinaryNotEquals,
+	tokens.Less:          ops.BinaryLess,
+	tokens.Greater:       ops.BinaryGreater,
+	tokens.LessEquals:    ops.BinaryLessEquals,
+	tokens.GreaterEquals: ops.BinaryGreaterEquals,
 }
 
-var unaryOps = map[tokens.Type]operations.UnaryOperator{
-	tokens.Minus: operations.UnaryMinus,
-	tokens.Bang:  operations.UnaryBang,
+var unaryOps = map[tokens.Type]ops.UnaryOperator{
+	tokens.Minus: ops.UnaryMinus,
+	tokens.Bang:  ops.UnaryBang,
 }

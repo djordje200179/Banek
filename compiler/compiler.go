@@ -4,19 +4,19 @@ import (
 	"banek/ast"
 	"banek/bytecode"
 	"banek/compiler/scopes"
-	"banek/exec/objects"
+	"banek/runtime/types"
 	"slices"
 )
 
 type compiler struct {
-	consts []objects.Object
+	consts []types.Obj
 	funcs  []bytecode.FuncTemplate
 
 	globalScope scopes.Global
 	scopes      []scopes.Scope
 }
 
-func Compile(stmtsChan <-chan ast.Statement) (bytecode.Executable, error) {
+func Compile(stmtsChan <-chan ast.Stmt) (bytecode.Executable, error) {
 	compiler := &compiler{
 		scopes: make([]scopes.Scope, 1),
 	}
@@ -32,7 +32,7 @@ func Compile(stmtsChan <-chan ast.Statement) (bytecode.Executable, error) {
 	return compiler.makeExecutable(), nil
 }
 
-func (compiler *compiler) addConst(object objects.Object) int {
+func (compiler *compiler) addConst(object types.Obj) int {
 	if index := slices.IndexFunc(compiler.consts, object.Equals); index != -1 {
 		return index
 	}

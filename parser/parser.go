@@ -2,15 +2,15 @@ package parser
 
 import (
 	"banek/ast"
-	"banek/ast/statements"
+	"banek/ast/stmts"
 	"banek/tokens"
 	"runtime"
 )
 
 type (
-	prefixExprHandler func() (ast.Expression, error)
-	infixExprHandler  func(ast.Expression) (ast.Expression, error)
-	stmtHandler       func() (ast.Statement, error)
+	prefixExprHandler func() (ast.Expr, error)
+	infixExprHandler  func(ast.Expr) (ast.Expr, error)
+	stmtHandler       func() (ast.Stmt, error)
 )
 
 type parser struct {
@@ -23,15 +23,15 @@ type parser struct {
 	stmtHandlers       map[tokens.Type]stmtHandler
 }
 
-func Parse(tokenChan <-chan tokens.Token, bufferSize int) <-chan ast.Statement {
-	stmtChan := make(chan ast.Statement, bufferSize)
+func Parse(tokenChan <-chan tokens.Token, bufferSize int) <-chan ast.Stmt {
+	stmtChan := make(chan ast.Stmt, bufferSize)
 
 	go parsingThread(tokenChan, stmtChan)
 
 	return stmtChan
 }
 
-func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Statement) {
+func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Stmt) {
 	runtime.LockOSThread()
 
 	parser := &parser{tokenChan: tokenChan}
@@ -42,7 +42,7 @@ func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Statement)
 	for parser.currToken.Type != tokens.EOF {
 		stmt, err := parser.parseStmt()
 		if err != nil {
-			stmt = statements.Invalid{Err: err}
+			stmt = stmts.Invalid{Err: err}
 		}
 
 		stmtChan <- stmt

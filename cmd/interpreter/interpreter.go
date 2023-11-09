@@ -1,11 +1,11 @@
 package main
 
 import (
-	"banek/exec/objects"
 	"banek/interpreter"
 	"banek/interpreter/results"
 	"banek/lexer"
 	"banek/parser"
+	"banek/runtime/types"
 	"flag"
 	"fmt"
 	"os"
@@ -33,7 +33,7 @@ func REPL() {
 		switch result := result.(type) {
 		case results.Error:
 			fmt.Println(result)
-		case objects.Object:
+		case types.Obj:
 			fmt.Println(result)
 		}
 

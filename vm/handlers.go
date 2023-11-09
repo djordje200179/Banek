@@ -2,10 +2,12 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instructions"
-	"banek/exec/errors"
-	"banek/exec/objects"
-	"banek/exec/operations"
+	"banek/bytecode/instrs"
+	"banek/runtime/builtins"
+	"banek/runtime/errors"
+	"banek/runtime/objs"
+	"banek/runtime/ops"
+	"banek/runtime/types"
 )
 
 func (vm *vm) opPushDup(_ *scope) error {
@@ -40,7 +42,7 @@ func (vm *vm) opPushGlobal(scope *scope) error {
 
 func (vm *vm) opPushBuiltin(scope *scope) error {
 	index := scope.readOperand(1)
-	builtin := objects.Builtins[index]
+	builtin := builtins.Funcs[index]
 
 	return vm.push(builtin)
 }
@@ -58,7 +60,7 @@ func (vm *vm) opPushCollElem(_ *scope) error {
 		return err
 	}
 
-	value, err := operations.EvalCollGet(coll, key)
+	value, err := ops.EvalCollGet(coll, key)
 	if err != nil {
 		return err
 	}
@@ -121,18 +123,18 @@ func (vm *vm) opPopCollElem(_ *scope) error {
 		return err
 	}
 
-	return operations.EvalCollSet(coll, key, value)
+	return ops.EvalCollSet(coll, key, value)
 }
 
 func (vm *vm) opBinaryOp(scope *scope) error {
-	operator := operations.BinaryOperator(scope.readOperand(1))
+	operator := ops.BinaryOperator(scope.readOperand(1))
 
 	left, right, err := vm.popTwo()
 	if err != nil {
 		return err
 	}
 
-	result, err := operations.BinaryOps[operator](left, right)
+	result, err := ops.BinaryOps[operator](left, right)
 	if err != nil {
 		return err
 	}
@@ -141,14 +143,14 @@ func (vm *vm) opBinaryOp(scope *scope) error {
 }
 
 func (vm *vm) opUnaryOp(scope *scope) error {
-	operator := operations.UnaryOperator(scope.readOperand(1))
+	operator := ops.UnaryOperator(scope.readOperand(1))
 
 	operand, err := vm.popOne()
 	if err != nil {
 		return err
 	}
 
-	result, err := operations.UnaryOps[operator](operand)
+	result, err := ops.UnaryOps[operator](operand)
 	if err != nil {
 		return err
 	}
@@ -172,9 +174,9 @@ func (vm *vm) opBranchIfFalse(scope *scope) error {
 		return err
 	}
 
-	boolOperand, ok := operand.(objects.Boolean)
+	boolOperand, ok := operand.(objs.Bool)
 	if !ok {
-		return errors.ErrInvalidOp{Operator: instructions.OpBranchIfFalse.String(), LeftOperand: boolOperand}
+		return errors.ErrInvalidOp{Operator: instrs.OpBranchIfFalse.String(), LeftOperand: boolOperand}
 	}
 
 	if !boolOperand {
@@ -187,7 +189,7 @@ func (vm *vm) opBranchIfFalse(scope *scope) error {
 func (vm *vm) opNewArray(scope *scope) error {
 	size := scope.readOperand(2)
 
-	arr := make(objects.Array, size)
+	arr := make(objs.Array, size)
 
 	err := vm.popMany(arr)
 	if err != nil {
@@ -202,7 +204,7 @@ func (vm *vm) opNewFunc(scope *scope) error {
 
 	template := vm.program.FuncsPool[templateIndex]
 
-	captures := make([]*objects.Object, len(template.Captures))
+	captures := make([]*types.Obj, len(template.Captures))
 	for i, captureInfo := range template.Captures {
 		capturedVariableScope := vm.currScope
 		for j := 0; j < captureInfo.Level; j++ {
@@ -249,14 +251,14 @@ func (vm *vm) opCall(scope *scope) error {
 		}
 
 		return nil
-	case objects.BuiltinFunc:
-		args := make([]objects.Object, numArgs)
+	case builtins.BuiltinFunc:
+		args := make([]types.Obj, numArgs)
 		err = vm.popMany(args)
 		if err != nil {
 			return err
 		}
 
-		result, err := function.Func(args...)
+		result, err := function.Func(args)
 		if err != nil {
 			return err
 		}

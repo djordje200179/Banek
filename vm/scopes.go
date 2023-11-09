@@ -2,15 +2,15 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instructions"
-	"banek/exec/objects"
+	"banek/bytecode/instrs"
+	"banek/runtime/types"
 )
 
 type scope struct {
 	code bytecode.Code
 	pc   int
 
-	vars []objects.Object
+	vars []types.Obj
 
 	function     *bytecode.Func
 	funcTemplate bytecode.FuncTemplate
@@ -18,19 +18,19 @@ type scope struct {
 	parent *scope
 }
 
-func (scope *scope) getLocal(index int) objects.Object {
+func (scope *scope) getLocal(index int) types.Obj {
 	return scope.vars[index]
 }
 
-func (scope *scope) setLocal(index int, value objects.Object) {
+func (scope *scope) setLocal(index int, value types.Obj) {
 	scope.vars[index] = value
 }
 
-func (scope *scope) getCaptured(index int) objects.Object {
+func (scope *scope) getCaptured(index int) types.Obj {
 	return *scope.function.Captures[index]
 }
 
-func (scope *scope) setCaptured(index int, value objects.Object) {
+func (scope *scope) setCaptured(index int, value types.Obj) {
 	*scope.function.Captures[index] = value
 }
 
@@ -38,8 +38,8 @@ func (scope *scope) hasCode() bool {
 	return scope.pc < len(scope.code)
 }
 
-func (scope *scope) readOpcode() instructions.Opcode {
-	opcode := instructions.Opcode(scope.code[scope.pc])
+func (scope *scope) readOpcode() instrs.Opcode {
+	opcode := instrs.Opcode(scope.code[scope.pc])
 
 	scope.pc++
 
@@ -48,7 +48,7 @@ func (scope *scope) readOpcode() instructions.Opcode {
 
 func (scope *scope) readOperand(width int) int {
 	rawOperand := scope.code[scope.pc : scope.pc+width]
-	operand := instructions.ReadOperandValue(rawOperand, width)
+	operand := instrs.ReadOperandValue(rawOperand, width)
 
 	scope.pc += width
 

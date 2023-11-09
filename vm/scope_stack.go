@@ -2,7 +2,8 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/exec/objects"
+	"banek/runtime/objs"
+	"banek/runtime/types"
 	"sync"
 	"unsafe"
 )
@@ -18,33 +19,33 @@ var scopePool = sync.Pool{
 	},
 }
 
-func (stack *scopeStack) getGlobal(index int) objects.Object {
+func (stack *scopeStack) getGlobal(index int) types.Obj {
 	return stack.globalScope.vars[index]
 }
 
-func (stack *scopeStack) setGlobal(index int, value objects.Object) {
+func (stack *scopeStack) setGlobal(index int, value types.Obj) {
 	stack.globalScope.vars[index] = value
 }
 
 var scopeVarsPools = [...]sync.Pool{
-	{New: func() any { return (*objects.Object)(nil) }},
-	{New: func() any { return &(new([1]objects.Object)[0]) }},
-	{New: func() any { return &(new([2]objects.Object)[0]) }},
-	{New: func() any { return &(new([3]objects.Object)[0]) }},
-	{New: func() any { return &(new([4]objects.Object)[0]) }},
+	{New: func() any { return (*types.Obj)(nil) }},
+	{New: func() any { return &(new([1]types.Obj)[0]) }},
+	{New: func() any { return &(new([2]types.Obj)[0]) }},
+	{New: func() any { return &(new([3]types.Obj)[0]) }},
+	{New: func() any { return &(new([4]types.Obj)[0]) }},
 }
 
-func getScopeVars(size int) []objects.Object {
+func getScopeVars(size int) []types.Obj {
 	if size >= len(scopeVarsPools) {
-		return make([]objects.Object, size)
+		return make([]types.Obj, size)
 	}
 
-	arr := scopeVarsPools[size].Get().(*objects.Object)
+	arr := scopeVarsPools[size].Get().(*types.Obj)
 
 	return unsafe.Slice(arr, size)
 }
 
-func returnScopeVars(arr []objects.Object) {
+func returnScopeVars(arr []types.Obj) {
 	if len(arr) >= len(scopeVarsPools) {
 		return
 	}
@@ -63,7 +64,7 @@ func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *by
 
 	funcScope.vars = getScopeVars(varsNum)
 	for i := range funcScope.vars {
-		funcScope.vars[i] = objects.Undefined{}
+		funcScope.vars[i] = objs.Undefined{}
 	}
 
 	stack.currScope = funcScope

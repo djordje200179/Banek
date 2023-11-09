@@ -2,12 +2,12 @@ package interpreter
 
 import (
 	"banek/ast"
-	"banek/interpreter/environments"
+	"banek/interpreter/envs"
 	"banek/interpreter/results"
 	"runtime"
 )
 
-func Interpret(stmtsChan <-chan ast.Statement, bufferSize int) <-chan results.Result {
+func Interpret(stmtsChan <-chan ast.Stmt, bufferSize int) <-chan results.Result {
 	resChan := make(chan results.Result, bufferSize)
 
 	go evalThread(stmtsChan, resChan)
@@ -16,14 +16,14 @@ func Interpret(stmtsChan <-chan ast.Statement, bufferSize int) <-chan results.Re
 }
 
 type interpreter struct {
-	globalEnv *environments.Env
+	globalEnv *envs.Env
 }
 
-func evalThread(stmtsChan <-chan ast.Statement, resChan chan<- results.Result) {
+func evalThread(stmtsChan <-chan ast.Stmt, resChan chan<- results.Result) {
 	runtime.LockOSThread()
 
 	interpreter := &interpreter{
-		globalEnv: environments.New(nil, 0),
+		globalEnv: envs.New(nil, 0),
 	}
 
 	for stmt := range stmtsChan {

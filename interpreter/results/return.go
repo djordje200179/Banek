@@ -1,11 +1,9 @@
 package results
 
-import (
-	"banek/exec/objects"
-)
+import "banek/runtime/types"
 
 type Return struct {
-	Value objects.Object
+	Value types.Obj
 }
 
 func (ret Return) String() string { return ret.Value.String() }

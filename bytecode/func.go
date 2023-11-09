@@ -1,7 +1,7 @@
 package bytecode
 
 import (
-	"banek/exec/objects"
+	"banek/runtime/types"
 	"slices"
 	"strconv"
 )
@@ -9,14 +9,14 @@ import (
 type Func struct {
 	TemplateIndex int
 
-	Captures []*objects.Object
+	Captures []*types.Obj
 }
 
-func (function *Func) Type() objects.Type    { return objects.TypeFunction }
-func (function *Func) Clone() objects.Object { return function }
-func (function *Func) String() string        { return "func#" + strconv.Itoa(function.TemplateIndex) }
+func (function *Func) Type() types.Type { return types.TypeFunc }
+func (function *Func) Clone() types.Obj { return function }
+func (function *Func) String() string   { return "func#" + strconv.Itoa(function.TemplateIndex) }
 
-func (function *Func) Equals(other objects.Object) bool {
+func (function *Func) Equals(other types.Obj) bool {
 	otherFunc, ok := other.(*Func)
 	if !ok {
 		return false
