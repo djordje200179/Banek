@@ -113,6 +113,10 @@ func (scope *Function) MarkCaptured() {
 	scope.isCaptured = true
 }
 
+func (scope *Function) GetFunc() *Function {
+	return scope
+}
+
 func (scope *Function) MakeFunction() bytecode.FuncTemplate {
 	return bytecode.FuncTemplate{
 		Code: scope.code,

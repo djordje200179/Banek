@@ -46,6 +46,20 @@ func (scope *Block) IsGlobal() bool {
 	return scope.Parent.IsGlobal()
 }
 
+func (scope *Block) GetFunc() *Function {
+	block := scope.Parent
+	for {
+		switch scope := block.(type) {
+		case *Function:
+			return scope
+		case *Block:
+			block = scope.Parent
+		default:
+			panic("unreachable")
+		}
+	}
+}
+
 func (scope *Block) MarkCaptured() {
 	scope.Parent.MarkCaptured()
 }

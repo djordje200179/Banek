@@ -72,6 +72,10 @@ func (scope *Global) IsGlobal() bool {
 	return true
 }
 
+func (scope *Global) GetFunc() *Function {
+	panic("unreachable")
+}
+
 func (scope *Global) MarkCaptured() {}
 
 func (scope *Global) MakeExecutable() bytecode.Executable {

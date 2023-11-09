@@ -55,10 +55,22 @@ func (compiler *compiler) topScope() scopes.Scope {
 }
 
 func (compiler *compiler) popScope() {
-	compiler.scopes = compiler.scopes[:len(compiler.scopes)-1]
+	scopeStackLen := len(compiler.scopes)
+
+	if blockScope, ok := compiler.scopes[scopeStackLen-1].(*scopes.Block); ok {
+		compiler.scopes[scopeStackLen-1] = blockScope.Parent
+		return
+	}
+
+	compiler.scopes = compiler.scopes[:scopeStackLen-1]
 }
 
 func (compiler *compiler) pushScope(scope scopes.Scope) {
+	if blockScope, ok := scope.(*scopes.Block); ok {
+		compiler.scopes[len(compiler.scopes)-1] = blockScope
+		return
+	}
+
 	compiler.scopes = append(compiler.scopes, scope)
 }
 

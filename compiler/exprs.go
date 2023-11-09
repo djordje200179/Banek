@@ -160,22 +160,7 @@ func (compiler *compiler) compileAssigment(expr exprs.Assignment) error {
 
 		capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-		funcScope, ok := varScope.(*scopes.Function)
-		if !ok {
-			block := varScope.(*scopes.Block)
-			for {
-				nextScope := block.Parent
-
-				funcScope, ok = nextScope.(*scopes.Function)
-				if ok {
-					break
-				}
-
-				block = nextScope.(*scopes.Block)
-			}
-		}
-
-		capturedVarIndex := funcScope.AddCapturedVar(capturedVarLevel, varIndex)
+		capturedVarIndex := scope.GetFunc().AddCapturedVar(capturedVarLevel, varIndex)
 		scope.EmitInstr(instrs.OpPopCaptured, capturedVarIndex)
 
 		return nil
@@ -279,22 +264,7 @@ func (compiler *compiler) compileIdentifier(expr exprs.Identifier) error {
 
 	capturedVarLevel := len(compiler.scopes) - 2 - varScopeIndex
 
-	funcScope, ok := scope.(*scopes.Function)
-	if !ok {
-		block := scope.(*scopes.Block)
-		for {
-			nextScope := block.Parent
-
-			funcScope, ok = nextScope.(*scopes.Function)
-			if ok {
-				break
-			}
-
-			block = nextScope.(*scopes.Block)
-		}
-	}
-
-	capturedVarIndex := funcScope.AddCapturedVar(capturedVarLevel, varIndex)
+	capturedVarIndex := scope.GetFunc().AddCapturedVar(capturedVarLevel, varIndex)
 	scope.EmitInstr(instrs.OpPushCaptured, capturedVarIndex)
 
 	return nil

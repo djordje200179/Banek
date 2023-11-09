@@ -25,6 +25,8 @@ type Scope interface {
 	CurrAddr() int
 
 	IsGlobal() bool
+	GetFunc() *Function
+
 	MarkCaptured()
 
 	NextBlockIndex() int
