@@ -82,11 +82,11 @@ func evalBinaryMinus(left, right types.Obj) (types.Obj, error) {
 
 func evalBinaryAsterisk(left, right types.Obj) (types.Obj, error) {
 	leftAdder, ok := left.(types.Multer)
-	if !ok || !leftAdder.CanMultiply(right) {
+	if !ok || !leftAdder.CanMul(right) {
 		return nil, errors.ErrInvalidOp{Operator: BinaryAsterisk.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Multiply(right), nil
+	return leftAdder.Mul(right), nil
 }
 
 func evalBinaryCaret(left, right types.Obj) (types.Obj, error) {
@@ -100,11 +100,11 @@ func evalBinaryCaret(left, right types.Obj) (types.Obj, error) {
 
 func evalBinarySlash(left, right types.Obj) (types.Obj, error) {
 	leftAdder, ok := left.(types.Diver)
-	if !ok || !leftAdder.CanDivide(right) {
+	if !ok || !leftAdder.CanDiv(right) {
 		return nil, errors.ErrInvalidOp{Operator: BinarySlash.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Divide(right), nil
+	return leftAdder.Div(right), nil
 }
 
 func evalBinaryModulo(left, right types.Obj) (types.Obj, error) {

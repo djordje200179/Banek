@@ -11,13 +11,13 @@ type Subber interface {
 }
 
 type Multer interface {
-	CanMultiply(other Obj) bool
-	Multiply(other Obj) Obj
+	CanMul(other Obj) bool
+	Mul(other Obj) Obj
 }
 
 type Diver interface {
-	CanDivide(other Obj) bool
-	Divide(other Obj) Obj
+	CanDiv(other Obj) bool
+	Div(other Obj) Obj
 }
 
 type Modder interface {

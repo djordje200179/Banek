@@ -30,12 +30,12 @@ func (str Str) Add(other types.Obj) types.Obj {
 	return str + otherStr
 }
 
-func (str Str) CanMultiply(other types.Obj) bool {
+func (str Str) CanMul(other types.Obj) bool {
 	_, ok := other.(Int)
 	return ok
 }
 
-func (str Str) Multiply(other types.Obj) types.Obj {
+func (str Str) Mul(other types.Obj) types.Obj {
 	count := other.(Int)
 	if count < 0 {
 		return Str("")

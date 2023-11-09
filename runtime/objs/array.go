@@ -87,12 +87,12 @@ func (array Array) Add(other types.Obj) types.Obj {
 	return combinedArray
 }
 
-func (array Array) CanMultiply(other types.Obj) bool {
+func (array Array) CanMul(other types.Obj) bool {
 	_, ok := other.(Int)
 	return ok
 }
 
-func (array Array) Multiply(other types.Obj) types.Obj {
+func (array Array) Mul(other types.Obj) types.Obj {
 	count := int(other.(Int))
 	if count < 0 {
 		return Array(nil)
