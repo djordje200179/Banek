@@ -25,7 +25,7 @@ type Scope interface {
 	CurrAddr() int
 
 	IsGlobal() bool
-	GetFunc() *Function
+	GetFunc() *Func
 
 	MarkCaptured()
 

@@ -184,7 +184,7 @@ func (compiler *compiler) compileAssigment(expr exprs.Assignment) error {
 }
 
 func (compiler *compiler) compileFuncLiteral(expr exprs.FuncLiteral) error {
-	funcScope := new(scopes.Function)
+	funcScope := new(scopes.Func)
 
 	paramNames := make([]string, len(expr.Params))
 	for i, param := range expr.Params {

@@ -72,7 +72,7 @@ func (scope *Global) IsGlobal() bool {
 	return true
 }
 
-func (scope *Global) GetFunc() *Function {
+func (scope *Global) GetFunc() *Func {
 	panic("unreachable")
 }
 

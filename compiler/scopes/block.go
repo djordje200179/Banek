@@ -46,11 +46,11 @@ func (scope *Block) IsGlobal() bool {
 	return scope.Parent.IsGlobal()
 }
 
-func (scope *Block) GetFunc() *Function {
+func (scope *Block) GetFunc() *Func {
 	block := scope.Parent
 	for {
 		switch scope := block.(type) {
-		case *Function:
+		case *Func:
 			return scope
 		case *Block:
 			block = scope.Parent

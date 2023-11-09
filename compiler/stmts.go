@@ -108,7 +108,7 @@ func (compiler *compiler) compileBlock(stmt stmts.Block) error {
 }
 
 func (compiler *compiler) compileFuncStmt(stmt stmts.Func) error {
-	funcScope := new(scopes.Function)
+	funcScope := new(scopes.Func)
 
 	paramNames := make([]string, len(stmt.Params))
 	for i, param := range stmt.Params {

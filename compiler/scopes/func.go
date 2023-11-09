@@ -7,7 +7,7 @@ import (
 	"slices"
 )
 
-type Function struct {
+type Func struct {
 	params   []string
 	vars     []Var
 	captures []bytecode.Capture
@@ -19,7 +19,7 @@ type Function struct {
 	blocksCounter
 }
 
-func (scope *Function) AddParams(params []string) error {
+func (scope *Func) AddParams(params []string) error {
 	for i, firstParam := range params {
 		for j := i + 1; j < len(params); j++ {
 			secondParam := params[j]
@@ -40,7 +40,7 @@ func (scope *Function) AddParams(params []string) error {
 	return nil
 }
 
-func (scope *Function) AddVar(name string, mutable bool) (int, error) {
+func (scope *Func) AddVar(name string, mutable bool) (int, error) {
 	if slices.ContainsFunc(scope.vars, func(v Var) bool {
 		return v.Name == name
 	}) {
@@ -55,7 +55,7 @@ func (scope *Function) AddVar(name string, mutable bool) (int, error) {
 	return len(scope.vars) - 1, nil
 }
 
-func (scope *Function) GetVar(name string) (Var, int) {
+func (scope *Func) GetVar(name string) (Var, int) {
 	index := slices.IndexFunc(scope.vars, func(v Var) bool {
 		return v.Name == name
 	})
@@ -66,7 +66,7 @@ func (scope *Function) GetVar(name string) (Var, int) {
 	return scope.vars[index], index
 }
 
-func (scope *Function) AddCapturedVar(level, index int) int {
+func (scope *Func) AddCapturedVar(level, index int) int {
 	captureInfo := bytecode.Capture{Index: index, Level: level}
 
 	if captureIndex := slices.Index(scope.captures, captureInfo); captureIndex != -1 {
@@ -78,7 +78,7 @@ func (scope *Function) AddCapturedVar(level, index int) int {
 	return len(scope.captures) - 1
 }
 
-func (scope *Function) EmitInstr(opcode instrs.Opcode, operands ...int) {
+func (scope *Func) EmitInstr(opcode instrs.Opcode, operands ...int) {
 	instr := instrs.MakeInstr(opcode, operands...)
 
 	newCode := make(bytecode.Code, len(scope.code)+len(instr))
@@ -88,7 +88,7 @@ func (scope *Function) EmitInstr(opcode instrs.Opcode, operands ...int) {
 	scope.code = newCode
 }
 
-func (scope *Function) PatchInstrOperand(addr int, operandIndex int, newValue int) {
+func (scope *Func) PatchInstrOperand(addr int, operandIndex int, newValue int) {
 	op := instrs.Opcode(scope.code[addr])
 	opInfo := op.Info()
 
@@ -101,23 +101,23 @@ func (scope *Function) PatchInstrOperand(addr int, operandIndex int, newValue in
 
 }
 
-func (scope *Function) CurrAddr() int {
+func (scope *Func) CurrAddr() int {
 	return len(scope.code)
 }
 
-func (scope *Function) IsGlobal() bool {
+func (scope *Func) IsGlobal() bool {
 	return false
 }
 
-func (scope *Function) MarkCaptured() {
+func (scope *Func) MarkCaptured() {
 	scope.isCaptured = true
 }
 
-func (scope *Function) GetFunc() *Function {
+func (scope *Func) GetFunc() *Func {
 	return scope
 }
 
-func (scope *Function) MakeFunction() bytecode.FuncTemplate {
+func (scope *Func) MakeFunction() bytecode.FuncTemplate {
 	return bytecode.FuncTemplate{
 		Code: scope.code,
 
