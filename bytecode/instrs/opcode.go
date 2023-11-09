@@ -76,7 +76,7 @@ var InstrInfos = [...]InstrInfo{
 	OpPushLocal:    {"PUSH.L", []OperandInfo{{1, OperandLiteral}}},
 	OpPushGlobal:   {"PUSH.G", []OperandInfo{{1, OperandLiteral}}},
 	OpPushCaptured: {"PUSH.O", []OperandInfo{{1, OperandLiteral}}},
-	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandLiteral}}},
+	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandBuiltin}}},
 	OpPushCollElem: {"PUSH.CE", []OperandInfo{}},
 
 	OpPop:         {"POP", []OperandInfo{}},

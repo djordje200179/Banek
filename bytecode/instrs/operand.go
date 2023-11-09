@@ -10,6 +10,7 @@ const (
 	OperandConst OperandType = iota
 	OperandLiteral
 	OperandFunc
+	OperandBuiltin
 
 	OperandBinaryOp
 	OperandUnaryOp

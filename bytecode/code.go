@@ -2,6 +2,7 @@ package bytecode
 
 import (
 	"banek/bytecode/instrs"
+	"banek/runtime/builtins"
 	"banek/runtime/ops"
 	"fmt"
 	"strconv"
@@ -43,6 +44,8 @@ func (code Code) String() string {
 				sb.WriteString(ops.BinaryOperator(operandValue).String())
 			case instrs.OperandUnaryOp:
 				sb.WriteString(ops.UnaryOperator(operandValue).String())
+			case instrs.OperandBuiltin:
+				sb.WriteString(builtins.Funcs[operandValue].Name)
 			}
 		}
 
