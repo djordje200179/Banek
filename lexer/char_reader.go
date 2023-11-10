@@ -3,14 +3,12 @@ package lexer
 import "unicode"
 
 func (lexer *lexer) nextChar() rune {
-	for {
-		ch, _, err := lexer.codeReader.ReadRune()
-		if err != nil {
-			return 0
-		}
-
-		return ch
+	ch, _, err := lexer.codeReader.ReadRune()
+	if err != nil {
+		return 0
 	}
+
+	return ch
 }
 
 func (lexer *lexer) skipBlank() {
@@ -22,6 +20,19 @@ func (lexer *lexer) skipBlank() {
 
 		if !unicode.IsSpace(ch) {
 			_ = lexer.codeReader.UnreadRune()
+			return
+		}
+	}
+}
+
+func (lexer *lexer) skipLineComment() {
+	for {
+		ch, _, err := lexer.codeReader.ReadRune()
+		if err != nil {
+			return
+		}
+
+		if ch == '\n' || ch == 0 {
 			return
 		}
 	}

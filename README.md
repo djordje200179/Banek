@@ -242,3 +242,13 @@ while i < 10 do {
 }
 ```
 
+### Comments
+Currently, only single-line comments are supported. They start with `#`
+and continue until the end of the line.
+
+```banek
+let a = 1;
+# let b = 2;  <- This line is commented out
+let c = 3;
+```
+

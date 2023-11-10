@@ -10,6 +10,11 @@ func (lexer *lexer) nextToken() tokens.Token {
 	lexer.skipBlank()
 
 	nextChar := lexer.nextChar()
+	if nextChar == '#' {
+		lexer.skipLineComment()
+		nextChar = lexer.nextChar()
+	}
+
 	if nextChar == 0 {
 		return tokens.Token{Type: tokens.EOF}
 	}
