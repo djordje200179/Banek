@@ -160,7 +160,7 @@ func evalBinaryNotEquals(left, right types.Obj) (types.Obj, error) {
 
 func evalBinaryLess(left, right types.Obj) (types.Obj, error) {
 	leftLesser, ok := left.(types.Lesser)
-	if ok {
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryLess.String(), LeftOperand: left, RightOperand: right}
 	}
 

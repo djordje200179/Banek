@@ -73,18 +73,17 @@ func (array Array) Set(key, value types.Obj) error {
 	return nil
 }
 
-func (array Array) CanAdd(other types.Obj) bool {
-	_, ok := other.(Array)
-	return ok
-}
+func (array Array) Add(other types.Obj) (types.Obj, bool) {
+	otherArray, ok := other.(Array)
+	if !ok {
+		return nil, false
+	}
 
-func (array Array) Add(other types.Obj) types.Obj {
-	combinedArray := make(Array, len(array)+len(other.(Array)))
-
+	combinedArray := make(Array, len(array)+len(otherArray))
 	copy(combinedArray, array)
-	copy(combinedArray[len(array):], other.(Array))
+	copy(combinedArray[len(array):], otherArray)
 
-	return combinedArray
+	return combinedArray, true
 }
 
 func (array Array) Mul(other types.Obj) (types.Obj, bool) {

@@ -21,11 +21,6 @@ func (integer Int) Equals(other types.Obj) bool {
 
 func (integer Int) String() string { return strconv.Itoa(int(integer)) }
 
-func (integer Int) CanAdd(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
 func (integer Int) Add(other types.Obj) (types.Obj, bool) {
 	otherInt, ok := other.(Int)
 	if !ok {
