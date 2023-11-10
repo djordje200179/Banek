@@ -26,63 +26,56 @@ func (integer Int) CanAdd(other types.Obj) bool {
 	return ok
 }
 
-func (integer Int) Add(other types.Obj) types.Obj {
-	otherInt := other.(Int)
+func (integer Int) Add(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
 
-	return integer + otherInt
+	return integer + otherInt, true
 }
 
-func (integer Int) CanSub(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
+func (integer Int) Sub(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
+
+	return integer - otherInt, true
 }
 
-func (integer Int) Sub(other types.Obj) types.Obj {
-	otherInt := other.(Int)
+func (integer Int) Mul(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
 
-	return integer - otherInt
+	return integer * otherInt, true
 }
 
-func (integer Int) CanMul(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
+func (integer Int) Div(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
+
+	return integer / otherInt, true
 }
 
-func (integer Int) Mul(other types.Obj) types.Obj {
-	otherInt := other.(Int)
+func (integer Int) Mod(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
 
-	return integer * otherInt
+	return integer % otherInt, true
 }
 
-func (integer Int) CanDiv(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
-func (integer Int) Div(other types.Obj) types.Obj {
-	otherInt := other.(Int)
-
-	return integer / otherInt
-}
-
-func (integer Int) CanMod(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
-func (integer Int) Mod(other types.Obj) types.Obj {
-	otherInt := other.(Int)
-
-	return integer % otherInt
-}
-
-func (integer Int) CanPow(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
-func (integer Int) Pow(other types.Obj) types.Obj {
-	otherInt := other.(Int)
+func (integer Int) Pow(other types.Obj) (types.Obj, bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
 
 	result := Int(1)
 	if otherInt < 0 {
@@ -95,20 +88,18 @@ func (integer Int) Pow(other types.Obj) types.Obj {
 		}
 	}
 
-	return result
+	return result, true
 }
 
 func (integer Int) Negate() types.Obj {
 	return -integer
 }
 
-func (integer Int) CanLess(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
+func (integer Int) Less(other types.Obj) (less, ok bool) {
+	otherInt, ok := other.(Int)
+	if !ok {
+		return
+	}
 
-func (integer Int) Less(other types.Obj) bool {
-	otherInt := other.(Int)
-
-	return integer < otherInt
+	return integer < otherInt, true
 }

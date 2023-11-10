@@ -1,33 +1,27 @@
 package types
 
 type Adder interface {
-	CanAdd(other Obj) bool
-	Add(other Obj) Obj
+	Add(other Obj) (Obj, bool)
 }
 
 type Subber interface {
-	CanSub(other Obj) bool
-	Sub(other Obj) Obj
+	Sub(other Obj) (Obj, bool)
 }
 
 type Multer interface {
-	CanMul(other Obj) bool
-	Mul(other Obj) Obj
+	Mul(other Obj) (Obj, bool)
 }
 
 type Diver interface {
-	CanDiv(other Obj) bool
-	Div(other Obj) Obj
+	Div(other Obj) (Obj, bool)
 }
 
 type Modder interface {
-	CanMod(other Obj) bool
-	Mod(other Obj) Obj
+	Mod(other Obj) (Obj, bool)
 }
 
 type Powwer interface {
-	CanPow(other Obj) bool
-	Pow(other Obj) Obj
+	Pow(other Obj) (Obj, bool)
 }
 
 type Negater interface {
@@ -39,6 +33,5 @@ type Notter interface {
 }
 
 type Lesser interface {
-	CanLess(other Obj) bool
-	Less(other Obj) bool
+	Less(other Obj) (less, ok bool)
 }

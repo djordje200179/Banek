@@ -87,22 +87,21 @@ func (array Array) Add(other types.Obj) types.Obj {
 	return combinedArray
 }
 
-func (array Array) CanMul(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
-func (array Array) Mul(other types.Obj) types.Obj {
-	count := int(other.(Int))
-	if count < 0 {
-		return Array(nil)
+func (array Array) Mul(other types.Obj) (types.Obj, bool) {
+	count, ok := other.(Int)
+	if !ok {
+		return nil, false
 	}
 
-	combinedArray := make(Array, len(array)*count)
+	if count < 0 {
+		return Array(nil), true
+	}
 
-	for i := 0; i < count; i++ {
+	combinedArray := make(Array, len(array)*int(count))
+
+	for i := 0; i < int(count); i++ {
 		copy(combinedArray[i*len(array):], array)
 	}
 
-	return combinedArray
+	return combinedArray, true
 }

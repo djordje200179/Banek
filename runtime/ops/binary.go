@@ -64,56 +64,86 @@ var BinaryOps = [...]binaryOp{
 
 func evalBinaryPlus(left, right types.Obj) (types.Obj, error) {
 	leftAdder, ok := left.(types.Adder)
-	if !ok || !leftAdder.CanAdd(right) {
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryPlus.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Add(right), nil
+	res, ok := leftAdder.Add(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryPlus.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinaryMinus(left, right types.Obj) (types.Obj, error) {
-	leftAdder, ok := left.(types.Subber)
-	if !ok || !leftAdder.CanSub(right) {
+	leftSubber, ok := left.(types.Subber)
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryMinus.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Sub(right), nil
+	res, ok := leftSubber.Sub(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryMinus.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinaryAsterisk(left, right types.Obj) (types.Obj, error) {
-	leftAdder, ok := left.(types.Multer)
-	if !ok || !leftAdder.CanMul(right) {
+	leftMulter, ok := left.(types.Multer)
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryAsterisk.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Mul(right), nil
+	res, ok := leftMulter.Mul(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryAsterisk.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinaryCaret(left, right types.Obj) (types.Obj, error) {
 	leftPowwer, ok := left.(types.Powwer)
-	if !ok || !leftPowwer.CanPow(right) {
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryCaret.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftPowwer.Pow(right), nil
+	res, ok := leftPowwer.Pow(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryCaret.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinarySlash(left, right types.Obj) (types.Obj, error) {
-	leftAdder, ok := left.(types.Diver)
-	if !ok || !leftAdder.CanDiv(right) {
+	leftDiver, ok := left.(types.Diver)
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinarySlash.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftAdder.Div(right), nil
+	res, ok := leftDiver.Div(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinarySlash.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinaryModulo(left, right types.Obj) (types.Obj, error) {
 	leftModder, ok := left.(types.Modder)
-	if !ok || !leftModder.CanMod(right) {
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryModulo.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	return leftModder.Mod(right), nil
+	res, ok := leftModder.Mod(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryModulo.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }
 
 func evalBinaryEquals(left, right types.Obj) (types.Obj, error) {
@@ -130,11 +160,14 @@ func evalBinaryNotEquals(left, right types.Obj) (types.Obj, error) {
 
 func evalBinaryLess(left, right types.Obj) (types.Obj, error) {
 	leftLesser, ok := left.(types.Lesser)
-	if ok && !leftLesser.CanLess(right) {
+	if ok {
 		return nil, errors.ErrInvalidOp{Operator: BinaryLess.String(), LeftOperand: left, RightOperand: right}
 	}
 
-	isLess := leftLesser.Less(right)
+	isLess, ok := leftLesser.Less(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryLess.String(), LeftOperand: left, RightOperand: right}
+	}
 
 	return objs.Bool(isLess), nil
 }

@@ -20,41 +20,39 @@ func (str Str) Equals(other types.Obj) bool {
 	return str == otherStr
 }
 
-func (str Str) CanAdd(other types.Obj) bool {
-	_, ok := other.(Str)
-	return ok
+func (str Str) Add(other types.Obj) (types.Obj, bool) {
+	otherStr, ok := other.(Str)
+	if !ok {
+		return nil, false
+	}
+
+	return str + otherStr, true
 }
 
-func (str Str) Add(other types.Obj) types.Obj {
-	otherStr := other.(Str)
-	return str + otherStr
-}
+func (str Str) Mul(other types.Obj) (types.Obj, bool) {
+	count, ok := other.(Int)
+	if !ok {
+		return nil, false
+	}
 
-func (str Str) CanMul(other types.Obj) bool {
-	_, ok := other.(Int)
-	return ok
-}
-
-func (str Str) Mul(other types.Obj) types.Obj {
-	count := other.(Int)
 	if count < 0 {
-		return Str("")
+		return Str(""), true
 	}
 
 	var sb strings.Builder
+	sb.Grow(int(count) * len(str))
 	for i := 0; i < int(count); i++ {
 		sb.WriteString(string(str))
 	}
 
-	return Str(sb.String())
+	return Str(sb.String()), true
 }
 
-func (str Str) CanLess(other types.Obj) bool {
-	_, ok := other.(Str)
-	return ok
-}
+func (str Str) Less(other types.Obj) (less, ok bool) {
+	otherStr, ok := other.(Str)
+	if !ok {
+		return
+	}
 
-func (str Str) Less(other types.Obj) bool {
-	otherStr := other.(Str)
-	return str < otherStr
+	return str < otherStr, true
 }
