@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	gob.Register(objs.Array{})
+	gob.Register(&objs.Array{})
 	gob.Register(objs.Bool(false))
 	gob.Register(builtins.BuiltinFunc{})
 	gob.Register(objs.Int(0))

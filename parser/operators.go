@@ -42,6 +42,9 @@ var infixOperatorPrecedences = map[tokens.Type]OperatorPrecedence{
 	tokens.MinusAssign:    Assignment,
 	tokens.AsteriskAssign: Assignment,
 	tokens.SlashAssign:    Assignment,
+	tokens.ModuloAssign:   Assignment,
+	tokens.CaretAssign:    Assignment,
+	tokens.LeftArrow:      Assignment,
 }
 
 var binaryOps = map[tokens.Type]ops.BinaryOperator{
@@ -58,9 +61,12 @@ var binaryOps = map[tokens.Type]ops.BinaryOperator{
 	tokens.Greater:       ops.BinaryGreater,
 	tokens.LessEquals:    ops.BinaryLessEquals,
 	tokens.GreaterEquals: ops.BinaryGreaterEquals,
+
+	tokens.LeftArrow: ops.BinaryLeftArrow,
 }
 
 var unaryOps = map[tokens.Type]ops.UnaryOperator{
-	tokens.Minus: ops.UnaryMinus,
-	tokens.Bang:  ops.UnaryBang,
+	tokens.Minus:     ops.UnaryMinus,
+	tokens.Bang:      ops.UnaryBang,
+	tokens.LeftArrow: ops.UnaryLeftArrow,
 }

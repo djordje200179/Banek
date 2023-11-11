@@ -13,11 +13,11 @@ func get_prime_numbers(max) {
         p += 1;
     }
 
-    let mut primes = [];
+    let primes = [];
     p = 2;
     while p <= max do {
         if is_prime[p] then
-            primes += [p];
+            primes <- p;
         p += 1;
     }
 

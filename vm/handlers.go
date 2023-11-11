@@ -189,9 +189,11 @@ func (vm *vm) opBranchIfFalse(scope *scope) error {
 func (vm *vm) opNewArray(scope *scope) error {
 	size := scope.readOperand(2)
 
-	arr := make(objs.Array, size)
+	arr := &objs.Array{
+		Slice: make([]types.Obj, size),
+	}
 
-	err := vm.popMany(arr)
+	err := vm.popMany(arr.Slice)
 	if err != nil {
 		return err
 	}

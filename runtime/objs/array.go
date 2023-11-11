@@ -7,25 +7,30 @@ import (
 	"strings"
 )
 
-type Array []types.Obj
+type Array struct {
+	Slice []types.Obj
+}
 
-func (array Array) Type() types.Type { return types.TypeArray }
-func (array Array) Clone() types.Obj { return slices.Clone(array) }
+func (array *Array) Type() types.Type { return types.TypeArray }
 
-func (array Array) Equals(other types.Obj) bool {
-	otherArray, ok := other.(Array)
+func (array *Array) Clone() types.Obj {
+	return &Array{Slice: slices.Clone(array.Slice)}
+}
+
+func (array *Array) Equals(other types.Obj) bool {
+	otherArray, ok := other.(*Array)
 	if !ok {
 		return false
 	}
 
-	return slices.Equal(array, otherArray)
+	return slices.Equal(array.Slice, otherArray.Slice)
 }
 
-func (array Array) String() string {
+func (array *Array) String() string {
 	var sb strings.Builder
 
-	elements := make([]string, len(array))
-	for i, element := range array {
+	elements := make([]string, len(array.Slice))
+	for i, element := range array.Slice {
 		elements[i] = element.String()
 	}
 
@@ -36,11 +41,11 @@ func (array Array) String() string {
 	return sb.String()
 }
 
-func (array Array) Size() int {
-	return len(array)
+func (array *Array) Size() int {
+	return len(array.Slice)
 }
 
-func (array Array) CanIndex(key types.Obj) bool {
+func (array *Array) CanIndex(key types.Obj) bool {
 	_, ok := key.(Int)
 	return ok
 }
@@ -54,53 +59,75 @@ func (err ErrIndexOutOfBounds) Error() string {
 	return fmt.Sprintf("index out of bounds: index %d, size %d", err.Index, err.Size)
 }
 
-func (array Array) Get(key types.Obj) (types.Obj, error) {
+func (array *Array) Get(key types.Obj) (types.Obj, error) {
 	index := key.(Int)
-	if index < 0 || int(index) >= len(array) {
-		return nil, ErrIndexOutOfBounds{int(index), len(array)}
+	if index < 0 || int(index) >= len(array.Slice) {
+		return nil, ErrIndexOutOfBounds{int(index), len(array.Slice)}
 	}
 
-	return array[index], nil
+	return array.Slice[index], nil
 }
 
-func (array Array) Set(key, value types.Obj) error {
+func (array *Array) Set(key, value types.Obj) error {
 	index := key.(Int)
-	if index < 0 || int(index) >= len(array) {
-		return ErrIndexOutOfBounds{int(index), len(array)}
+	if index < 0 || int(index) >= len(array.Slice) {
+		return ErrIndexOutOfBounds{int(index), len(array.Slice)}
 	}
 
-	array[index] = value
+	array.Slice[index] = value
 	return nil
 }
 
-func (array Array) Add(other types.Obj) (types.Obj, bool) {
-	otherArray, ok := other.(Array)
+func (array *Array) Add(other types.Obj) (types.Obj, bool) {
+	otherArray, ok := other.(*Array)
 	if !ok {
 		return nil, false
 	}
 
-	combinedArray := make(Array, len(array)+len(otherArray))
-	copy(combinedArray, array)
-	copy(combinedArray[len(array):], otherArray)
+	newArray := &Array{
+		Slice: make([]types.Obj, len(array.Slice)+len(otherArray.Slice)),
+	}
 
-	return combinedArray, true
+	copy(newArray.Slice, array.Slice)
+	copy(newArray.Slice[len(array.Slice):], otherArray.Slice)
+
+	return newArray, true
 }
 
-func (array Array) Mul(other types.Obj) (types.Obj, bool) {
+func (array *Array) Mul(other types.Obj) (types.Obj, bool) {
 	count, ok := other.(Int)
 	if !ok {
 		return nil, false
 	}
 
 	if count < 0 {
-		return Array(nil), true
+		return nil, false // TODO: Return invalid argument error
 	}
 
-	combinedArray := make(Array, len(array)*int(count))
+	newArray := &Array{
+		Slice: make([]types.Obj, len(array.Slice)*int(count)),
+	}
 
 	for i := 0; i < int(count); i++ {
-		copy(combinedArray[i*len(array):], array)
+		copy(newArray.Slice[i*len(array.Slice):], array.Slice)
 	}
 
-	return combinedArray, true
+	return newArray, true
+}
+
+func (array *Array) Receive(other types.Obj) (types.Obj, bool) {
+	array.Slice = append(array.Slice, other)
+
+	return array, true
+}
+
+func (array *Array) Give() types.Obj {
+	if len(array.Slice) == 0 {
+		return Undefined{}
+	}
+
+	element := array.Slice[0]
+	array.Slice = array.Slice[1:]
+
+	return element
 }

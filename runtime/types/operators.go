@@ -35,3 +35,11 @@ type Notter interface {
 type Lesser interface {
 	Less(other Obj) (less, ok bool)
 }
+
+type Receiver interface {
+	Receive(other Obj) (Obj, bool)
+}
+
+type Giver interface {
+	Give() Obj
+}

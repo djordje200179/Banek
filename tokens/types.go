@@ -48,8 +48,9 @@ const (
 	Func
 	Return
 
+	LeftArrow
+	RightArrow
 	VerticalBar
-	Arrow
 
 	Let
 	Mut
@@ -108,7 +109,8 @@ var typeStrings = [...]string{
 	Func:   "func",
 	Return: "return",
 
-	Arrow:       "->",
+	LeftArrow:   "<-",
+	RightArrow:  "->",
 	VerticalBar: "|",
 
 	Let: "let",

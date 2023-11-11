@@ -9,7 +9,8 @@ var CharTokens = map[string]Type{
 	"^": Caret,
 	"!": Bang,
 
-	"->": Arrow,
+	"<-": LeftArrow,
+	"->": RightArrow,
 	"|":  VerticalBar,
 
 	",": Comma,

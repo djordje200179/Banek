@@ -22,6 +22,8 @@ const (
 	BinaryGreater
 	BinaryLessEquals
 	BinaryGreaterEquals
+
+	BinaryLeftArrow
 )
 
 func (operator BinaryOperator) String() string {
@@ -44,6 +46,8 @@ var binaryOperatorNames = [...]string{
 	BinaryGreater:       ">",
 	BinaryLessEquals:    "<=",
 	BinaryGreaterEquals: ">=",
+
+	BinaryLeftArrow: "<-",
 }
 
 var BinaryOps = [...]binaryOp{
@@ -60,6 +64,8 @@ var BinaryOps = [...]binaryOp{
 	BinaryGreater:       evalBinaryGreater,
 	BinaryLessEquals:    evalBinaryLessEquals,
 	BinaryGreaterEquals: evalBinaryGreaterEquals,
+
+	BinaryLeftArrow: evalBinaryLeftArrow,
 }
 
 func evalBinaryPlus(left, right types.Obj) (types.Obj, error) {
@@ -192,4 +198,18 @@ func evalBinaryLessEquals(left, right types.Obj) (types.Obj, error) {
 
 func evalBinaryGreaterEquals(left, right types.Obj) (types.Obj, error) {
 	return evalBinaryLessEquals(right, left)
+}
+
+func evalBinaryLeftArrow(left, right types.Obj) (types.Obj, error) {
+	receiver, ok := left.(types.Receiver)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryLeftArrow.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	res, ok := receiver.Receive(right)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: BinaryLeftArrow.String(), LeftOperand: left, RightOperand: right}
+	}
+
+	return res, nil
 }

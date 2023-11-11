@@ -60,8 +60,9 @@ func (parser *parser) initHandlers() {
 		tokens.String:    parser.parseString,
 		tokens.Undefined: parser.parseUndefined,
 
-		tokens.Minus: parser.parseUnaryOp,
-		tokens.Bang:  parser.parseUnaryOp,
+		tokens.Minus:     parser.parseUnaryOp,
+		tokens.Bang:      parser.parseUnaryOp,
+		tokens.LeftArrow: parser.parseUnaryOp,
 
 		tokens.LeftParen: parser.parseGroupedExpr,
 
@@ -79,12 +80,13 @@ func (parser *parser) initHandlers() {
 		tokens.LessEquals:    parser.parseBinaryOp,
 		tokens.GreaterEquals: parser.parseBinaryOp,
 
-		tokens.Plus:     parser.parseBinaryOp,
-		tokens.Minus:    parser.parseBinaryOp,
-		tokens.Asterisk: parser.parseBinaryOp,
-		tokens.Slash:    parser.parseBinaryOp,
-		tokens.Modulo:   parser.parseBinaryOp,
-		tokens.Caret:    parser.parseBinaryOp,
+		tokens.Plus:      parser.parseBinaryOp,
+		tokens.Minus:     parser.parseBinaryOp,
+		tokens.Asterisk:  parser.parseBinaryOp,
+		tokens.Slash:     parser.parseBinaryOp,
+		tokens.Modulo:    parser.parseBinaryOp,
+		tokens.Caret:     parser.parseBinaryOp,
+		tokens.LeftArrow: parser.parseBinaryOp,
 
 		tokens.Assign:         parser.parseAssignment,
 		tokens.PlusAssign:     parser.parseAssignment,

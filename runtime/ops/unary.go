@@ -10,6 +10,7 @@ type UnaryOperator byte
 const (
 	UnaryMinus UnaryOperator = iota
 	UnaryBang
+	UnaryLeftArrow
 )
 
 func (operation UnaryOperator) String() string {
@@ -19,13 +20,15 @@ func (operation UnaryOperator) String() string {
 type unaryOp func(operand types.Obj) (types.Obj, error)
 
 var unaryOperatorNames = [...]string{
-	UnaryMinus: "-",
-	UnaryBang:  "!",
+	UnaryMinus:     "-",
+	UnaryBang:      "!",
+	UnaryLeftArrow: "<-",
 }
 
 var UnaryOps = [...]unaryOp{
-	UnaryMinus: evalUnaryMinus,
-	UnaryBang:  evalUnaryBang,
+	UnaryMinus:     evalUnaryMinus,
+	UnaryBang:      evalUnaryBang,
+	UnaryLeftArrow: evalUnaryLeftArrow,
 }
 
 func evalUnaryMinus(operand types.Obj) (types.Obj, error) {
@@ -44,4 +47,13 @@ func evalUnaryBang(operand types.Obj) (types.Obj, error) {
 	}
 
 	return notter.Not(), nil
+}
+
+func evalUnaryLeftArrow(operand types.Obj) (types.Obj, error) {
+	giver, ok := operand.(types.Giver)
+	if !ok {
+		return nil, errors.ErrInvalidOp{Operator: UnaryLeftArrow.String(), RightOperand: operand}
+	}
+
+	return giver.Give(), nil
 }

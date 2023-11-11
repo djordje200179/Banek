@@ -228,7 +228,7 @@ func (parser *parser) parseFuncLiteral() (ast.Expr, error) {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Arrow); err != nil {
+	if err := parser.assertToken(tokens.RightArrow); err != nil {
 		return nil, err
 	}
 

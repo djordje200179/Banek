@@ -157,18 +157,21 @@ func (interpreter *interpreter) evalFuncArgs(env *envs.Env, rawArgs []ast.Expr) 
 	return args, nil
 }
 
-func (interpreter *interpreter) evalArrayLiteral(env *envs.Env, expr exprs.ArrayLiteral) (objs.Array, error) {
-	elems := make([]types.Obj, len(expr))
+func (interpreter *interpreter) evalArrayLiteral(env *envs.Env, expr exprs.ArrayLiteral) (*objs.Array, error) {
+	array := &objs.Array{
+		Slice: make([]types.Obj, len(expr)),
+	}
+
 	for i, elemExpr := range expr {
 		elem, err := interpreter.evalExpr(env, elemExpr)
 		if err != nil {
 			return nil, err
 		}
 
-		elems[i] = elem
+		array.Slice[i] = elem
 	}
 
-	return elems, nil
+	return array, nil
 }
 
 func (interpreter *interpreter) evalCollIndex(env *envs.Env, expr exprs.CollIndex) (types.Obj, error) {
