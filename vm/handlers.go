@@ -55,7 +55,7 @@ func (vm *vm) opPushCaptured(scope *scope) error {
 }
 
 func (vm *vm) opPushCollElem(_ *scope) error {
-	key, coll, err := vm.popTwo()
+	coll, key, err := vm.popTwo()
 	if err != nil {
 		return err
 	}
