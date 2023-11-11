@@ -133,7 +133,7 @@ func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncC
 	case stmts.Return:
 		return interpreter.evalExpr(funcEnv, body.Value)
 	case stmts.Block:
-		result, err := interpreter.evalBlockStatement(funcEnv, body)
+		result, err := interpreter.evalBlock(funcEnv, body)
 		if err != nil {
 			return nil, err
 		}

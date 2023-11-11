@@ -21,9 +21,9 @@ func BenchmarkCompiler(b *testing.B) {
 		inputFile.Seek(0, 0)
 
 		tokenChannel := lexer.Tokenize(inputFile, 200)
-		statementChannel := parser.Parse(tokenChannel, 20)
+		stmtChannel := parser.Parse(tokenChannel, 20)
 
-		_, err := compiler.Compile(statementChannel)
+		_, err := compiler.Compile(stmtChannel)
 		if err != nil {
 			b.Error(err)
 		}

@@ -43,9 +43,9 @@ func main() {
 	defer inputFile.Close()
 
 	tokenChannel := lexer.Tokenize(inputFile, 200)
-	statementChannel := parser.Parse(tokenChannel, 20)
+	stmtChannel := parser.Parse(tokenChannel, 20)
 
-	executable, err := compiler.Compile(statementChannel)
+	executable, err := compiler.Compile(stmtChannel)
 	if err != nil {
 		HandleError(err)
 	}

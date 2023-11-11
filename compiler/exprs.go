@@ -62,8 +62,8 @@ func (compiler *compiler) compileExpr(expr ast.Expr) error {
 	}
 }
 
-func (compiler *compiler) compileIfExpr(expression exprs.If) error {
-	err := compiler.compileExpr(expression.Cond)
+func (compiler *compiler) compileIfExpr(expr exprs.If) error {
+	err := compiler.compileExpr(expr.Cond)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (compiler *compiler) compileIfExpr(expression exprs.If) error {
 	firstPatchAddr := scope.CurrAddr()
 	scope.EmitInstr(instrs.OpBranchIfFalse, 0)
 
-	err = compiler.compileExpr(expression.Consequence)
+	err = compiler.compileExpr(expr.Consequence)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (compiler *compiler) compileIfExpr(expression exprs.If) error {
 	scope.EmitInstr(instrs.OpBranch, 0)
 	elseAddr := secondPatchAddr + branchSize
 
-	err = compiler.compileExpr(expression.Alternative)
+	err = compiler.compileExpr(expr.Alternative)
 	if err != nil {
 		return err
 	}
@@ -284,31 +284,31 @@ func (compiler *compiler) compileFuncCall(expr exprs.FuncCall) error {
 	return nil
 }
 
-func (compiler *compiler) compileBinaryOp(expression exprs.BinaryOp) error {
-	err := compiler.compileExpr(expression.Left)
+func (compiler *compiler) compileBinaryOp(expr exprs.BinaryOp) error {
+	err := compiler.compileExpr(expr.Left)
 	if err != nil {
 		return err
 	}
 
-	err = compiler.compileExpr(expression.Right)
+	err = compiler.compileExpr(expr.Right)
 	if err != nil {
 		return err
 	}
 
 	container := compiler.topScope()
-	container.EmitInstr(instrs.OpBinaryOp, int(expression.Operator))
+	container.EmitInstr(instrs.OpBinaryOp, int(expr.Operator))
 
 	return nil
 }
 
-func (compiler *compiler) compileUnaryOp(expression exprs.UnaryOp) error {
-	err := compiler.compileExpr(expression.Operand)
+func (compiler *compiler) compileUnaryOp(expr exprs.UnaryOp) error {
+	err := compiler.compileExpr(expr.Operand)
 	if err != nil {
 		return err
 	}
 
 	container := compiler.topScope()
-	container.EmitInstr(instrs.OpUnaryOp, int(expression.Operator))
+	container.EmitInstr(instrs.OpUnaryOp, int(expr.Operator))
 
 	return nil
 }

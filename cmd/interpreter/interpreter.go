@@ -23,8 +23,8 @@ func HandleError(err error) {
 
 func REPL() {
 	tokenChannel := lexer.Tokenize(os.Stdin, 200)
-	statementChannel := parser.Parse(tokenChannel, 20)
-	resultsChannel := interpreter.Interpret(statementChannel, 1)
+	stmtChannel := parser.Parse(tokenChannel, 20)
+	resultsChannel := interpreter.Interpret(stmtChannel, 1)
 
 	fmt.Println("Welcome to Banek REPL!")
 	fmt.Print(">>> ")
@@ -43,8 +43,8 @@ func REPL() {
 
 func EvalFile(file *os.File) {
 	tokenChannel := lexer.Tokenize(file, 200)
-	statementChannel := parser.Parse(tokenChannel, 20)
-	resultsChannel := interpreter.Interpret(statementChannel, 5)
+	stmtChannel := parser.Parse(tokenChannel, 20)
+	resultsChannel := interpreter.Interpret(stmtChannel, 5)
 
 	for result := range resultsChannel {
 		switch result := result.(type) {

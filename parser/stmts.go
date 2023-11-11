@@ -76,7 +76,7 @@ func (parser *parser) parseReturn() (ast.Stmt, error) {
 }
 
 func (parser *parser) parseExprStmt() (ast.Stmt, error) {
-	expression, err := parser.parseExpr(Lowest)
+	expr, err := parser.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (parser *parser) parseExprStmt() (ast.Stmt, error) {
 		parser.fetchToken()
 	}
 
-	return stmts.Expr{Expr: expression}, nil
+	return stmts.Expr{Expr: expr}, nil
 }
 
 func (parser *parser) parseBlock() (ast.Stmt, error) {
