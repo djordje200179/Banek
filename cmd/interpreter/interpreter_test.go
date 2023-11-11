@@ -10,7 +10,7 @@ import (
 )
 
 func BenchmarkInterpreter(b *testing.B) {
-	inputFile, err := os.Open("test.ba")
+	inputFile, err := os.Open("eratosthenes_sieve.ba")
 	if err != nil {
 		b.Fatal(err)
 	}
