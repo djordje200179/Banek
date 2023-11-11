@@ -203,6 +203,28 @@ print(1 != "1");    // Prints true
 print(1 < 2);       // Prints true
 ```
 
+#### Special operators
+There are also some special operators that are used for more complex
+operations. Example of such operator is a left arrow operator (`<-`),
+which is used for inserting value into an array without creating a new
+array every time.
+
+```banek
+let arr = [];
+arr <- 1;
+arr <- 2;
+print(arr); // Prints [1, 2]
+```
+
+This operator also serves as unary operator for popping first element
+from an array.
+
+```banek
+let arr = [1, 2, 3];
+print(<-arr); // Prints 1
+print(arr);   // Prints [2, 3]
+```
+
 ### Control flow
 
 #### If statements
