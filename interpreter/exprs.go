@@ -11,6 +11,7 @@ import (
 	"banek/runtime/objs"
 	"banek/runtime/ops"
 	"banek/runtime/types"
+	"slices"
 )
 
 func (interpreter *interpreter) evalExpr(env *envs.Env, expr ast.Expr) (types.Obj, error) {
@@ -85,10 +86,6 @@ func (interpreter *interpreter) evalUnaryOp(env *envs.Env, expr exprs.UnaryOp) (
 }
 
 func (interpreter *interpreter) evalIdentifier(env *envs.Env, identifier exprs.Identifier) (types.Obj, error) {
-	if index := builtins.BuiltinFindIndex(identifier.String()); index != -1 {
-		return builtins.Funcs[index], nil
-	}
-
 	value, err := env.Get(identifier.String())
 	if err != nil {
 		return nil, err
@@ -98,48 +95,57 @@ func (interpreter *interpreter) evalIdentifier(env *envs.Env, identifier exprs.I
 }
 
 func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncCall) (types.Obj, error) {
-	funcObject, err := interpreter.evalExpr(env, funcCall.Func)
-	if err != nil {
-		return nil, err
-	}
-
 	args, err := interpreter.evalFuncArgs(env, funcCall.Args)
 	if err != nil {
 		return nil, err
 	}
 
-	switch function := funcObject.(type) {
-	case *envs.Func:
-		funcEnv := envs.New(function.Env, len(function.Params))
-		for i, param := range function.Params {
-			err = funcEnv.Define(param.String(), args[i], true)
-			if err != nil {
-				return nil, err
-			}
+	funcIdentifier, ok := funcCall.Func.(exprs.Identifier)
+	if ok {
+		index := slices.IndexFunc(builtins.Builtins[:], func(builtin builtins.BuiltinFunc) bool {
+			return builtin.Name == funcIdentifier.String()
+		})
+
+		if index != -1 {
+			return builtins.Builtins[index].Func(args)
 		}
+	}
 
-		switch body := function.Body.(type) {
-		case stmts.Return:
-			return interpreter.evalExpr(funcEnv, body.Value)
-		case stmts.Block:
-			result, err := interpreter.evalBlockStatement(funcEnv, body)
-			if err != nil {
-				return nil, err
-			}
+	funcObject, err := interpreter.evalExpr(env, funcCall.Func)
+	if err != nil {
+		return nil, err
+	}
 
-			ret, ok := result.(results.Return)
-			if !ok {
-				return objs.Undefined{}, nil
-			}
-
-			return ret.Value, nil
-		default:
-			return nil, ast.ErrUnknownStmt{Stmt: body}
-		}
-	case builtins.BuiltinFunc:
-		return function.Func(args)
-	default:
+	function, ok := funcObject.(*envs.Func)
+	if !ok {
 		return nil, errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
+	}
+
+	funcEnv := envs.New(function.Env, len(function.Params))
+	for i, param := range function.Params {
+		err = funcEnv.Define(param.String(), args[i], true)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	switch body := function.Body.(type) {
+	case stmts.Return:
+		return interpreter.evalExpr(funcEnv, body.Value)
+	case stmts.Block:
+		result, err := interpreter.evalBlockStatement(funcEnv, body)
+		if err != nil {
+			return nil, err
+		}
+
+		ret, ok := result.(results.Return)
+		if !ok {
+			return objs.Undefined{}, nil
+		}
+
+		return ret.Value, nil
+	default:
+		return nil, ast.ErrUnknownStmt{Stmt: body}
 	}
 }
 

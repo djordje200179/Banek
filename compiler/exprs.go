@@ -8,6 +8,7 @@ import (
 	"banek/compiler/scopes"
 	"banek/runtime/builtins"
 	"banek/runtime/errors"
+	"slices"
 )
 
 func (compiler *compiler) compileExpr(expr ast.Expr) error {
@@ -51,21 +52,7 @@ func (compiler *compiler) compileExpr(expr ast.Expr) error {
 	case exprs.Assignment:
 		return compiler.compileAssigment(expr)
 	case exprs.FuncCall:
-		for _, arg := range expr.Args {
-			err := compiler.compileExpr(arg)
-			if err != nil {
-				return err
-			}
-		}
-
-		err := compiler.compileExpr(expr.Func)
-		if err != nil {
-			return err
-		}
-
-		scope.EmitInstr(instrs.OpCall, len(expr.Args))
-
-		return nil
+		return compiler.compileFuncCall(expr)
 	case exprs.FuncLiteral:
 		return compiler.compileFuncLiteral(expr)
 	case exprs.Identifier:
@@ -228,11 +215,6 @@ func (compiler *compiler) compileIdentifier(expr exprs.Identifier) error {
 
 	scope := compiler.topScope()
 
-	if index := builtins.BuiltinFindIndex(varName); index != -1 {
-		scope.EmitInstr(instrs.OpPushBuiltin, index)
-		return nil
-	}
-
 	var varScope scopes.Scope
 	var varIndex, varScopeIndex int
 	for i := len(compiler.scopes) - 1; i >= 0; i-- {
@@ -266,6 +248,38 @@ func (compiler *compiler) compileIdentifier(expr exprs.Identifier) error {
 
 	capturedVarIndex := scope.GetFunc().AddCapturedVar(capturedVarLevel, varIndex)
 	scope.EmitInstr(instrs.OpPushCaptured, capturedVarIndex)
+
+	return nil
+}
+
+func (compiler *compiler) compileFuncCall(expr exprs.FuncCall) error {
+	for _, arg := range expr.Args {
+		err := compiler.compileExpr(arg)
+		if err != nil {
+			return err
+		}
+	}
+
+	scope := compiler.topScope()
+
+	funcIdentifier, ok := expr.Func.(exprs.Identifier)
+	if ok {
+		index := slices.IndexFunc(builtins.Builtins[:], func(builtin builtins.BuiltinFunc) bool {
+			return builtin.Name == funcIdentifier.String()
+		})
+
+		if index != -1 {
+			scope.EmitInstr(instrs.OpCallBuiltin, index, len(expr.Args))
+			return nil
+		}
+	}
+
+	err := compiler.compileExpr(expr.Func)
+	if err != nil {
+		return err
+	}
+
+	scope.EmitInstr(instrs.OpCallFunc, len(expr.Args))
 
 	return nil
 }

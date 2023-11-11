@@ -23,7 +23,7 @@ func (builtin BuiltinFunc) Equals(other types.Obj) bool {
 	return builtin.Name == otherBuiltin.Name
 }
 
-var Funcs = [...]BuiltinFunc{
+var Builtins = [...]BuiltinFunc{
 	{
 		Name: "print",
 		Func: builtinPrint,
@@ -52,14 +52,4 @@ var Funcs = [...]BuiltinFunc{
 		Name: "int",
 		Func: builtinInt,
 	},
-}
-
-func BuiltinFindIndex(name string) int {
-	for i, builtin := range &Funcs {
-		if builtin.Name == name {
-			return i
-		}
-	}
-
-	return -1
 }

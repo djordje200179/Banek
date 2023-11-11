@@ -40,13 +40,6 @@ func (vm *vm) opPushGlobal(scope *scope) error {
 	return vm.push(global)
 }
 
-func (vm *vm) opPushBuiltin(scope *scope) error {
-	index := scope.readOperand(1)
-	builtin := builtins.Funcs[index]
-
-	return vm.push(builtin)
-}
-
 func (vm *vm) opPushCaptured(scope *scope) error {
 	capturedIndex := scope.readOperand(1)
 	captured := scope.getCaptured(capturedIndex)
@@ -224,7 +217,7 @@ func (vm *vm) opNewFunc(scope *scope) error {
 	return vm.push(function)
 }
 
-func (vm *vm) opCall(scope *scope) error {
+func (vm *vm) opCallFunc(scope *scope) error {
 	numArgs := scope.readOperand(1)
 
 	funcObject, err := vm.popOne()
@@ -232,43 +225,43 @@ func (vm *vm) opCall(scope *scope) error {
 		return err
 	}
 
-	switch function := funcObject.(type) {
-	case *bytecode.Func:
-		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
-
-		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
-
-		if numArgs > len(funcTemplate.Params) {
-			err := vm.decreaseSP(numArgs - len(funcTemplate.Params))
-			if err != nil {
-				return err
-			}
-			numArgs = len(funcTemplate.Params)
-		}
-
-		args := funcScope.vars[:numArgs]
-		err = vm.popMany(args)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	case builtins.BuiltinFunc:
-		args := make([]types.Obj, numArgs)
-		err = vm.popMany(args)
-		if err != nil {
-			return err
-		}
-
-		result, err := function.Func(args)
-		if err != nil {
-			return err
-		}
-
-		return vm.push(result)
-	default:
+	function, ok := funcObject.(*bytecode.Func)
+	if !ok {
 		return errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
 	}
+
+	funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
+	funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
+
+	if numArgs > len(funcTemplate.Params) {
+		err := vm.decreaseSP(numArgs - len(funcTemplate.Params))
+		if err != nil {
+			return err
+		}
+		numArgs = len(funcTemplate.Params)
+	}
+
+	return vm.popMany(funcScope.vars[:numArgs])
+}
+
+func (vm *vm) opCallBuiltin(scope *scope) error {
+	builtinIndex := scope.readOperand(1)
+	numArgs := scope.readOperand(1)
+
+	builtin := builtins.Builtins[builtinIndex]
+
+	args := make([]types.Obj, numArgs)
+	err := vm.popMany(args)
+	if err != nil {
+		return err
+	}
+
+	result, err := builtin.Func(args)
+	if err != nil {
+		return err
+	}
+
+	return vm.push(result)
 }
 
 func (vm *vm) opReturn(_ *scope) error {
