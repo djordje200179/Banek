@@ -19,6 +19,8 @@ var handlers = [...]handler{
 	instrs.OpPushDup:      (*vm).opPushDup,
 	instrs.OpPushConst:    (*vm).opPushConst,
 	instrs.OpPushLocal:    (*vm).opPushLocal,
+	instrs.OpPushLocal0:   (*vm).opPushLocal0,
+	instrs.OpPushLocal1:   (*vm).opPushLocal1,
 	instrs.OpPushGlobal:   (*vm).opPushGlobal,
 	instrs.OpPushCaptured: (*vm).opPushCaptured,
 	instrs.OpPushBuiltin:  (*vm).opPushBuiltin,
@@ -26,6 +28,8 @@ var handlers = [...]handler{
 
 	instrs.OpPop:         (*vm).opPop,
 	instrs.OpPopLocal:    (*vm).opPopLocal,
+	instrs.OpPopLocal0:   (*vm).opPopLocal0,
+	instrs.OpPopLocal1:   (*vm).opPopLocal1,
 	instrs.OpPopGlobal:   (*vm).opPopGlobal,
 	instrs.OpPopCaptured: (*vm).opPopCaptured,
 	instrs.OpPopCollElem: (*vm).opPopCollElem,

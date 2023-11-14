@@ -28,6 +28,18 @@ func (vm *vm) opPushLocal(scope *scope) error {
 	return vm.push(local)
 }
 
+func (vm *vm) opPushLocal0(scope *scope) error {
+	local := scope.getLocal(0)
+
+	return vm.push(local)
+}
+
+func (vm *vm) opPushLocal1(scope *scope) error {
+	local := scope.getLocal(1)
+
+	return vm.push(local)
+}
+
 func (vm *vm) opPushGlobal(scope *scope) error {
 	globalIndex := scope.readOperand(1)
 	global := vm.getGlobal(globalIndex)
@@ -71,6 +83,22 @@ func (vm *vm) opPopLocal(scope *scope) error {
 	local := vm.popOne()
 
 	scope.setLocal(localIndex, local)
+
+	return nil
+}
+
+func (vm *vm) opPopLocal0(scope *scope) error {
+	local := vm.popOne()
+
+	scope.setLocal(0, local)
+
+	return nil
+}
+
+func (vm *vm) opPopLocal1(scope *scope) error {
+	local := vm.popOne()
+
+	scope.setLocal(1, local)
 
 	return nil
 }

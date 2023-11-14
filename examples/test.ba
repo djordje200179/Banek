@@ -1,9 +1,8 @@
-let arr1 = [1, 2];
-let arr2 = [3, 4];
+func fibonacci(n) {
+    if n < 2 then
+        return n;
 
-println(arr1 + arr2);
-println(arr1 + [5]);
-println(arr1 <- 6);
-println(arr1 <- [7]);
-println(<-arr1);
-println(<-arr1);
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+println(fibonacci(30));

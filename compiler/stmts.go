@@ -174,7 +174,14 @@ func (compiler *compiler) compileVarDeclaration(stmt stmts.VarDecl) error {
 	if scope.IsGlobal() {
 		scope.EmitInstr(instrs.OpPopGlobal, index)
 	} else {
-		scope.EmitInstr(instrs.OpPopLocal, index)
+		switch index {
+		case 0:
+			scope.EmitInstr(instrs.OpPopLocal0)
+		case 1:
+			scope.EmitInstr(instrs.OpPopLocal1)
+		default:
+			scope.EmitInstr(instrs.OpPopLocal, index)
+		}
 	}
 
 	return nil

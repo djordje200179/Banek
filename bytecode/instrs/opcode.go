@@ -8,6 +8,8 @@ const (
 	OpPushDup
 	OpPushConst
 	OpPushLocal
+	OpPushLocal0
+	OpPushLocal1
 	OpPushGlobal
 	OpPushCaptured
 	OpPushBuiltin
@@ -15,6 +17,8 @@ const (
 
 	OpPop
 	OpPopLocal
+	OpPopLocal0
+	OpPopLocal1
 	OpPopGlobal
 	OpPopCaptured
 	OpPopCollElem
@@ -74,6 +78,8 @@ var InstrInfos = [...]InstrInfo{
 	OpPushDup:      {"PUSH.D", []OperandInfo{}},
 	OpPushConst:    {"PUSH.C", []OperandInfo{{2, OperandConst}}},
 	OpPushLocal:    {"PUSH.L", []OperandInfo{{1, OperandLiteral}}},
+	OpPushLocal0:   {"PUSH.L0", []OperandInfo{}},
+	OpPushLocal1:   {"PUSH.L1", []OperandInfo{}},
 	OpPushGlobal:   {"PUSH.G", []OperandInfo{{1, OperandLiteral}}},
 	OpPushCaptured: {"PUSH.O", []OperandInfo{{1, OperandLiteral}}},
 	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandBuiltin}}},
@@ -81,6 +87,8 @@ var InstrInfos = [...]InstrInfo{
 
 	OpPop:         {"POP", []OperandInfo{}},
 	OpPopLocal:    {"POP.L", []OperandInfo{{1, OperandLiteral}}},
+	OpPopLocal0:   {"POP.L0", []OperandInfo{}},
+	OpPopLocal1:   {"POP.L1", []OperandInfo{}},
 	OpPopGlobal:   {"POP.G", []OperandInfo{{1, OperandLiteral}}},
 	OpPopCaptured: {"POP.O", []OperandInfo{{1, OperandLiteral}}},
 	OpPopCollElem: {"POP.CE", []OperandInfo{}},

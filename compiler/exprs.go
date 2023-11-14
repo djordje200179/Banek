@@ -152,7 +152,15 @@ func (compiler *compiler) compileAssigment(expr exprs.Assignment) error {
 			scope.EmitInstr(instrs.OpPopGlobal, varIndex)
 			return nil
 		} else if varScope == scope {
-			scope.EmitInstr(instrs.OpPopLocal, varIndex)
+			switch varIndex {
+			case 0:
+				scope.EmitInstr(instrs.OpPopLocal0)
+			case 1:
+				scope.EmitInstr(instrs.OpPopLocal1)
+			default:
+				scope.EmitInstr(instrs.OpPopLocal, varIndex)
+			}
+
 			return nil
 		}
 
@@ -256,7 +264,15 @@ func (compiler *compiler) compileIdentifier(expr exprs.Identifier) error {
 		scope.EmitInstr(instrs.OpPushGlobal, varIndex)
 		return nil
 	} else if varScope == scope {
-		scope.EmitInstr(instrs.OpPushLocal, varIndex)
+		switch varIndex {
+		case 0:
+			scope.EmitInstr(instrs.OpPushLocal0)
+		case 1:
+			scope.EmitInstr(instrs.OpPushLocal1)
+		default:
+			scope.EmitInstr(instrs.OpPushLocal, varIndex)
+		}
+
 		return nil
 	}
 
