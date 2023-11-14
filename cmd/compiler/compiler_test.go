@@ -20,10 +20,10 @@ func BenchmarkCompiler(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		inputFile.Seek(0, 0)
 
-		tokenChannel := lexer.Tokenize(inputFile, 200)
-		statementChannel := parser.Parse(tokenChannel, 20)
+		tokenChan := lexer.Tokenize(inputFile, 200)
+		stmtChan := parser.Parse(tokenChan, 20)
 
-		_, err := compiler.Compile(statementChannel)
+		_, err := compiler.Compile(stmtChan)
 		if err != nil {
 			b.Error(err)
 		}

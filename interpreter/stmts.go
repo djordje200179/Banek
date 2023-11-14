@@ -50,7 +50,7 @@ func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.
 		return results.None{}, nil
 	case stmts.Block:
 		blockEnv := envs.New(env, 0)
-		return interpreter.evalBlockStatement(blockEnv, stmt)
+		return interpreter.evalBlock(blockEnv, stmt)
 	case stmts.Return:
 		value, err := interpreter.evalExpr(env, stmt.Value)
 		if err != nil {
@@ -90,7 +90,7 @@ func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.
 	}
 }
 
-func (interpreter *interpreter) evalBlockStatement(env *envs.Env, block stmts.Block) (results.Result, error) {
+func (interpreter *interpreter) evalBlock(env *envs.Env, block stmts.Block) (results.Result, error) {
 	for _, stmt := range block.Stmts {
 		result, err := interpreter.evalStmt(env, stmt)
 		if err != nil {

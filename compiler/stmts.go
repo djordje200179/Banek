@@ -22,7 +22,7 @@ func (compiler *compiler) compileStmt(stmt ast.Stmt) error {
 
 		return nil
 	case stmts.If:
-		return compiler.compileIfStatement(stmt)
+		return compiler.compileIfStmt(stmt)
 	case stmts.Block:
 		return compiler.compileBlock(stmt)
 	case stmts.Func:
@@ -45,7 +45,7 @@ func (compiler *compiler) compileStmt(stmt ast.Stmt) error {
 	}
 }
 
-func (compiler *compiler) compileIfStatement(stmt stmts.If) error {
+func (compiler *compiler) compileIfStmt(stmt stmts.If) error {
 	err := compiler.compileExpr(stmt.Cond)
 	if err != nil {
 		return err

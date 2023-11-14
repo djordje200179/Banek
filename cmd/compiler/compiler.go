@@ -42,10 +42,10 @@ func main() {
 
 	defer inputFile.Close()
 
-	tokenChannel := lexer.Tokenize(inputFile, 200)
-	statementChannel := parser.Parse(tokenChannel, 20)
+	tokenChan := lexer.Tokenize(inputFile, 200)
+	stmtChan := parser.Parse(tokenChan, 20)
 
-	executable, err := compiler.Compile(statementChannel)
+	executable, err := compiler.Compile(stmtChan)
 	if err != nil {
 		HandleError(err)
 	}

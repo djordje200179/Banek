@@ -21,11 +21,11 @@ func BenchmarkInterpreter(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		inputFile.Seek(0, 0)
 
-		tokenChannel := lexer.Tokenize(inputFile, 200)
-		statementChannel := parser.Parse(tokenChannel, 20)
-		resultsChannel := interpreter.Interpret(statementChannel, 5)
+		tokenChan := lexer.Tokenize(inputFile, 200)
+		stmtChan := parser.Parse(tokenChan, 20)
+		resultsChan := interpreter.Interpret(stmtChan, 5)
 
-		for result := range resultsChannel {
+		for result := range resultsChan {
 			if err, ok := result.(results.Error); ok {
 				b.Error(err)
 			}
