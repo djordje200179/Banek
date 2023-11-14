@@ -1,8 +1,0 @@
-func fibonachi(n) {
-    if n < 2 then
-        return n;
-
-    return fibonachi(n - 1) + fibonachi(n - 2);
-}
-
-println(fibonachi(20));
