@@ -110,6 +110,10 @@ func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncC
 
 	switch function := funcObject.(type) {
 	case *envs.Func:
+		if len(args) > len(function.Params) {
+			return nil, errors.ErrTooManyArgs{Expected: len(function.Params), Received: len(args)}
+		}
+
 		funcEnv := envs.New(function.Env, len(function.Params))
 		for i, param := range function.Params {
 			err = funcEnv.Define(param.String(), args[i], true)
@@ -137,9 +141,13 @@ func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncC
 			return nil, ast.ErrUnknownStmt{Stmt: body}
 		}
 	case builtins.BuiltinFunc:
+		if len(args) > function.NumArgs {
+			return nil, errors.ErrTooManyArgs{Expected: function.NumArgs, Received: len(args)}
+		}
+
 		return function.Func(args)
 	default:
-		return nil, errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
+		return nil, errors.ErrNotCallable{Obj: funcObject}
 	}
 }
 

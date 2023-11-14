@@ -11,12 +11,7 @@ import (
 )
 
 func (vm *vm) opPushDup(_ *scope) error {
-	value, err := vm.peek()
-	if err != nil {
-		return err
-	}
-
-	return vm.push(value)
+	return vm.push(vm.peek())
 }
 
 func (vm *vm) opPushConst(scope *scope) error {
@@ -55,10 +50,8 @@ func (vm *vm) opPushCaptured(scope *scope) error {
 }
 
 func (vm *vm) opPushCollElem(_ *scope) error {
-	coll, key, err := vm.popTwo()
-	if err != nil {
-		return err
-	}
+	key := vm.popOne()
+	coll := vm.popOne()
 
 	value, err := ops.EvalCollGet(coll, key)
 	if err != nil {
@@ -69,17 +62,13 @@ func (vm *vm) opPushCollElem(_ *scope) error {
 }
 
 func (vm *vm) opPop(_ *scope) error {
-	_, err := vm.popOne()
-	return err
+	vm.popOne()
+	return nil
 }
 
 func (vm *vm) opPopLocal(scope *scope) error {
 	localIndex := scope.readOperand(1)
-
-	local, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	local := vm.popOne()
 
 	scope.setLocal(localIndex, local)
 
@@ -88,11 +77,7 @@ func (vm *vm) opPopLocal(scope *scope) error {
 
 func (vm *vm) opPopGlobal(scope *scope) error {
 	globalIndex := scope.readOperand(1)
-
-	global, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	global := vm.popOne()
 
 	vm.setGlobal(globalIndex, global)
 
@@ -101,11 +86,7 @@ func (vm *vm) opPopGlobal(scope *scope) error {
 
 func (vm *vm) opPopCaptured(scope *scope) error {
 	capturedIndex := scope.readOperand(1)
-
-	captured, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	captured := vm.popOne()
 
 	scope.setCaptured(capturedIndex, captured)
 
@@ -113,15 +94,9 @@ func (vm *vm) opPopCaptured(scope *scope) error {
 }
 
 func (vm *vm) opPopCollElem(_ *scope) error {
-	coll, key, err := vm.popTwo()
-	if err != nil {
-		return err
-	}
-
-	value, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	key := vm.popOne()
+	coll := vm.popOne()
+	value := vm.popOne()
 
 	return ops.EvalCollSet(coll, key, value)
 }
@@ -129,10 +104,8 @@ func (vm *vm) opPopCollElem(_ *scope) error {
 func (vm *vm) opBinaryOp(scope *scope) error {
 	operator := ops.BinaryOperator(scope.readOperand(1))
 
-	left, right, err := vm.popTwo()
-	if err != nil {
-		return err
-	}
+	right := vm.popOne()
+	left := vm.popOne()
 
 	result, err := ops.BinaryOps[operator](left, right)
 	if err != nil {
@@ -145,10 +118,7 @@ func (vm *vm) opBinaryOp(scope *scope) error {
 func (vm *vm) opUnaryOp(scope *scope) error {
 	operator := ops.UnaryOperator(scope.readOperand(1))
 
-	operand, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	operand := vm.popOne()
 
 	result, err := ops.UnaryOps[operator](operand)
 	if err != nil {
@@ -169,10 +139,7 @@ func (vm *vm) opBranch(scope *scope) error {
 func (vm *vm) opBranchIfFalse(scope *scope) error {
 	offset := scope.readOperand(2)
 
-	operand, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	operand := vm.popOne()
 
 	boolOperand, ok := operand.(objs.Bool)
 	if !ok {
@@ -193,10 +160,7 @@ func (vm *vm) opNewArray(scope *scope) error {
 		Slice: make([]types.Obj, size),
 	}
 
-	err := vm.popMany(arr.Slice)
-	if err != nil {
-		return err
-	}
+	vm.popMany(arr.Slice)
 
 	return vm.push(arr)
 }
@@ -227,38 +191,27 @@ func (vm *vm) opNewFunc(scope *scope) error {
 func (vm *vm) opCall(scope *scope) error {
 	numArgs := scope.readOperand(1)
 
-	funcObject, err := vm.popOne()
-	if err != nil {
-		return err
-	}
+	funcObject := vm.popOne()
 
 	switch function := funcObject.(type) {
 	case *bytecode.Func:
 		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
 
-		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
-
 		if numArgs > len(funcTemplate.Params) {
-			err := vm.decreaseSP(numArgs - len(funcTemplate.Params))
-			if err != nil {
-				return err
-			}
-			numArgs = len(funcTemplate.Params)
+			return errors.ErrTooManyArgs{Expected: len(funcTemplate.Params), Received: numArgs}
 		}
 
-		args := funcScope.vars[:numArgs]
-		err = vm.popMany(args)
-		if err != nil {
-			return err
-		}
+		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function, funcTemplate)
+		vm.popMany(funcScope.vars[:numArgs])
 
 		return nil
 	case builtins.BuiltinFunc:
-		args := make([]types.Obj, numArgs)
-		err = vm.popMany(args)
-		if err != nil {
-			return err
+		if function.NumArgs != -1 && numArgs != function.NumArgs {
+			return errors.ErrTooManyArgs{Expected: function.NumArgs, Received: numArgs}
 		}
+
+		args := make([]types.Obj, numArgs)
+		vm.popMany(args)
 
 		result, err := function.Func(args)
 		if err != nil {
@@ -267,7 +220,7 @@ func (vm *vm) opCall(scope *scope) error {
 
 		return vm.push(result)
 	default:
-		return errors.ErrInvalidOp{Operator: "call", LeftOperand: funcObject}
+		return errors.ErrNotCallable{Obj: funcObject}
 	}
 }
 

@@ -5,7 +5,8 @@ import (
 )
 
 type BuiltinFunc struct {
-	Name string
+	Name    string
+	NumArgs int
 
 	Func func(args []types.Obj) (types.Obj, error)
 }
@@ -25,31 +26,45 @@ func (builtin BuiltinFunc) Equals(other types.Obj) bool {
 
 var Funcs = [...]BuiltinFunc{
 	{
-		Name: "print",
+		Name:    "print",
+		NumArgs: -1,
+
 		Func: builtinPrint,
 	},
 	{
-		Name: "println",
+		Name:    "println",
+		NumArgs: -1,
+
 		Func: builtinPrintln,
 	},
 	{
-		Name: "read",
+		Name:    "read",
+		NumArgs: 0,
+
 		Func: builtinRead,
 	},
 	{
-		Name: "readln",
+		Name:    "readln",
+		NumArgs: 0,
+
 		Func: builtinReadln,
 	},
 	{
-		Name: "len",
+		Name:    "len",
+		NumArgs: 1,
+
 		Func: builtinLen,
 	},
 	{
-		Name: "str",
+		Name:    "str",
+		NumArgs: 1,
+
 		Func: builtinStr,
 	},
 	{
-		Name: "int",
+		Name:    "int",
+		NumArgs: 1,
+
 		Func: builtinInt,
 	},
 }

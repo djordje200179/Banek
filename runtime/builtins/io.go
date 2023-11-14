@@ -31,11 +31,7 @@ func builtinPrintln(args []types.Obj) (types.Obj, error) {
 	return objs.Undefined{}, nil
 }
 
-func builtinRead(args []types.Obj) (types.Obj, error) {
-	if len(args) != 0 {
-		return nil, ErrIncorrectArgNum{Expected: 0, Got: len(args)}
-	}
-
+func builtinRead(_ []types.Obj) (types.Obj, error) {
 	var input string
 	_, err := fmt.Scan(&input)
 	if err != nil {
@@ -45,11 +41,7 @@ func builtinRead(args []types.Obj) (types.Obj, error) {
 	return objs.Str(input), nil
 }
 
-func builtinReadln(args []types.Obj) (types.Obj, error) {
-	if len(args) != 0 {
-		return nil, ErrIncorrectArgNum{Expected: 0, Got: len(args)}
-	}
-
+func builtinReadln(_ []types.Obj) (types.Obj, error) {
 	var input string
 	_, err := fmt.Scanln(&input)
 	if err != nil {
