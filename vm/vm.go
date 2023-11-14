@@ -23,7 +23,6 @@ var handlers = [...]handler{
 	instrs.OpPushLocal1:   (*vm).opPushLocal1,
 	instrs.OpPushGlobal:   (*vm).opPushGlobal,
 	instrs.OpPushCaptured: (*vm).opPushCaptured,
-	instrs.OpPushBuiltin:  (*vm).opPushBuiltin,
 	instrs.OpPushCollElem: (*vm).opPushCollElem,
 
 	instrs.OpPop:         (*vm).opPop,
@@ -40,8 +39,9 @@ var handlers = [...]handler{
 	instrs.OpBranch:        (*vm).opBranch,
 	instrs.OpBranchIfFalse: (*vm).opBranchIfFalse,
 
-	instrs.OpCall:   (*vm).opCall,
-	instrs.OpReturn: (*vm).opReturn,
+	instrs.OpCallFunc:    (*vm).opCallFunc,
+	instrs.OpCallBuiltin: (*vm).opCallBuiltin,
+	instrs.OpReturn:      (*vm).opReturn,
 
 	instrs.OpNewArray: (*vm).opNewArray,
 	instrs.OpNewFunc:  (*vm).opNewFunc,

@@ -12,7 +12,6 @@ const (
 	OpPushLocal1
 	OpPushGlobal
 	OpPushCaptured
-	OpPushBuiltin
 	OpPushCollElem
 
 	OpPop
@@ -29,7 +28,8 @@ const (
 	OpBranch
 	OpBranchIfFalse
 
-	OpCall
+	OpCallFunc
+	OpCallBuiltin
 	OpReturn
 
 	OpNewArray
@@ -82,7 +82,6 @@ var InstrInfos = [...]InstrInfo{
 	OpPushLocal1:   {"PUSH.L1", []OperandInfo{}},
 	OpPushGlobal:   {"PUSH.G", []OperandInfo{{1, OperandLiteral}}},
 	OpPushCaptured: {"PUSH.O", []OperandInfo{{1, OperandLiteral}}},
-	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandBuiltin}}},
 	OpPushCollElem: {"PUSH.CE", []OperandInfo{}},
 
 	OpPop:         {"POP", []OperandInfo{}},
@@ -99,8 +98,9 @@ var InstrInfos = [...]InstrInfo{
 	OpBranch:        {"BR", []OperandInfo{{2, OperandLiteral}}},
 	OpBranchIfFalse: {"BR.F", []OperandInfo{{2, OperandLiteral}}},
 
-	OpCall:   {"CALL", []OperandInfo{{1, OperandLiteral}}},
-	OpReturn: {"RET", []OperandInfo{}},
+	OpCallFunc:    {"CALL.F", []OperandInfo{{1, OperandLiteral}}},
+	OpCallBuiltin: {"CALL.B", []OperandInfo{{1, OperandBuiltin}, {1, OperandLiteral}}},
+	OpReturn:      {"RET", []OperandInfo{}},
 
 	OpNewArray: {"NEW.A", []OperandInfo{{2, OperandLiteral}}},
 	OpNewFunc:  {"NEW.F", []OperandInfo{{2, OperandFunc}}},
