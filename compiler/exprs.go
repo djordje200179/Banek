@@ -236,7 +236,7 @@ func (compiler *compiler) compileIdentifier(expr exprs.Identifier) error {
 
 	scope := compiler.topScope()
 
-	if index := builtins.BuiltinFindIndex(varName); index != -1 {
+	if index := builtins.Find(varName); index != -1 {
 		scope.EmitInstr(instrs.OpPushBuiltin, index)
 		return nil
 	}

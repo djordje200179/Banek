@@ -85,7 +85,7 @@ func (interpreter *interpreter) evalUnaryOp(env *envs.Env, expr exprs.UnaryOp) (
 }
 
 func (interpreter *interpreter) evalIdentifier(env *envs.Env, identifier exprs.Identifier) (types.Obj, error) {
-	if index := builtins.BuiltinFindIndex(identifier.String()); index != -1 {
+	if index := builtins.Find(identifier.String()); index != -1 {
 		return builtins.Funcs[index], nil
 	}
 

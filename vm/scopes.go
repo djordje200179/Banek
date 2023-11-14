@@ -34,10 +34,6 @@ func (scope *scope) setCaptured(index int, value types.Obj) {
 	*scope.function.Captures[index] = value
 }
 
-func (scope *scope) hasCode() bool {
-	return scope.pc < len(scope.code)
-}
-
 func (scope *scope) readOpcode() instrs.Opcode {
 	opcode := instrs.Opcode(scope.code[scope.pc])
 

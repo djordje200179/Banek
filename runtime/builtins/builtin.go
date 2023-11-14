@@ -67,9 +67,15 @@ var Funcs = [...]BuiltinFunc{
 
 		Func: builtinInt,
 	},
+	{
+		Name:    "exit",
+		NumArgs: 0,
+
+		Func: builtinExit,
+	},
 }
 
-func BuiltinFindIndex(name string) int {
+func Find(name string) int {
 	for i, builtin := range &Funcs {
 		if builtin.Name == name {
 			return i

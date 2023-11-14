@@ -71,15 +71,5 @@ func (vm *vm) run() error {
 		if err != nil {
 			return err
 		}
-
-		scope = vm.currScope
-
-		if !scope.hasCode() {
-			if scope == &vm.globalScope {
-				return nil
-			}
-
-			vm.popScope()
-		}
 	}
 }
