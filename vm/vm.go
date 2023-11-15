@@ -11,19 +11,26 @@ type vm struct {
 
 	operandStack
 	scopeStack
+
+	halted bool
 }
 
-type handler func(vm *vm, scope *scope) error
+type handler func(vm *vm) error
 
 var handlers = [...]handler{
-	instrs.OpPushDup:      (*vm).opPushDup,
-	instrs.OpPushConst:    (*vm).opPushConst,
-	instrs.OpPushLocal:    (*vm).opPushLocal,
-	instrs.OpPushLocal0:   (*vm).opPushLocal0,
-	instrs.OpPushLocal1:   (*vm).opPushLocal1,
-	instrs.OpPushGlobal:   (*vm).opPushGlobal,
-	instrs.OpPushCaptured: (*vm).opPushCaptured,
-	instrs.OpPushCollElem: (*vm).opPushCollElem,
+	instrs.OpPushDup:       (*vm).opPushDup,
+	instrs.OpPushConst:     (*vm).opPushConst,
+	instrs.OpPush0:         (*vm).opPush0,
+	instrs.OpPush1:         (*vm).opPush1,
+	instrs.OpPush2:         (*vm).opPush2,
+	instrs.OpPushUndefined: (*vm).opPushUndefined,
+	instrs.OpPushBuiltin:   (*vm).opPushBuiltin,
+	instrs.OpPushLocal:     (*vm).opPushLocal,
+	instrs.OpPushLocal0:    (*vm).opPushLocal0,
+	instrs.OpPushLocal1:    (*vm).opPushLocal1,
+	instrs.OpPushGlobal:    (*vm).opPushGlobal,
+	instrs.OpPushCaptured:  (*vm).opPushCaptured,
+	instrs.OpPushCollElem:  (*vm).opPushCollElem,
 
 	instrs.OpPop:         (*vm).opPop,
 	instrs.OpPopLocal:    (*vm).opPopLocal,
@@ -39,9 +46,9 @@ var handlers = [...]handler{
 	instrs.OpBranch:        (*vm).opBranch,
 	instrs.OpBranchIfFalse: (*vm).opBranchIfFalse,
 
-	instrs.OpCallFunc:    (*vm).opCallFunc,
-	instrs.OpCallBuiltin: (*vm).opCallBuiltin,
-	instrs.OpReturn:      (*vm).opReturn,
+	instrs.OpCall:   (*vm).opCall,
+	instrs.OpReturn: (*vm).opReturn,
+	instrs.OpHalt:   (*vm).opHalt,
 
 	instrs.OpNewArray: (*vm).opNewArray,
 	instrs.OpNewFunc:  (*vm).opNewFunc,
@@ -57,19 +64,19 @@ func Execute(program bytecode.Executable) error {
 			},
 		},
 	}
-	vm.currScope = &vm.globalScope
+	vm.scope = &vm.globalScope
 
 	return vm.run()
 }
 
 func (vm *vm) run() error {
-	for {
-		scope := vm.currScope
-
-		opcode := scope.readOpcode()
-		err := handlers[opcode](vm, scope)
+	for !vm.halted {
+		opcode := vm.readOpcode()
+		err := handlers[opcode](vm)
 		if err != nil {
 			return err
 		}
 	}
+
+	return nil
 }

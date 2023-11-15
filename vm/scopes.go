@@ -9,11 +9,9 @@ import (
 type scope struct {
 	code bytecode.Code
 	pc   int
-
 	vars []types.Obj
 
-	function     *bytecode.Func
-	funcTemplate bytecode.FuncTemplate
+	function *bytecode.Func
 
 	parent *scope
 }

@@ -31,7 +31,7 @@ func (stack *operandStack) push(object types.Obj) error {
 	return nil
 }
 
-func (stack *operandStack) popOne() types.Obj {
+func (stack *operandStack) pop() types.Obj {
 	stack.ptr--
 
 	elem := stack.array[stack.ptr]

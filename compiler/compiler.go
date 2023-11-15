@@ -5,7 +5,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
 	"banek/compiler/scopes"
-	"banek/runtime/builtins"
 	"banek/runtime/types"
 	"slices"
 )
@@ -31,8 +30,7 @@ func Compile(stmtsChan <-chan ast.Stmt) (bytecode.Executable, error) {
 		}
 	}
 
-	compiler.globalScope.EmitInstr(instrs.OpPushBuiltin, builtins.Find("exit"))
-	compiler.globalScope.EmitInstr(instrs.OpCall, 0)
+	compiler.globalScope.EmitInstr(instrs.OpHalt)
 
 	return compiler.makeExecutable(), nil
 }

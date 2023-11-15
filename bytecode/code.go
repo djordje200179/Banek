@@ -45,7 +45,7 @@ func (code Code) String() string {
 			case instrs.OperandUnaryOp:
 				sb.WriteString(ops.UnaryOperator(operandValue).String())
 			case instrs.OperandBuiltin:
-				sb.WriteString(builtins.Builtins[operandValue].Name)
+				sb.WriteString(builtins.Funcs[operandValue].Name)
 			}
 		}
 

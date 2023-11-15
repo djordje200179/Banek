@@ -67,12 +67,6 @@ var Funcs = [...]BuiltinFunc{
 
 		Func: builtinInt,
 	},
-	{
-		Name:    "exit",
-		NumArgs: 0,
-
-		Func: builtinExit,
-	},
 }
 
 func Find(name string) int {

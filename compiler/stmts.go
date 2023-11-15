@@ -6,7 +6,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
 	"banek/compiler/scopes"
-	"banek/runtime/objs"
 )
 
 func (compiler *compiler) compileStmt(stmt ast.Stmt) error {
@@ -135,11 +134,11 @@ func (compiler *compiler) compileFuncStmt(stmt stmts.Func) error {
 	}
 	if lastStmtIndex := len(stmt.Body.Stmts) - 1; lastStmtIndex >= 0 {
 		if _, ok := stmt.Body.Stmts[lastStmtIndex].(stmts.Return); !ok {
-			funcScope.EmitInstr(instrs.OpPushConst, compiler.addConst(objs.Undefined{}))
+			funcScope.EmitInstr(instrs.OpPushUndefined)
 			funcScope.EmitInstr(instrs.OpReturn)
 		}
 	} else {
-		funcScope.EmitInstr(instrs.OpPushConst, compiler.addConst(objs.Undefined{}))
+		funcScope.EmitInstr(instrs.OpPushUndefined)
 		funcScope.EmitInstr(instrs.OpReturn)
 	}
 	compiler.popScope()

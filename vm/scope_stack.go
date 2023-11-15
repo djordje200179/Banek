@@ -10,7 +10,7 @@ import (
 
 type scopeStack struct {
 	globalScope scope
-	currScope   *scope
+	*scope
 }
 
 var scopePool = sync.Pool{
@@ -41,8 +41,13 @@ func getScopeVars(size int) []types.Obj {
 	}
 
 	arr := scopeVarsPools[size].Get().(*types.Obj)
+	slice := unsafe.Slice(arr, size)
 
-	return unsafe.Slice(arr, size)
+	for i := range slice {
+		slice[i] = objs.Undefined{}
+	}
+
+	return slice
 }
 
 func returnScopeVars(arr []types.Obj) {
@@ -53,31 +58,24 @@ func returnScopeVars(arr []types.Obj) {
 	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
 }
 
-func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *bytecode.Func, funcTemplate bytecode.FuncTemplate) *scope {
+func (stack *scopeStack) pushScope(code bytecode.Code, varsNum int, function *bytecode.Func) *scope {
 	funcScope := scopePool.Get().(*scope)
-
-	funcScope.code = code
-	funcScope.pc = 0
-	funcScope.parent = stack.currScope
-	funcScope.function = function
-	funcScope.funcTemplate = funcTemplate
-
-	funcScope.vars = getScopeVars(varsNum)
-	for i := range funcScope.vars {
-		funcScope.vars[i] = objs.Undefined{}
+	*funcScope = scope{
+		code:     code,
+		vars:     getScopeVars(varsNum),
+		function: function,
+		parent:   stack.scope,
 	}
-
-	stack.currScope = funcScope
+	stack.scope = funcScope
 
 	return funcScope
 }
 
-func (stack *scopeStack) popScope() {
-	removedScope := stack.currScope
+func (stack *scopeStack) popScope(canFreeVars bool) {
+	removedScope := stack.scope
+	stack.scope = removedScope.parent
 
-	stack.currScope = stack.currScope.parent
-
-	if !removedScope.funcTemplate.IsCaptured {
+	if canFreeVars {
 		returnScopeVars(removedScope.vars)
 	}
 

@@ -8,6 +8,7 @@ import (
 	"banek/compiler/scopes"
 	"banek/runtime/builtins"
 	"banek/runtime/errors"
+	"banek/runtime/objs"
 )
 
 func (compiler *compiler) compileExpr(expr ast.Expr) error {
@@ -15,7 +16,24 @@ func (compiler *compiler) compileExpr(expr ast.Expr) error {
 
 	switch expr := expr.(type) {
 	case exprs.ConstLiteral:
-		scope.EmitInstr(instrs.OpPushConst, compiler.addConst(expr.Value))
+		switch value := expr.Value.(type) {
+		case objs.Undefined:
+			scope.EmitInstr(instrs.OpPushUndefined)
+		case objs.Int:
+			switch value {
+			case 0:
+				scope.EmitInstr(instrs.OpPush0)
+			case 1:
+				scope.EmitInstr(instrs.OpPush1)
+			case 2:
+				scope.EmitInstr(instrs.OpPush2)
+			default:
+				scope.EmitInstr(instrs.OpPushConst, compiler.addConst(expr.Value))
+			}
+		default:
+			scope.EmitInstr(instrs.OpPushConst, compiler.addConst(expr.Value))
+		}
+
 		return nil
 	case exprs.BinaryOp:
 		return compiler.compileBinaryOp(expr)
