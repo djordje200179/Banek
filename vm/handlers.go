@@ -184,8 +184,7 @@ func (vm *vm) opBranchIfFalse() error {
 	operand := vm.pop()
 
 	if operand.Tag != objs.TypeBool {
-		// TODO: add more info to error
-		return nil
+		return errors.ErrNotBool{Obj: operand}
 	}
 
 	if !operand.AsBool() {

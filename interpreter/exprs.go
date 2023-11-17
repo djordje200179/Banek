@@ -30,6 +30,10 @@ func (interpreter *interpreter) evalExpr(env *envs.Env, expr ast.Expr) (objs.Obj
 			return objs.MakeUndefined(), err
 		}
 
+		if cond.Tag != objs.TypeBool {
+			return objs.MakeUndefined(), errors.ErrNotBool{Obj: cond}
+		}
+
 		if cond.AsBool() {
 			return interpreter.evalExpr(env, expr.Consequence)
 		} else {
