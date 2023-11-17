@@ -88,7 +88,7 @@ func (err ErrInvalidBinaryOpOperand) Error() string {
 
 func evalBinaryPlus(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != right.Tag {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
 	}
 
 	switch left.Tag {
@@ -107,13 +107,13 @@ func evalBinaryPlus(left, right objs.Obj) (objs.Obj, error) {
 
 		return objs.MakeArray(newArr), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
 	}
 }
 
 func evalBinaryMinus(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryMinus, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryMinus, LeftOperand: left, RightOperand: right}
 	}
 
 	return objs.MakeInt(left.AsInt() - right.AsInt()), nil
@@ -123,13 +123,13 @@ func evalBinaryAsterisk(left, right objs.Obj) (objs.Obj, error) {
 	switch left.Tag {
 	case objs.TypeInt:
 		if right.Tag != objs.TypeInt {
-			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+			return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
 		}
 
 		return objs.MakeInt(left.AsInt() * right.AsInt()), nil
 	case objs.TypeArray:
 		if right.Tag != objs.TypeInt {
-			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+			return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
 		}
 
 		baseArr := left.AsArray()
@@ -144,7 +144,7 @@ func evalBinaryAsterisk(left, right objs.Obj) (objs.Obj, error) {
 		return objs.MakeArray(newArr), nil
 	case objs.TypeStr:
 		if right.Tag != objs.TypeInt {
-			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+			return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
 		}
 
 		baseStr := left.AsStr()
@@ -158,13 +158,13 @@ func evalBinaryAsterisk(left, right objs.Obj) (objs.Obj, error) {
 
 		return objs.MakeStr(sb.String()), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
 	}
 }
 
 func evalBinaryCaret(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
 	}
 
 	base := left.AsInt()
@@ -172,7 +172,7 @@ func evalBinaryCaret(left, right objs.Obj) (objs.Obj, error) {
 
 	if power < 0 {
 		// TODO: fix negative power
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
 	}
 
 	result := 1
@@ -185,7 +185,7 @@ func evalBinaryCaret(left, right objs.Obj) (objs.Obj, error) {
 
 func evalBinarySlash(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinarySlash, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinarySlash, LeftOperand: left, RightOperand: right}
 	}
 
 	return objs.MakeInt(left.AsInt() / right.AsInt()), nil
@@ -193,7 +193,7 @@ func evalBinarySlash(left, right objs.Obj) (objs.Obj, error) {
 
 func evalBinaryModulo(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryModulo, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryModulo, LeftOperand: left, RightOperand: right}
 	}
 
 	return objs.MakeInt(left.AsInt() % right.AsInt()), nil
@@ -209,7 +209,7 @@ func evalBinaryNotEquals(left, right objs.Obj) (objs.Obj, error) {
 
 func evalBinaryLess(left, right objs.Obj) (objs.Obj, error) {
 	if left.Tag != right.Tag {
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
 	}
 
 	switch left.Tag {
@@ -218,7 +218,7 @@ func evalBinaryLess(left, right objs.Obj) (objs.Obj, error) {
 	case objs.TypeStr:
 		return objs.MakeBool(left.AsStr() < right.AsStr()), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
 	}
 }
 
@@ -248,6 +248,6 @@ func evalBinaryLeftArrow(left, right objs.Obj) (objs.Obj, error) {
 
 		return objs.MakeArray(arr), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLeftArrow, LeftOperand: left, RightOperand: right}
+		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryLeftArrow, LeftOperand: left, RightOperand: right}
 	}
 }

@@ -54,7 +54,7 @@ func evalUnaryMinus(operand objs.Obj) (objs.Obj, error) {
 		integer := operand.AsInt()
 		return objs.MakeInt(-integer), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryMinus, Operand: operand}
+		return objs.Obj{}, ErrInvalidUnaryOpOperand{Operator: UnaryMinus, Operand: operand}
 	}
 }
 
@@ -64,7 +64,7 @@ func evalUnaryBang(operand objs.Obj) (objs.Obj, error) {
 		boolean := operand.AsBool()
 		return objs.MakeBool(!boolean), nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryBang, Operand: operand}
+		return objs.Obj{}, ErrInvalidUnaryOpOperand{Operator: UnaryBang, Operand: operand}
 	}
 }
 
@@ -74,7 +74,7 @@ func evalUnaryLeftArrow(operand objs.Obj) (objs.Obj, error) {
 		arr := operand.AsArray()
 
 		if len(arr.Slice) == 0 {
-			return objs.MakeUndefined(), nil
+			return objs.Obj{}, nil
 		}
 
 		elem := arr.Slice[0]
@@ -82,6 +82,6 @@ func evalUnaryLeftArrow(operand objs.Obj) (objs.Obj, error) {
 
 		return elem, nil
 	default:
-		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryLeftArrow, Operand: operand}
+		return objs.Obj{}, ErrInvalidUnaryOpOperand{Operator: UnaryLeftArrow, Operand: operand}
 	}
 }

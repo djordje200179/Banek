@@ -43,7 +43,7 @@ func getScopeVars(size int) []objs.Obj {
 	slice := unsafe.Slice(arr, size)
 
 	for i := range slice {
-		slice[i] = objs.MakeUndefined()
+		slice[i] = objs.Obj{}
 	}
 
 	return slice

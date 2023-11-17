@@ -32,7 +32,7 @@ func (vm *vm) opPush2() error {
 }
 
 func (vm *vm) opPushUndefined() error {
-	return vm.push(objs.MakeUndefined())
+	return vm.push(objs.Obj{})
 }
 
 func (vm *vm) opPushLocal() error {

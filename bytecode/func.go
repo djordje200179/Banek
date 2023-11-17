@@ -63,7 +63,7 @@ func funcUnmarshal(buf *bytes.Buffer) (objs.Obj, error) {
 	var templateIndex uint64
 	err := binary.Read(buf, binary.LittleEndian, &templateIndex)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	function := Func{

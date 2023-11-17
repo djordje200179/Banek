@@ -27,11 +27,11 @@ func (interpreter *interpreter) evalExpr(env *envs.Env, expr ast.Expr) (objs.Obj
 	case exprs.If:
 		cond, err := interpreter.evalExpr(env, expr.Cond)
 		if err != nil {
-			return objs.MakeUndefined(), err
+			return objs.Obj{}, err
 		}
 
 		if cond.Tag != objs.TypeBool {
-			return objs.MakeUndefined(), errors.ErrNotBool{Obj: cond}
+			return objs.Obj{}, errors.ErrNotBool{Obj: cond}
 		}
 
 		if cond.AsBool() {
@@ -54,23 +54,23 @@ func (interpreter *interpreter) evalExpr(env *envs.Env, expr ast.Expr) (objs.Obj
 	case exprs.CollIndex:
 		return interpreter.evalCollIndex(env, expr)
 	default:
-		return objs.MakeUndefined(), ast.ErrUnknownExpr{Expr: expr}
+		return objs.Obj{}, ast.ErrUnknownExpr{Expr: expr}
 	}
 }
 
 func (interpreter *interpreter) evalBinaryOp(env *envs.Env, expr exprs.BinaryOp) (objs.Obj, error) {
 	right, err := interpreter.evalExpr(env, expr.Right)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	left, err := interpreter.evalExpr(env, expr.Left)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	if expr.Operator >= ops.BinaryOperator(len(ops.BinaryOps)) {
-		return objs.MakeUndefined(), errors.ErrUnknownOperator{Operator: expr.Operator.String()}
+		return objs.Obj{}, errors.ErrUnknownOperator{Operator: expr.Operator.String()}
 	}
 
 	return ops.BinaryOps[expr.Operator](left, right)
@@ -79,11 +79,11 @@ func (interpreter *interpreter) evalBinaryOp(env *envs.Env, expr exprs.BinaryOp)
 func (interpreter *interpreter) evalUnaryOp(env *envs.Env, expr exprs.UnaryOp) (objs.Obj, error) {
 	operand, err := interpreter.evalExpr(env, expr.Operand)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	if expr.Operator >= ops.UnaryOperator(len(ops.UnaryOps)) {
-		return objs.MakeUndefined(), errors.ErrUnknownOperator{Operator: expr.Operator.String()}
+		return objs.Obj{}, errors.ErrUnknownOperator{Operator: expr.Operator.String()}
 	}
 
 	return ops.UnaryOps[expr.Operator](operand)
@@ -97,7 +97,7 @@ func (interpreter *interpreter) evalIdentifier(env *envs.Env, identifier exprs.I
 
 	value, err := env.Get(identifier.String())
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	return value, nil
@@ -106,12 +106,12 @@ func (interpreter *interpreter) evalIdentifier(env *envs.Env, identifier exprs.I
 func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncCall) (objs.Obj, error) {
 	funcObj, err := interpreter.evalExpr(env, funcCall.Func)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	args, err := interpreter.evalFuncArgs(env, funcCall.Args)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	switch funcObj.Tag {
@@ -119,14 +119,14 @@ func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncC
 		function := envs.GetFunc(funcObj)
 
 		if len(args) > len(function.Params) {
-			return objs.MakeUndefined(), errors.ErrTooManyArgs{Expected: len(function.Params), Received: len(args)}
+			return objs.Obj{}, errors.ErrTooManyArgs{Expected: len(function.Params), Received: len(args)}
 		}
 
 		funcEnv := envs.New(function.Env, len(function.Params))
 		for i, param := range function.Params {
 			err = funcEnv.Define(param.String(), args[i], true)
 			if err != nil {
-				return objs.MakeUndefined(), err
+				return objs.Obj{}, err
 			}
 		}
 
@@ -136,28 +136,28 @@ func (interpreter *interpreter) evalFuncCall(env *envs.Env, funcCall exprs.FuncC
 		case stmts.Block:
 			result, err := interpreter.evalBlock(funcEnv, body)
 			if err != nil {
-				return objs.MakeUndefined(), err
+				return objs.Obj{}, err
 			}
 
 			ret, ok := result.(results.Return)
 			if !ok {
-				return objs.MakeUndefined(), nil
+				return objs.Obj{}, nil
 			}
 
 			return ret.Value, nil
 		default:
-			return objs.MakeUndefined(), ast.ErrUnknownStmt{Stmt: body}
+			return objs.Obj{}, ast.ErrUnknownStmt{Stmt: body}
 		}
 	case objs.TypeBuiltin:
 		builtin := builtins.GetBuiltin(funcObj)
 
 		if builtin.NumArgs != -1 && len(args) != builtin.NumArgs {
-			return objs.MakeUndefined(), errors.ErrTooManyArgs{Expected: builtin.NumArgs, Received: len(args)}
+			return objs.Obj{}, errors.ErrTooManyArgs{Expected: builtin.NumArgs, Received: len(args)}
 		}
 
 		return builtin.Func(args)
 	default:
-		return objs.MakeUndefined(), errors.ErrNotCallable{Obj: funcObj}
+		return objs.Obj{}, errors.ErrNotCallable{Obj: funcObj}
 	}
 }
 
@@ -183,7 +183,7 @@ func (interpreter *interpreter) evalArrayLiteral(env *envs.Env, expr exprs.Array
 	for i, elemExpr := range expr {
 		elem, err := interpreter.evalExpr(env, elemExpr)
 		if err != nil {
-			return objs.MakeUndefined(), err
+			return objs.Obj{}, err
 		}
 
 		array.Slice[i] = elem
@@ -195,12 +195,12 @@ func (interpreter *interpreter) evalArrayLiteral(env *envs.Env, expr exprs.Array
 func (interpreter *interpreter) evalCollIndex(env *envs.Env, expr exprs.CollIndex) (objs.Obj, error) {
 	coll, err := interpreter.evalExpr(env, expr.Coll)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	key, err := interpreter.evalExpr(env, expr.Key)
 	if err != nil {
-		return objs.MakeUndefined(), err
+		return objs.Obj{}, err
 	}
 
 	return ops.EvalCollGet(coll, key)

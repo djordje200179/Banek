@@ -20,7 +20,7 @@ func builtinInt(args []objs.Obj) (objs.Obj, error) {
 		str := arg.AsStr()
 		integer, err := strconv.Atoi(str)
 		if err != nil {
-			return objs.MakeUndefined(), err
+			return objs.Obj{}, err
 		}
 		return objs.MakeInt(integer), nil
 	case objs.TypeBool:
@@ -32,6 +32,6 @@ func builtinInt(args []objs.Obj) (objs.Obj, error) {
 		}
 	default:
 		// TODO: error
-		return objs.MakeUndefined(), nil
+		return objs.Obj{}, nil
 	}
 }

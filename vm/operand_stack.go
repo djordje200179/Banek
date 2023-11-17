@@ -37,7 +37,7 @@ func (stack *operandStack) pop() objs.Obj {
 	stack.ptr--
 
 	elem := stack.array[stack.ptr]
-	stack.array[stack.ptr] = objs.MakeUndefined()
+	stack.array[stack.ptr] = objs.Obj{}
 
 	return elem
 }
@@ -47,7 +47,7 @@ func (stack *operandStack) popMany(arr []objs.Obj) {
 	copy(arr, stack.array[nextPtr:stack.ptr])
 
 	for i := nextPtr; i < stack.ptr; i++ {
-		stack.array[i] = objs.MakeUndefined()
+		stack.array[i] = objs.Obj{}
 	}
 
 	stack.ptr = nextPtr

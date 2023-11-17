@@ -54,7 +54,7 @@ func EvalCollGet(coll, key objs.Obj) (objs.Obj, error) {
 		arr := coll.AsArray()
 
 		if key.Tag != objs.TypeInt {
-			return objs.MakeUndefined(), ErrNotIndexable{Coll: coll, Key: key}
+			return objs.Obj{}, ErrNotIndexable{Coll: coll, Key: key}
 		}
 
 		index := key.AsInt()
@@ -63,11 +63,11 @@ func EvalCollGet(coll, key objs.Obj) (objs.Obj, error) {
 		}
 
 		if index < 0 || index >= len(arr.Slice) {
-			return objs.MakeUndefined(), ErrIndexOutOfBounds{Index: index, Size: len(arr.Slice)}
+			return objs.Obj{}, ErrIndexOutOfBounds{Index: index, Size: len(arr.Slice)}
 		}
 
 		return arr.Slice[index], nil
 	default:
-		return objs.MakeUndefined(), ErrNotIndexable{Coll: coll, Key: key}
+		return objs.Obj{}, ErrNotIndexable{Coll: coll, Key: key}
 	}
 }

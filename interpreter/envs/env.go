@@ -42,7 +42,7 @@ func (env *Env) Get(name string) (objs.Obj, error) {
 		if env.outer != nil {
 			return env.outer.Get(name)
 		} else {
-			return objs.MakeUndefined(), errors.ErrIdentifierNotDefined{Identifier: name}
+			return objs.Obj{}, errors.ErrIdentifierNotDefined{Identifier: name}
 		}
 	}
 

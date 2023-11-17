@@ -35,10 +35,6 @@ func MakeStr(value string) Obj {
 	return Obj{Tag: TypeStr, PtrData: ptrData, IntData: intData}
 }
 
-func MakeUndefined() Obj {
-	return Obj{Tag: TypeUndefined}
-}
-
 func MakeArray(value *Array) Obj {
 	ptrData := unsafe.Pointer(value)
 

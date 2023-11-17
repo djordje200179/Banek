@@ -75,7 +75,7 @@ func (parser *parser) parseString() (ast.Expr, error) {
 func (parser *parser) parseUndefined() (ast.Expr, error) {
 	parser.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.MakeUndefined()}, nil
+	return exprs.ConstLiteral{Value: objs.Obj{}}, nil
 }
 
 func (parser *parser) parseArray() (ast.Expr, error) {

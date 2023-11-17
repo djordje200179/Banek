@@ -15,6 +15,6 @@ func builtinLen(args []objs.Obj) (objs.Obj, error) {
 		return objs.MakeInt(len(arr.Slice)), nil
 	default:
 		// TODO: error
-		return objs.MakeUndefined(), nil
+		return objs.Obj{}, nil
 	}
 }
