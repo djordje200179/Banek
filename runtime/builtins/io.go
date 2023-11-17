@@ -2,51 +2,53 @@ package builtins
 
 import (
 	"banek/runtime/objs"
-	"banek/runtime/types"
 	"fmt"
 	"strings"
 )
 
-func builtinPrint(args []types.Obj) (types.Obj, error) {
+func builtinPrint(args []objs.Obj) (objs.Obj, error) {
 	var sb strings.Builder
 
 	for _, arg := range args {
 		sb.WriteString(arg.String())
+		sb.WriteByte(' ')
 	}
 
 	fmt.Print(sb.String())
 
-	return objs.Undefined{}, nil
+	return objs.MakeUndefined(), nil
 }
 
-func builtinPrintln(args []types.Obj) (types.Obj, error) {
+func builtinPrintln(args []objs.Obj) (objs.Obj, error) {
 	var sb strings.Builder
 
 	for _, arg := range args {
 		sb.WriteString(arg.String())
+		sb.WriteByte(' ')
 	}
+	sb.WriteByte('\n')
 
-	fmt.Println(sb.String())
+	fmt.Print(sb.String())
 
-	return objs.Undefined{}, nil
+	return objs.MakeUndefined(), nil
 }
 
-func builtinRead(_ []types.Obj) (types.Obj, error) {
+func builtinRead(_ []objs.Obj) (objs.Obj, error) {
 	var input string
 	_, err := fmt.Scan(&input)
 	if err != nil {
-		return nil, err
+		return objs.MakeUndefined(), err
 	}
 
-	return objs.Str(input), nil
+	return objs.MakeStr(input), nil
 }
 
-func builtinReadln(_ []types.Obj) (types.Obj, error) {
+func builtinReadln(_ []objs.Obj) (objs.Obj, error) {
 	var input string
 	_, err := fmt.Scanln(&input)
 	if err != nil {
-		return nil, err
+		return objs.MakeUndefined(), err
 	}
 
-	return objs.Str(input), nil
+	return objs.MakeStr(input), nil
 }

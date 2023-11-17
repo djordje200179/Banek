@@ -1,7 +1,7 @@
 package bytecode
 
 import (
-	"banek/runtime/types"
+	"banek/runtime/objs"
 	"strconv"
 	"strings"
 )
@@ -9,7 +9,7 @@ import (
 type Executable struct {
 	Code Code
 
-	ConstsPool []types.Obj
+	ConstsPool []objs.Obj
 	FuncsPool  []FuncTemplate
 
 	NumGlobals int
@@ -22,8 +22,9 @@ func (executable Executable) String() string {
 	for i, constant := range executable.ConstsPool {
 		replacePairs[i*2] = "=" + strconv.Itoa(i)
 
-		if functionObject, ok := constant.(*Func); ok {
-			replacePairs[i*2+1] = executable.FuncsPool[functionObject.TemplateIndex].Name
+		if constant.Tag == objs.TypeFunc {
+			function := GetFunc(constant)
+			replacePairs[i*2+1] = executable.FuncsPool[function.TemplateIndex].Name
 		} else {
 			replacePairs[i*2+1] = constant.String()
 		}

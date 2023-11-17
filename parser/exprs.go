@@ -50,7 +50,7 @@ func (parser *parser) parseInteger() (ast.Expr, error) {
 
 	parser.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.Int(value)}, nil
+	return exprs.ConstLiteral{Value: objs.MakeInt(int(value))}, nil
 }
 
 func (parser *parser) parseBoolean() (ast.Expr, error) {
@@ -61,7 +61,7 @@ func (parser *parser) parseBoolean() (ast.Expr, error) {
 
 	parser.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.Bool(value)}, nil
+	return exprs.ConstLiteral{Value: objs.MakeBool(value)}, nil
 }
 
 func (parser *parser) parseString() (ast.Expr, error) {
@@ -69,13 +69,13 @@ func (parser *parser) parseString() (ast.Expr, error) {
 
 	parser.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.Str(value)}, nil
+	return exprs.ConstLiteral{Value: objs.MakeStr(value)}, nil
 }
 
 func (parser *parser) parseUndefined() (ast.Expr, error) {
 	parser.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.Undefined{}}, nil
+	return exprs.ConstLiteral{Value: objs.MakeUndefined()}, nil
 }
 
 func (parser *parser) parseArray() (ast.Expr, error) {

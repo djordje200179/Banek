@@ -1,30 +1,29 @@
 package builtins
 
 import (
-	"banek/runtime/types"
+	"banek/runtime/objs"
+	"bytes"
+	"unsafe"
 )
 
-type BuiltinFunc struct {
+type Builtin struct {
 	Name    string
 	NumArgs int
 
-	Func func(args []types.Obj) (types.Obj, error)
+	Func func(args []objs.Obj) (objs.Obj, error)
 }
 
-func (builtin BuiltinFunc) Type() types.Type { return types.TypeBuiltin }
-func (builtin BuiltinFunc) Clone() types.Obj { return builtin }
-func (builtin BuiltinFunc) String() string   { return builtin.Name }
-
-func (builtin BuiltinFunc) Equals(other types.Obj) bool {
-	otherBuiltin, ok := other.(BuiltinFunc)
-	if !ok {
-		return false
-	}
-
-	return builtin.Name == otherBuiltin.Name
+func GetBuiltin(objs objs.Obj) *Builtin {
+	return (*Builtin)(objs.PtrData)
 }
 
-var Funcs = [...]BuiltinFunc{
+func (builtin *Builtin) MakeObj() objs.Obj {
+	ptrData := unsafe.Pointer(builtin)
+
+	return objs.Obj{Tag: objs.TypeBuiltin, PtrData: ptrData}
+}
+
+var Funcs = [...]Builtin{
 	{
 		Name:    "print",
 		NumArgs: -1,
@@ -77,4 +76,40 @@ func Find(name string) int {
 	}
 
 	return -1
+}
+
+func builtinString(obj objs.Obj) string {
+	builtin := GetBuiltin(obj)
+	return builtin.Name
+}
+
+func builtinEquals(first, second objs.Obj) bool {
+	firstBuiltin := GetBuiltin(first)
+	secondBuiltin := GetBuiltin(second)
+
+	return firstBuiltin.Name == secondBuiltin.Name
+}
+
+func builtinMarshal(obj objs.Obj) ([]byte, error) {
+	builtin := GetBuiltin(obj)
+
+	index := Find(builtin.Name)
+
+	return []byte{byte(index)}, nil
+}
+
+func builtinUnmarshal(buf *bytes.Buffer) (objs.Obj, error) {
+	index := int(buf.Next(1)[0])
+
+	return Funcs[index].MakeObj(), nil
+}
+
+func init() {
+	objs.Config[objs.TypeBuiltin] = objs.TypeConfig{
+		Stringer: builtinString,
+		Equaler:  builtinEquals,
+
+		Marshaller:   builtinMarshal,
+		Unmarshaller: builtinUnmarshal,
+	}
 }

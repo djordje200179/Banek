@@ -2,32 +2,36 @@ package builtins
 
 import (
 	"banek/runtime/objs"
-	"banek/runtime/types"
 	"strconv"
 )
 
-func builtinStr(args []types.Obj) (types.Obj, error) {
-	return objs.Str(args[0].String()), nil
+func builtinStr(args []objs.Obj) (objs.Obj, error) {
+	arg := args[0]
+	return objs.MakeStr(arg.String()), nil
 }
 
-func builtinInt(args []types.Obj) (types.Obj, error) {
-	switch arg := args[0].(type) {
-	case objs.Int:
-		return arg, nil
-	case objs.Str:
-		integer, err := strconv.Atoi(string(arg))
-		if err != nil {
-			return nil, err
-		}
+func builtinInt(args []objs.Obj) (objs.Obj, error) {
+	arg := args[0]
 
-		return objs.Int(integer), nil
-	case objs.Bool:
-		if arg {
-			return objs.Int(1), nil
+	switch arg.Tag {
+	case objs.TypeInt:
+		return arg, nil
+	case objs.TypeStr:
+		str := arg.AsStr()
+		integer, err := strconv.Atoi(str)
+		if err != nil {
+			return objs.MakeUndefined(), err
+		}
+		return objs.MakeInt(integer), nil
+	case objs.TypeBool:
+		boolean := arg.AsBool()
+		if boolean {
+			return objs.MakeInt(1), nil
 		} else {
-			return objs.Int(0), nil
+			return objs.MakeInt(0), nil
 		}
 	default:
-		return objs.Undefined{}, nil
+		// TODO: error
+		return objs.MakeUndefined(), nil
 	}
 }

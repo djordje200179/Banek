@@ -9,7 +9,7 @@ import (
 )
 
 func BenchmarkEmulator(b *testing.B) {
-	file, err := os.Open("test.bac")
+	file, err := os.Open("../../examples/test.bac")
 	if err != nil {
 		b.Fatal(err)
 	}

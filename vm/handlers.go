@@ -2,12 +2,10 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instrs"
 	"banek/runtime/builtins"
 	"banek/runtime/errors"
 	"banek/runtime/objs"
 	"banek/runtime/ops"
-	"banek/runtime/types"
 )
 
 func (vm *vm) opPushDup() error {
@@ -22,19 +20,19 @@ func (vm *vm) opPushConst() error {
 }
 
 func (vm *vm) opPush0() error {
-	return vm.push(objs.Int(0))
+	return vm.push(objs.MakeInt(0))
 }
 
 func (vm *vm) opPush1() error {
-	return vm.push(objs.Int(1))
+	return vm.push(objs.MakeInt(1))
 }
 
 func (vm *vm) opPush2() error {
-	return vm.push(objs.Int(2))
+	return vm.push(objs.MakeInt(2))
 }
 
 func (vm *vm) opPushUndefined() error {
-	return vm.push(objs.Undefined{})
+	return vm.push(objs.MakeUndefined())
 }
 
 func (vm *vm) opPushLocal() error {
@@ -65,9 +63,9 @@ func (vm *vm) opPushGlobal() error {
 
 func (vm *vm) opPushBuiltin() error {
 	index := vm.readOperand(1)
-	builtin := builtins.Funcs[index]
+	builtin := &builtins.Funcs[index]
 
-	return vm.push(builtin)
+	return vm.push(builtin.MakeObj())
 }
 
 func (vm *vm) opPushCaptured() error {
@@ -185,12 +183,12 @@ func (vm *vm) opBranchIfFalse() error {
 
 	operand := vm.pop()
 
-	boolOperand, ok := operand.(objs.Bool)
-	if !ok {
-		return errors.ErrInvalidOp{Operator: instrs.OpBranchIfFalse.String(), LeftOperand: boolOperand}
+	if operand.Tag != objs.TypeBool {
+		// TODO: add more info to error
+		return nil
 	}
 
-	if !boolOperand {
+	if !operand.AsBool() {
 		vm.movePC(offset)
 	}
 
@@ -201,12 +199,12 @@ func (vm *vm) opNewArray() error {
 	size := vm.readOperand(2)
 
 	arr := &objs.Array{
-		Slice: make([]types.Obj, size),
+		Slice: make([]objs.Obj, size),
 	}
 
 	vm.popMany(arr.Slice)
 
-	return vm.push(arr)
+	return vm.push(objs.MakeArray(arr))
 }
 
 func (vm *vm) opNewFunc() error {
@@ -214,7 +212,7 @@ func (vm *vm) opNewFunc() error {
 
 	template := vm.program.FuncsPool[templateIndex]
 
-	captures := make([]*types.Obj, len(template.Captures))
+	captures := make([]*objs.Obj, len(template.Captures))
 	for i, captureInfo := range template.Captures {
 		capturedVariableScope := vm.scope
 		for j := 0; j < captureInfo.Level; j++ {
@@ -229,16 +227,17 @@ func (vm *vm) opNewFunc() error {
 		Captures:      captures,
 	}
 
-	return vm.push(function)
+	return vm.push(function.MakeObj())
 }
 
 func (vm *vm) opCall() error {
 	numArgs := vm.readOperand(1)
 
-	funcObject := vm.pop()
+	funcObj := vm.pop()
 
-	switch function := funcObject.(type) {
-	case *bytecode.Func:
+	switch funcObj.Tag {
+	case objs.TypeFunc:
+		function := bytecode.GetFunc(funcObj)
 		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
 
 		if numArgs > len(funcTemplate.Params) {
@@ -249,22 +248,23 @@ func (vm *vm) opCall() error {
 		vm.popMany(funcScope.vars[:numArgs])
 
 		return nil
-	case builtins.BuiltinFunc:
-		if function.NumArgs != -1 && numArgs != function.NumArgs {
-			return errors.ErrTooManyArgs{Expected: function.NumArgs, Received: numArgs}
+	case objs.TypeBuiltin:
+		builtin := builtins.GetBuiltin(funcObj)
+		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {
+			return errors.ErrTooManyArgs{Expected: builtin.NumArgs, Received: numArgs}
 		}
 
-		args := make([]types.Obj, numArgs)
+		args := make([]objs.Obj, numArgs)
 		vm.popMany(args)
 
-		result, err := function.Func(args)
+		result, err := builtin.Func(args)
 		if err != nil {
 			return err
 		}
 
 		return vm.push(result)
 	default:
-		return errors.ErrNotCallable{Obj: funcObject}
+		return errors.ErrNotCallable{Obj: funcObj}
 	}
 }
 

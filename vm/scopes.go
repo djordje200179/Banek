@@ -3,32 +3,32 @@ package vm
 import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
-	"banek/runtime/types"
+	"banek/runtime/objs"
 )
 
 type scope struct {
 	code bytecode.Code
 	pc   int
-	vars []types.Obj
+	vars []objs.Obj
 
 	function *bytecode.Func
 
 	parent *scope
 }
 
-func (scope *scope) getLocal(index int) types.Obj {
+func (scope *scope) getLocal(index int) objs.Obj {
 	return scope.vars[index]
 }
 
-func (scope *scope) setLocal(index int, value types.Obj) {
+func (scope *scope) setLocal(index int, value objs.Obj) {
 	scope.vars[index] = value
 }
 
-func (scope *scope) getCaptured(index int) types.Obj {
+func (scope *scope) getCaptured(index int) objs.Obj {
 	return *scope.function.Captures[index]
 }
 
-func (scope *scope) setCaptured(index int, value types.Obj) {
+func (scope *scope) setCaptured(index int, value objs.Obj) {
 	*scope.function.Captures[index] = value
 }
 

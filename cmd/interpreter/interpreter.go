@@ -5,7 +5,7 @@ import (
 	"banek/interpreter/results"
 	"banek/lexer"
 	"banek/parser"
-	"banek/runtime/types"
+	"banek/runtime/objs"
 	"flag"
 	"fmt"
 	"os"
@@ -33,7 +33,7 @@ func REPL() {
 		switch result := result.(type) {
 		case results.Error:
 			fmt.Println(result)
-		case types.Obj:
+		case objs.Obj:
 			fmt.Println(result)
 		}
 

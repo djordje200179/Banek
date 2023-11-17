@@ -2,16 +2,19 @@ package builtins
 
 import (
 	"banek/runtime/objs"
-	"banek/runtime/types"
 )
 
-func builtinLen(args []types.Obj) (types.Obj, error) {
-	switch arg := args[0].(type) {
-	case objs.Str:
-		return objs.Int(len(arg)), nil
-	case *objs.Array:
-		return objs.Int(len(arg.Slice)), nil
+func builtinLen(args []objs.Obj) (objs.Obj, error) {
+	arg := args[0]
+	switch arg.Tag {
+	case objs.TypeStr:
+		str := arg.AsStr()
+		return objs.MakeInt(len(str)), nil
+	case objs.TypeArray:
+		arr := arg.AsArray()
+		return objs.MakeInt(len(arr.Slice)), nil
 	default:
-		return objs.Undefined{}, nil
+		// TODO: error
+		return objs.MakeUndefined(), nil
 	}
 }

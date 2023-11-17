@@ -1,8 +1,8 @@
 package ops
 
 import (
-	"banek/runtime/errors"
-	"banek/runtime/types"
+	"banek/runtime/objs"
+	"strings"
 )
 
 type UnaryOperator byte
@@ -17,7 +17,7 @@ func (operation UnaryOperator) String() string {
 	return unaryOperatorNames[operation]
 }
 
-type unaryOp func(operand types.Obj) (types.Obj, error)
+type unaryOp func(operand objs.Obj) (objs.Obj, error)
 
 var unaryOperatorNames = [...]string{
 	UnaryMinus:     "-",
@@ -31,29 +31,57 @@ var UnaryOps = [...]unaryOp{
 	UnaryLeftArrow: evalUnaryLeftArrow,
 }
 
-func evalUnaryMinus(operand types.Obj) (types.Obj, error) {
-	negater, ok := operand.(types.Negater)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: UnaryMinus.String(), RightOperand: operand}
-	}
+type ErrInvalidUnaryOpOperand struct {
+	Operator UnaryOperator
 
-	return negater.Negate(), nil
+	Operand objs.Obj
 }
 
-func evalUnaryBang(operand types.Obj) (types.Obj, error) {
-	notter, ok := operand.(types.Notter)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: UnaryBang.String(), RightOperand: operand}
-	}
+func (err ErrInvalidUnaryOpOperand) Error() string {
+	var sb strings.Builder
 
-	return notter.Not(), nil
+	sb.WriteString("invalid operand for ")
+	sb.WriteString(err.Operator.String())
+	sb.WriteString(": ")
+	sb.WriteString(err.Operand.String())
+
+	return sb.String()
 }
 
-func evalUnaryLeftArrow(operand types.Obj) (types.Obj, error) {
-	giver, ok := operand.(types.Giver)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: UnaryLeftArrow.String(), RightOperand: operand}
+func evalUnaryMinus(operand objs.Obj) (objs.Obj, error) {
+	switch operand.Tag {
+	case objs.TypeInt:
+		integer := operand.AsInt()
+		return objs.MakeInt(-integer), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryMinus, Operand: operand}
 	}
+}
 
-	return giver.Give(), nil
+func evalUnaryBang(operand objs.Obj) (objs.Obj, error) {
+	switch operand.Tag {
+	case objs.TypeBool:
+		boolean := operand.AsBool()
+		return objs.MakeBool(!boolean), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryBang, Operand: operand}
+	}
+}
+
+func evalUnaryLeftArrow(operand objs.Obj) (objs.Obj, error) {
+	switch operand.Tag {
+	case objs.TypeArray:
+		arr := operand.AsArray()
+
+		if len(arr.Slice) == 0 {
+			return objs.MakeUndefined(), nil
+		}
+
+		elem := arr.Slice[0]
+		arr.Slice = arr.Slice[1:]
+
+		return elem, nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidUnaryOpOperand{Operator: UnaryLeftArrow, Operand: operand}
+	}
 }

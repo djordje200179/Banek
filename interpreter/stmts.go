@@ -5,7 +5,6 @@ import (
 	"banek/ast/stmts"
 	"banek/interpreter/envs"
 	"banek/interpreter/results"
-	"banek/runtime/objs"
 )
 
 func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.Result, error) {
@@ -18,7 +17,7 @@ func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.
 			return nil, err
 		}
 
-		if cond == objs.Bool(true) {
+		if cond.AsBool() {
 			return interpreter.evalStmt(env, stmt.Consequence)
 		} else if stmt.Alternative != nil {
 			return interpreter.evalStmt(env, stmt.Alternative)
@@ -32,7 +31,7 @@ func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.
 				return nil, err
 			}
 
-			if cond != objs.Bool(true) {
+			if !cond.AsBool() {
 				break
 			}
 
@@ -77,7 +76,7 @@ func (interpreter *interpreter) evalStmt(env *envs.Env, stmt ast.Stmt) (results.
 			Env:    env,
 		}
 
-		err := env.Define(stmt.Name.String(), value, false)
+		err := env.Define(stmt.Name.String(), value.MakeObj(), false)
 		if err != nil {
 			return nil, err
 		}

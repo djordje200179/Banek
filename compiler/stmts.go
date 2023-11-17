@@ -151,11 +151,11 @@ func (compiler *compiler) compileFuncStmt(stmt stmts.Func) error {
 	if funcTemplate.IsClosure() {
 		scope.EmitInstr(instrs.OpNewFunc, funcIndex)
 	} else {
-		functionObject := &bytecode.Func{
+		funcObj := &bytecode.Func{
 			TemplateIndex: funcIndex,
 		}
 
-		scope.EmitInstr(instrs.OpPushConst, compiler.addConst(functionObject))
+		scope.EmitInstr(instrs.OpPushConst, compiler.addConst(funcObj.MakeObj()))
 	}
 
 	if scope.IsGlobal() {

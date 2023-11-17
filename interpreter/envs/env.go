@@ -2,13 +2,13 @@ package envs
 
 import (
 	"banek/runtime/errors"
-	"banek/runtime/types"
+	"banek/runtime/objs"
 	"slices"
 	"sync"
 )
 
 type variable struct {
-	types.Obj
+	objs.Obj
 	Mutable bool
 }
 
@@ -36,20 +36,20 @@ func New(outer *Env, capacity int) *Env {
 	return env
 }
 
-func (env *Env) Get(name string) (types.Obj, error) {
+func (env *Env) Get(name string) (objs.Obj, error) {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {
 			return env.outer.Get(name)
 		} else {
-			return nil, errors.ErrIdentifierNotDefined{Identifier: name}
+			return objs.MakeUndefined(), errors.ErrIdentifierNotDefined{Identifier: name}
 		}
 	}
 
 	return env.values[index].Obj, nil
 }
 
-func (env *Env) Define(name string, value types.Obj, mutable bool) error {
+func (env *Env) Define(name string, value objs.Obj, mutable bool) error {
 	if slices.Index(env.keys, name) != -1 {
 		return errors.ErrIdentifierAlreadyDefined{Identifier: name}
 	}
@@ -60,7 +60,7 @@ func (env *Env) Define(name string, value types.Obj, mutable bool) error {
 	return nil
 }
 
-func (env *Env) Set(name string, value types.Obj) error {
+func (env *Env) Set(name string, value objs.Obj) error {
 	index := slices.Index(env.keys, name)
 	if index == -1 {
 		if env.outer != nil {

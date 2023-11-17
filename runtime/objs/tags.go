@@ -1,29 +1,27 @@
-package types
+package objs
 
-type Type byte
+type Tag byte
 
 const (
-	TypeUnknown Type = iota
-	TypeUndefined
+	TypeUndefined Tag = iota
 	TypeBool
 	TypeInt
 	TypeStr
 	TypeArray
-	TypeFunc
 	TypeBuiltin
+	TypeFunc
 )
 
-func (t Type) String() string {
+func (t Tag) String() string {
 	return typeNames[t]
 }
 
 var typeNames = [...]string{
-	"unknown",
 	"undefined",
 	"boolean",
 	"integer",
 	"string",
 	"array",
-	"function",
 	"builtin",
+	"function",
 }

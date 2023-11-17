@@ -1,9 +1,11 @@
 package exprs
 
-import "banek/runtime/types"
+import (
+	"banek/runtime/objs"
+)
 
 type ConstLiteral struct {
-	Value types.Obj
+	Value objs.Obj
 }
 
 func (expr ConstLiteral) String() string {

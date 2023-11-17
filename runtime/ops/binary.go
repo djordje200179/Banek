@@ -1,9 +1,8 @@
 package ops
 
 import (
-	"banek/runtime/errors"
 	"banek/runtime/objs"
-	"banek/runtime/types"
+	"strings"
 )
 
 type BinaryOperator byte
@@ -30,7 +29,7 @@ func (operator BinaryOperator) String() string {
 	return binaryOperatorNames[operator]
 }
 
-type binaryOp func(left, right types.Obj) (types.Obj, error)
+type binaryOp func(left, right objs.Obj) (objs.Obj, error)
 
 var binaryOperatorNames = [...]string{
 	BinaryPlus:     "+",
@@ -68,148 +67,187 @@ var BinaryOps = [...]binaryOp{
 	BinaryLeftArrow: evalBinaryLeftArrow,
 }
 
-func evalBinaryPlus(left, right types.Obj) (types.Obj, error) {
-	leftAdder, ok := left.(types.Adder)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryPlus.String(), LeftOperand: left, RightOperand: right}
-	}
+type ErrInvalidBinaryOpOperand struct {
+	Operator BinaryOperator
 
-	res, ok := leftAdder.Add(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryPlus.String(), LeftOperand: left, RightOperand: right}
-	}
-
-	return res, nil
+	LeftOperand, RightOperand objs.Obj
 }
 
-func evalBinaryMinus(left, right types.Obj) (types.Obj, error) {
-	leftSubber, ok := left.(types.Subber)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryMinus.String(), LeftOperand: left, RightOperand: right}
-	}
+func (err ErrInvalidBinaryOpOperand) Error() string {
+	var sb strings.Builder
 
-	res, ok := leftSubber.Sub(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryMinus.String(), LeftOperand: left, RightOperand: right}
-	}
+	sb.WriteString("invalid operands for ")
+	sb.WriteString(err.Operator.String())
+	sb.WriteString(": ")
+	sb.WriteString(err.LeftOperand.String())
+	sb.WriteString(" and ")
+	sb.WriteString(err.RightOperand.String())
 
-	return res, nil
+	return sb.String()
 }
 
-func evalBinaryAsterisk(left, right types.Obj) (types.Obj, error) {
-	leftMulter, ok := left.(types.Multer)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryAsterisk.String(), LeftOperand: left, RightOperand: right}
+func evalBinaryPlus(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != right.Tag {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
 	}
 
-	res, ok := leftMulter.Mul(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryAsterisk.String(), LeftOperand: left, RightOperand: right}
-	}
+	switch left.Tag {
+	case objs.TypeInt:
+		return objs.MakeInt(left.AsInt() + right.AsInt()), nil
+	case objs.TypeStr:
+		return objs.MakeStr(left.AsStr() + right.AsStr()), nil
+	case objs.TypeArray:
+		leftArr := left.AsArray()
+		rightArr := right.AsArray()
 
-	return res, nil
+		newArr := new(objs.Array)
+		newArr.Slice = make([]objs.Obj, len(leftArr.Slice)+len(rightArr.Slice))
+		copy(newArr.Slice, leftArr.Slice)
+		copy(newArr.Slice[len(leftArr.Slice):], rightArr.Slice)
+
+		return objs.MakeArray(newArr), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryPlus, LeftOperand: left, RightOperand: right}
+	}
 }
 
-func evalBinaryCaret(left, right types.Obj) (types.Obj, error) {
-	leftPowwer, ok := left.(types.Powwer)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryCaret.String(), LeftOperand: left, RightOperand: right}
+func evalBinaryMinus(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryMinus, LeftOperand: left, RightOperand: right}
 	}
 
-	res, ok := leftPowwer.Pow(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryCaret.String(), LeftOperand: left, RightOperand: right}
-	}
-
-	return res, nil
+	return objs.MakeInt(left.AsInt() - right.AsInt()), nil
 }
 
-func evalBinarySlash(left, right types.Obj) (types.Obj, error) {
-	leftDiver, ok := left.(types.Diver)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinarySlash.String(), LeftOperand: left, RightOperand: right}
-	}
+func evalBinaryAsterisk(left, right objs.Obj) (objs.Obj, error) {
+	switch left.Tag {
+	case objs.TypeInt:
+		if right.Tag != objs.TypeInt {
+			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+		}
 
-	res, ok := leftDiver.Div(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinarySlash.String(), LeftOperand: left, RightOperand: right}
-	}
+		return objs.MakeInt(left.AsInt() * right.AsInt()), nil
+	case objs.TypeArray:
+		if right.Tag != objs.TypeInt {
+			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+		}
 
-	return res, nil
+		baseArr := left.AsArray()
+
+		newArr := new(objs.Array)
+		newArr.Slice = make([]objs.Obj, len(baseArr.Slice)*right.AsInt())
+
+		for i := 0; i < right.AsInt(); i++ {
+			copy(newArr.Slice[i*len(baseArr.Slice):], baseArr.Slice)
+		}
+
+		return objs.MakeArray(newArr), nil
+	case objs.TypeStr:
+		if right.Tag != objs.TypeInt {
+			return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+		}
+
+		baseStr := left.AsStr()
+
+		var sb strings.Builder
+		sb.Grow(len(baseStr) * right.AsInt())
+
+		for i := 0; i < right.AsInt(); i++ {
+			sb.WriteString(baseStr)
+		}
+
+		return objs.MakeStr(sb.String()), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryAsterisk, LeftOperand: left, RightOperand: right}
+	}
 }
 
-func evalBinaryModulo(left, right types.Obj) (types.Obj, error) {
-	leftModder, ok := left.(types.Modder)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryModulo.String(), LeftOperand: left, RightOperand: right}
+func evalBinaryCaret(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
 	}
 
-	res, ok := leftModder.Mod(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryModulo.String(), LeftOperand: left, RightOperand: right}
+	base := left.AsInt()
+	power := right.AsInt()
+
+	if power < 0 {
+		// TODO: fix negative power
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
 	}
 
-	return res, nil
-}
-
-func evalBinaryEquals(left, right types.Obj) (types.Obj, error) {
-	equality := left.Equals(right)
-
-	return objs.Bool(equality), nil
-}
-
-func evalBinaryNotEquals(left, right types.Obj) (types.Obj, error) {
-	equality := left.Equals(right)
-
-	return objs.Bool(!equality), nil
-}
-
-func evalBinaryLess(left, right types.Obj) (types.Obj, error) {
-	leftLesser, ok := left.(types.Lesser)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryLess.String(), LeftOperand: left, RightOperand: right}
+	result := 1
+	for i := 0; i < power; i++ {
+		result *= base
 	}
 
-	isLess, ok := leftLesser.Less(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryLess.String(), LeftOperand: left, RightOperand: right}
-	}
-
-	return objs.Bool(isLess), nil
+	return objs.MakeInt(result), nil
 }
 
-func evalBinaryGreater(left, right types.Obj) (types.Obj, error) {
+func evalBinarySlash(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinarySlash, LeftOperand: left, RightOperand: right}
+	}
+
+	return objs.MakeInt(left.AsInt() / right.AsInt()), nil
+}
+
+func evalBinaryModulo(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != objs.TypeInt || right.Tag != objs.TypeInt {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryModulo, LeftOperand: left, RightOperand: right}
+	}
+
+	return objs.MakeInt(left.AsInt() % right.AsInt()), nil
+}
+
+func evalBinaryEquals(left, right objs.Obj) (objs.Obj, error) {
+	return objs.MakeBool(left.Equals(right)), nil
+}
+
+func evalBinaryNotEquals(left, right objs.Obj) (objs.Obj, error) {
+	return objs.MakeBool(!left.Equals(right)), nil
+}
+
+func evalBinaryLess(left, right objs.Obj) (objs.Obj, error) {
+	if left.Tag != right.Tag {
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
+	}
+
+	switch left.Tag {
+	case objs.TypeInt:
+		return objs.MakeBool(left.AsInt() < right.AsInt()), nil
+	case objs.TypeStr:
+		return objs.MakeBool(left.AsStr() < right.AsStr()), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLess, LeftOperand: left, RightOperand: right}
+	}
+}
+
+func evalBinaryGreater(left, right objs.Obj) (objs.Obj, error) {
 	return evalBinaryLess(right, left)
 }
 
-func evalBinaryLessEquals(left, right types.Obj) (types.Obj, error) {
-	less, err := evalBinaryLess(left, right)
-	if err != nil {
-		return nil, err
+func evalBinaryLessEquals(left, right objs.Obj) (objs.Obj, error) {
+	equal, _ := evalBinaryEquals(left, right)
+	if equal.AsBool() {
+		return equal, nil
 	}
 
-	equal, err := evalBinaryEquals(left, right)
-	if err != nil {
-		return nil, err
-	}
-
-	return less.(objs.Bool) || equal.(objs.Bool), nil
+	return evalBinaryLess(left, right)
 }
 
-func evalBinaryGreaterEquals(left, right types.Obj) (types.Obj, error) {
+func evalBinaryGreaterEquals(left, right objs.Obj) (objs.Obj, error) {
 	return evalBinaryLessEquals(right, left)
 }
 
-func evalBinaryLeftArrow(left, right types.Obj) (types.Obj, error) {
-	receiver, ok := left.(types.Receiver)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryLeftArrow.String(), LeftOperand: left, RightOperand: right}
-	}
+func evalBinaryLeftArrow(left, right objs.Obj) (objs.Obj, error) {
+	switch left.Tag {
+	case objs.TypeArray:
+		arr := left.AsArray()
 
-	res, ok := receiver.Receive(right)
-	if !ok {
-		return nil, errors.ErrInvalidOp{Operator: BinaryLeftArrow.String(), LeftOperand: left, RightOperand: right}
-	}
+		arr.Slice = append(arr.Slice, right)
 
-	return res, nil
+		return objs.MakeArray(arr), nil
+	default:
+		return objs.MakeUndefined(), ErrInvalidBinaryOpOperand{Operator: BinaryLeftArrow, LeftOperand: left, RightOperand: right}
+	}
 }

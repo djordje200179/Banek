@@ -1,11 +1,13 @@
 package vm
 
-import "banek/runtime/types"
+import (
+	"banek/runtime/objs"
+)
 
 const stackSize = 4 * 1024
 
 type operandStack struct {
-	array [stackSize]types.Obj
+	array [stackSize]objs.Obj
 
 	ptr int
 }
@@ -16,36 +18,36 @@ func (err ErrStackOverflow) Error() string {
 	return "stack overflow"
 }
 
-func (stack *operandStack) peek() types.Obj {
+func (stack *operandStack) peek() objs.Obj {
 	return stack.array[stack.ptr-1]
 }
 
-func (stack *operandStack) push(object types.Obj) error {
+func (stack *operandStack) push(obj objs.Obj) error {
 	if stack.ptr >= stackSize {
 		return ErrStackOverflow{}
 	}
 
-	stack.array[stack.ptr] = object
+	stack.array[stack.ptr] = obj
 	stack.ptr++
 
 	return nil
 }
 
-func (stack *operandStack) pop() types.Obj {
+func (stack *operandStack) pop() objs.Obj {
 	stack.ptr--
 
 	elem := stack.array[stack.ptr]
-	stack.array[stack.ptr] = nil
+	stack.array[stack.ptr] = objs.MakeUndefined()
 
 	return elem
 }
 
-func (stack *operandStack) popMany(arr []types.Obj) {
+func (stack *operandStack) popMany(arr []objs.Obj) {
 	nextPtr := stack.ptr - len(arr)
 	copy(arr, stack.array[nextPtr:stack.ptr])
 
 	for i := nextPtr; i < stack.ptr; i++ {
-		stack.array[i] = nil
+		stack.array[i] = objs.MakeUndefined()
 	}
 
 	stack.ptr = nextPtr

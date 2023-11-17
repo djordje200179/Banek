@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"banek/runtime/types"
+	"banek/runtime/objs"
 	"strconv"
 	"strings"
 )
@@ -23,7 +23,7 @@ func (err ErrTooManyArgs) Error() string {
 }
 
 type ErrNotCallable struct {
-	Obj types.Obj
+	Obj objs.Obj
 }
 
 func (err ErrNotCallable) Error() string {

@@ -3,7 +3,7 @@ package vm
 import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
-	"banek/runtime/types"
+	"banek/runtime/objs"
 )
 
 type vm struct {
@@ -59,7 +59,7 @@ func Execute(program bytecode.Executable) error {
 		program: program,
 		scopeStack: scopeStack{
 			globalScope: scope{
-				vars: make([]types.Obj, program.NumGlobals),
+				vars: make([]objs.Obj, program.NumGlobals),
 				code: program.Code,
 			},
 		},

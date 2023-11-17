@@ -16,11 +16,12 @@ func (compiler *compiler) compileExpr(expr ast.Expr) error {
 
 	switch expr := expr.(type) {
 	case exprs.ConstLiteral:
-		switch value := expr.Value.(type) {
-		case objs.Undefined:
+		switch expr.Value.Tag {
+		case objs.TypeUndefined:
 			scope.EmitInstr(instrs.OpPushUndefined)
-		case objs.Int:
-			switch value {
+		case objs.TypeInt:
+			integer := expr.Value.AsInt()
+			switch integer {
 			case 0:
 				scope.EmitInstr(instrs.OpPush0)
 			case 1:
@@ -239,11 +240,11 @@ func (compiler *compiler) compileFuncLiteral(expr exprs.FuncLiteral) error {
 	if funcTemplate.IsClosure() {
 		scope.EmitInstr(instrs.OpNewFunc, funcIndex)
 	} else {
-		funcObject := &bytecode.Func{
+		funcObj := &bytecode.Func{
 			TemplateIndex: funcIndex,
 		}
 
-		scope.EmitInstr(instrs.OpPushConst, compiler.addConst(funcObject))
+		scope.EmitInstr(instrs.OpPushConst, compiler.addConst(funcObj.MakeObj()))
 	}
 
 	return nil
