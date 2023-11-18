@@ -23,6 +23,8 @@ func MakeBool(value bool) Obj {
 	var intData uint64
 	if value {
 		intData = 1
+	} else {
+		intData = 0
 	}
 
 	return Obj{Tag: TypeBool, IntData: intData}

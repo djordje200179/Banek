@@ -3,9 +3,7 @@ package instrs
 type Opcode byte
 
 const (
-	OpInvalid Opcode = iota
-
-	OpPushDup
+	OpPushDup Opcode = iota
 	OpPushConst
 	OpPush0
 	OpPush1
@@ -46,10 +44,6 @@ func (opcode Opcode) String() string {
 }
 
 func (opcode Opcode) Info() InstrInfo {
-	if opcode < 0 || opcode >= Opcode(len(InstrInfos)) {
-		return InstrInfos[OpInvalid]
-	}
-
 	return InstrInfos[opcode]
 }
 
@@ -78,8 +72,6 @@ func (instrInfo InstrInfo) OperandOffset(index int) int {
 }
 
 var InstrInfos = [...]InstrInfo{
-	OpInvalid: {"INVALID", []OperandInfo{}},
-
 	OpPushDup:       {"PUSH.D", []OperandInfo{}},
 	OpPushConst:     {"PUSH.C", []OperandInfo{{2, OperandConst}}},
 	OpPush0:         {"PUSH.0", []OperandInfo{}},

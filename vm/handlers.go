@@ -70,21 +70,23 @@ func (vm *vm) opPushBuiltin() error {
 
 func (vm *vm) opPushCaptured() error {
 	capturedIndex := vm.readOperand(1)
-	captured := vm.getCaptured(capturedIndex)
+	captured := *vm.activeScope.captures[capturedIndex]
 
 	return vm.push(captured)
 }
 
 func (vm *vm) opPushCollElem() error {
 	key := vm.pop()
-	coll := vm.pop()
+	coll := vm.peek()
 
 	value, err := ops.EvalCollGet(coll, key)
 	if err != nil {
 		return err
 	}
 
-	return vm.push(value)
+	vm.swap(value)
+
+	return nil
 }
 
 func (vm *vm) opPop() error {
@@ -130,7 +132,7 @@ func (vm *vm) opPopCaptured() error {
 	capturedIndex := vm.readOperand(1)
 	captured := vm.pop()
 
-	vm.setCaptured(capturedIndex, captured)
+	*vm.activeScope.captures[capturedIndex] = captured
 
 	return nil
 }
@@ -147,33 +149,35 @@ func (vm *vm) opBinaryOp() error {
 	operator := ops.BinaryOperator(vm.readOperand(1))
 
 	right := vm.pop()
-	left := vm.pop()
+	left := vm.peek()
 
 	result, err := ops.BinaryOps[operator](left, right)
 	if err != nil {
 		return err
 	}
 
-	return vm.push(result)
+	vm.swap(result)
+
+	return nil
 }
 
 func (vm *vm) opUnaryOp() error {
 	operator := ops.UnaryOperator(vm.readOperand(1))
 
-	operand := vm.pop()
+	operand := vm.peek()
 
 	result, err := ops.UnaryOps[operator](operand)
 	if err != nil {
 		return err
 	}
 
-	return vm.push(result)
+	vm.swap(result)
+
+	return nil
 }
 
 func (vm *vm) opBranch() error {
-	offset := vm.readOperand(2)
-
-	vm.movePC(offset)
+	vm.pc += vm.readOperand(2)
 
 	return nil
 }
@@ -188,7 +192,7 @@ func (vm *vm) opBranchIfFalse() error {
 	}
 
 	if !operand.AsBool() {
-		vm.movePC(offset)
+		vm.pc += offset
 	}
 
 	return nil
@@ -213,7 +217,7 @@ func (vm *vm) opNewFunc() error {
 
 	captures := make([]*objs.Obj, len(template.Captures))
 	for i, captureInfo := range template.Captures {
-		capturedVariableScope := vm.scope
+		capturedVariableScope := vm.activeScope
 		for j := 0; j < captureInfo.Level; j++ {
 			capturedVariableScope = capturedVariableScope.parent
 		}
@@ -237,13 +241,18 @@ func (vm *vm) opCall() error {
 	switch funcObj.Tag {
 	case objs.TypeFunc:
 		function := bytecode.GetFunc(funcObj)
-		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
+		funcTemplate := &vm.program.FuncsPool[function.TemplateIndex]
 
 		if numArgs > len(funcTemplate.Params) {
 			return errors.ErrTooManyArgs{Expected: len(funcTemplate.Params), Received: numArgs}
 		}
 
-		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, function)
+		vm.activeScope.savedPC = vm.pc
+		vm.code = funcTemplate.Code
+		vm.pc = 0
+
+		funcScope := vm.scopeStack.pushScope(funcTemplate, function)
+		vm.locals = funcScope.vars
 		vm.popMany(funcScope.vars[:numArgs])
 
 		return nil
@@ -268,11 +277,10 @@ func (vm *vm) opCall() error {
 }
 
 func (vm *vm) opReturn() error {
-	funcTemplateIndex := vm.scope.function.TemplateIndex
-	funcTemplate := vm.program.FuncsPool[funcTemplateIndex]
-	canFreeVars := !funcTemplate.IsCaptured
-
-	vm.popScope(canFreeVars)
+	vm.scopeStack.popScope()
+	vm.pc = vm.activeScope.savedPC
+	vm.code = vm.activeScope.code
+	vm.locals = vm.activeScope.vars
 
 	return nil
 }

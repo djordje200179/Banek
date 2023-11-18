@@ -22,6 +22,10 @@ func (stack *operandStack) peek() objs.Obj {
 	return stack.array[stack.ptr-1]
 }
 
+func (stack *operandStack) swap(obj objs.Obj) {
+	stack.array[stack.ptr-1] = obj
+}
+
 func (stack *operandStack) push(obj objs.Obj) error {
 	if stack.ptr >= stackSize {
 		return ErrStackOverflow{}

@@ -2,53 +2,95 @@ package vm
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instrs"
 	"banek/runtime/objs"
+	"sync"
+	"unsafe"
 )
 
 type scope struct {
 	code bytecode.Code
-	pc   int
-	vars []objs.Obj
 
-	function *bytecode.Func
+	savedPC  int
+	vars     []objs.Obj
+	captures []*objs.Obj
+
+	canFreeVars bool
 
 	parent *scope
 }
 
-func (scope *scope) getLocal(index int) objs.Obj {
-	return scope.vars[index]
+type scopeStack struct {
+	globalScope scope
+	activeScope *scope
 }
 
-func (scope *scope) setLocal(index int, value objs.Obj) {
-	scope.vars[index] = value
+var scopePool = sync.Pool{
+	New: func() interface{} {
+		return &scope{}
+	},
 }
 
-func (scope *scope) getCaptured(index int) objs.Obj {
-	return *scope.function.Captures[index]
+func (stack *scopeStack) getGlobal(index int) objs.Obj {
+	return stack.globalScope.vars[index]
 }
 
-func (scope *scope) setCaptured(index int, value objs.Obj) {
-	*scope.function.Captures[index] = value
+func (stack *scopeStack) setGlobal(index int, value objs.Obj) {
+	stack.globalScope.vars[index] = value
 }
 
-func (scope *scope) readOpcode() instrs.Opcode {
-	opcode := instrs.Opcode(scope.code[scope.pc])
-
-	scope.pc++
-
-	return opcode
+var scopeVarsPools = [...]sync.Pool{
+	{New: func() any { return (*objs.Obj)(nil) }},
+	{New: func() any { return &(new([1]objs.Obj)[0]) }},
+	{New: func() any { return &(new([2]objs.Obj)[0]) }},
+	{New: func() any { return &(new([3]objs.Obj)[0]) }},
+	{New: func() any { return &(new([4]objs.Obj)[0]) }},
 }
 
-func (scope *scope) readOperand(width int) int {
-	rawOperand := scope.code[scope.pc : scope.pc+width]
-	operand := instrs.ReadOperandValue(rawOperand, width)
+func getScopeVars(size int) []objs.Obj {
+	if size >= len(scopeVarsPools) {
+		return make([]objs.Obj, size)
+	}
 
-	scope.pc += width
+	arr := scopeVarsPools[size].Get().(*objs.Obj)
+	slice := unsafe.Slice(arr, size)
 
-	return operand
+	for i := range slice {
+		slice[i] = objs.Obj{}
+	}
+
+	return slice
 }
 
-func (scope *scope) movePC(offset int) {
-	scope.pc += offset
+func returnScopeVars(arr []objs.Obj) {
+	if len(arr) >= len(scopeVarsPools) {
+		return
+	}
+
+	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
+}
+
+func (stack *scopeStack) pushScope(funcTemplate *bytecode.FuncTemplate, function *bytecode.Func) *scope {
+	funcScope := scopePool.Get().(*scope)
+	*funcScope = scope{
+		code:        funcTemplate.Code,
+		vars:        getScopeVars(funcTemplate.NumLocals),
+		captures:    function.Captures,
+		canFreeVars: !funcTemplate.IsCaptured,
+		parent:      stack.activeScope,
+	}
+	stack.activeScope = funcScope
+
+	return funcScope
+}
+
+func (stack *scopeStack) popScope() {
+	removedScope := stack.activeScope
+	stack.activeScope = removedScope.parent
+
+	if removedScope.canFreeVars {
+		returnScopeVars(removedScope.vars)
+	}
+
+	removedScope.vars = nil
+	scopePool.Put(removedScope)
 }

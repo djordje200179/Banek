@@ -12,6 +12,10 @@ type vm struct {
 	operandStack
 	scopeStack
 
+	code   bytecode.Code
+	pc     int
+	locals []objs.Obj
+
 	halted bool
 }
 
@@ -55,7 +59,7 @@ var handlers = [...]handler{
 }
 
 func Execute(program bytecode.Executable) error {
-	vm := &vm{
+	vm := vm{
 		program: program,
 		scopeStack: scopeStack{
 			globalScope: scope{
@@ -63,20 +67,37 @@ func Execute(program bytecode.Executable) error {
 				code: program.Code,
 			},
 		},
+		code: program.Code,
 	}
-	vm.scope = &vm.globalScope
+	vm.activeScope = &vm.globalScope
+	vm.locals = vm.globalScope.vars
 
-	return vm.run()
-}
-
-func (vm *vm) run() error {
 	for !vm.halted {
-		opcode := vm.readOpcode()
-		err := handlers[opcode](vm)
+		opcode := instrs.Opcode(vm.code[vm.pc])
+		vm.pc++
+
+		err := handlers[opcode](&vm)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (vm *vm) readOperand(width int) int {
+	rawOperand := vm.code[vm.pc : vm.pc+width]
+	operand := instrs.ReadOperandValue(rawOperand, width)
+
+	vm.pc += width
+
+	return operand
+}
+
+func (vm *vm) getLocal(index int) objs.Obj {
+	return vm.locals[index]
+}
+
+func (vm *vm) setLocal(index int, value objs.Obj) {
+	vm.locals[index] = value
 }
