@@ -8,144 +8,134 @@ import (
 	"banek/runtime/ops"
 )
 
-func (vm *vm) opPushDup() error {
-	return vm.push(vm.peek())
+func (vm *vm) opPushDup() {
+	vm.push(vm.peek())
 }
 
-func (vm *vm) opPushConst() error {
+func (vm *vm) opPushConst() {
 	constIndex := vm.readOperand(2)
 	constant := vm.program.ConstsPool[constIndex]
 
-	return vm.push(constant.Clone())
+	vm.push(constant.Clone())
 }
 
-func (vm *vm) opPush0() error {
-	return vm.push(objs.MakeInt(0))
+func (vm *vm) opPush0() {
+	vm.push(objs.MakeInt(0))
 }
 
-func (vm *vm) opPush1() error {
-	return vm.push(objs.MakeInt(1))
+func (vm *vm) opPush1() {
+	vm.push(objs.MakeInt(1))
 }
 
-func (vm *vm) opPush2() error {
-	return vm.push(objs.MakeInt(2))
+func (vm *vm) opPush2() {
+	vm.push(objs.MakeInt(2))
 }
 
-func (vm *vm) opPushUndefined() error {
-	return vm.push(objs.Obj{})
+func (vm *vm) opPushUndefined() {
+	vm.push(objs.Obj{})
 }
 
-func (vm *vm) opPushLocal() error {
+func (vm *vm) opPushLocal() {
 	localIndex := vm.readOperand(1)
 	local := vm.getLocal(localIndex)
 
-	return vm.push(local)
+	vm.push(local)
 }
 
-func (vm *vm) opPushLocal0() error {
+func (vm *vm) opPushLocal0() {
 	local := vm.getLocal(0)
 
-	return vm.push(local)
+	vm.push(local)
 }
 
-func (vm *vm) opPushLocal1() error {
+func (vm *vm) opPushLocal1() {
 	local := vm.getLocal(1)
 
-	return vm.push(local)
+	vm.push(local)
 }
 
-func (vm *vm) opPushGlobal() error {
+func (vm *vm) opPushGlobal() {
 	globalIndex := vm.readOperand(1)
 	global := vm.getGlobal(globalIndex)
 
-	return vm.push(global)
+	vm.push(global)
 }
 
-func (vm *vm) opPushBuiltin() error {
+func (vm *vm) opPushBuiltin() {
 	index := vm.readOperand(1)
 	builtin := &builtins.Funcs[index]
 
-	return vm.push(builtin.MakeObj())
+	vm.push(builtin.MakeObj())
 }
 
-func (vm *vm) opPushCaptured() error {
+func (vm *vm) opPushCaptured() {
 	capturedIndex := vm.readOperand(1)
 	captured := *vm.activeScope.captures[capturedIndex]
 
-	return vm.push(captured)
+	vm.push(captured)
 }
 
-func (vm *vm) opPushCollElem() error {
+func (vm *vm) opPushCollElem() {
 	key := vm.pop()
 	coll := vm.peek()
 
 	value, err := ops.EvalCollGet(coll, key)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	vm.swap(value)
-
-	return nil
 }
 
-func (vm *vm) opPop() error {
+func (vm *vm) opPop() {
 	vm.pop()
-	return nil
 }
 
-func (vm *vm) opPopLocal() error {
+func (vm *vm) opPopLocal() {
 	localIndex := vm.readOperand(1)
 	local := vm.pop()
 
 	vm.setLocal(localIndex, local)
-
-	return nil
 }
 
-func (vm *vm) opPopLocal0() error {
+func (vm *vm) opPopLocal0() {
 	local := vm.pop()
 
 	vm.setLocal(0, local)
-
-	return nil
 }
 
-func (vm *vm) opPopLocal1() error {
+func (vm *vm) opPopLocal1() {
 	local := vm.pop()
 
 	vm.setLocal(1, local)
-
-	return nil
 }
 
-func (vm *vm) opPopGlobal() error {
+func (vm *vm) opPopGlobal() {
 	globalIndex := vm.readOperand(1)
 	global := vm.pop()
 
 	vm.setGlobal(globalIndex, global)
-
-	return nil
 }
 
-func (vm *vm) opPopCaptured() error {
+func (vm *vm) opPopCaptured() {
 	capturedIndex := vm.readOperand(1)
 	captured := vm.pop()
 
 	*vm.activeScope.captures[capturedIndex] = captured
-
-	return nil
 }
 
-func (vm *vm) opPopCollElem() error {
+func (vm *vm) opPopCollElem() {
 	key := vm.pop()
 	coll := vm.pop()
 	value := vm.pop()
 
-	return ops.EvalCollSet(coll, key, value)
+	err := ops.EvalCollSet(coll, key, value)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (vm *vm) opBinaryOp() error {
+func (vm *vm) opBinaryOp() {
 	operator := ops.BinaryOperator(vm.readOperand(1))
 
 	right := vm.pop()
@@ -153,52 +143,44 @@ func (vm *vm) opBinaryOp() error {
 
 	result, err := ops.BinaryOps[operator](left, right)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	vm.swap(result)
-
-	return nil
 }
 
-func (vm *vm) opUnaryOp() error {
+func (vm *vm) opUnaryOp() {
 	operator := ops.UnaryOperator(vm.readOperand(1))
 
 	operand := vm.peek()
 
 	result, err := ops.UnaryOps[operator](operand)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	vm.swap(result)
-
-	return nil
 }
 
-func (vm *vm) opBranch() error {
+func (vm *vm) opBranch() {
 	vm.pc += vm.readOperand(2)
-
-	return nil
 }
 
-func (vm *vm) opBranchIfFalse() error {
+func (vm *vm) opBranchIfFalse() {
 	offset := vm.readOperand(2)
 
 	operand := vm.pop()
 
 	if operand.Tag != objs.TypeBool {
-		return errors.ErrNotBool{Obj: operand}
+		panic(errors.ErrNotBool{Obj: operand})
 	}
 
 	if !operand.AsBool() {
 		vm.pc += offset
 	}
-
-	return nil
 }
 
-func (vm *vm) opNewArray() error {
+func (vm *vm) opNewArray() {
 	size := vm.readOperand(2)
 
 	arr := &objs.Array{
@@ -207,10 +189,10 @@ func (vm *vm) opNewArray() error {
 
 	vm.popMany(arr.Slice)
 
-	return vm.push(objs.MakeArray(arr))
+	vm.push(objs.MakeArray(arr))
 }
 
-func (vm *vm) opNewFunc() error {
+func (vm *vm) opNewFunc() {
 	templateIndex := vm.readOperand(2)
 
 	template := vm.program.FuncsPool[templateIndex]
@@ -230,10 +212,10 @@ func (vm *vm) opNewFunc() error {
 		Captures:      captures,
 	}
 
-	return vm.push(function.MakeObj())
+	vm.push(function.MakeObj())
 }
 
-func (vm *vm) opCall() error {
+func (vm *vm) opCall() {
 	numArgs := vm.readOperand(1)
 
 	funcObj := vm.pop()
@@ -244,7 +226,7 @@ func (vm *vm) opCall() error {
 		funcTemplate := &vm.program.FuncsPool[function.TemplateIndex]
 
 		if numArgs > len(funcTemplate.Params) {
-			return errors.ErrTooManyArgs{Expected: len(funcTemplate.Params), Received: numArgs}
+			panic(errors.ErrTooManyArgs{Expected: len(funcTemplate.Params), Received: numArgs})
 		}
 
 		vm.activeScope.savedPC = vm.pc
@@ -254,12 +236,10 @@ func (vm *vm) opCall() error {
 		funcScope := vm.scopeStack.pushScope(funcTemplate, function)
 		vm.locals = funcScope.vars
 		vm.popMany(funcScope.vars[:numArgs])
-
-		return nil
 	case objs.TypeBuiltin:
 		builtin := builtins.GetBuiltin(funcObj)
 		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {
-			return errors.ErrTooManyArgs{Expected: builtin.NumArgs, Received: numArgs}
+			panic(errors.ErrTooManyArgs{Expected: builtin.NumArgs, Received: numArgs})
 		}
 
 		args := make([]objs.Obj, numArgs)
@@ -267,26 +247,22 @@ func (vm *vm) opCall() error {
 
 		result, err := builtin.Func(args)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
-		return vm.push(result)
+		vm.push(result)
 	default:
-		return errors.ErrNotCallable{Obj: funcObj}
+		panic(errors.ErrNotCallable{Obj: funcObj})
 	}
 }
 
-func (vm *vm) opReturn() error {
+func (vm *vm) opReturn() {
 	vm.scopeStack.popScope()
 	vm.pc = vm.activeScope.savedPC
 	vm.code = vm.activeScope.code
 	vm.locals = vm.activeScope.vars
-
-	return nil
 }
 
-func (vm *vm) opHalt() error {
+func (vm *vm) opHalt() {
 	vm.halted = true
-
-	return nil
 }

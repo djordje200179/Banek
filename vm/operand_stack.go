@@ -26,15 +26,13 @@ func (stack *operandStack) swap(obj objs.Obj) {
 	stack.array[stack.ptr-1] = obj
 }
 
-func (stack *operandStack) push(obj objs.Obj) error {
+func (stack *operandStack) push(obj objs.Obj) {
 	if stack.ptr >= stackSize {
-		return ErrStackOverflow{}
+		panic(ErrStackOverflow{})
 	}
 
 	stack.array[stack.ptr] = obj
 	stack.ptr++
-
-	return nil
 }
 
 func (stack *operandStack) pop() objs.Obj {

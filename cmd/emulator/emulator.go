@@ -41,8 +41,5 @@ func main() {
 		HandleError(err)
 	}
 
-	err = vm.Execute(executable)
-	if err != nil {
-		HandleError(err)
-	}
+	vm.Execute(executable)
 }

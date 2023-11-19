@@ -19,7 +19,7 @@ type vm struct {
 	halted bool
 }
 
-type handler func(vm *vm) error
+type handler func(vm *vm)
 
 var handlers = [...]handler{
 	instrs.OpPushDup:       (*vm).opPushDup,
@@ -58,7 +58,7 @@ var handlers = [...]handler{
 	instrs.OpNewFunc:  (*vm).opNewFunc,
 }
 
-func Execute(program bytecode.Executable) error {
+func Execute(program bytecode.Executable) {
 	vm := vm{
 		program: program,
 		scopeStack: scopeStack{
@@ -76,13 +76,8 @@ func Execute(program bytecode.Executable) error {
 		opcode := instrs.Opcode(vm.code[vm.pc])
 		vm.pc++
 
-		err := handlers[opcode](&vm)
-		if err != nil {
-			return err
-		}
+		handlers[opcode](&vm)
 	}
-
-	return nil
 }
 
 func (vm *vm) readOperand(width int) int {
