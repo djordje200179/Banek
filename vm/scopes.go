@@ -69,15 +69,14 @@ func returnScopeVars(arr []objs.Obj) {
 	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
 }
 
-func (stack *scopeStack) pushScope(funcTemplate *bytecode.FuncTemplate, function *bytecode.Func) *scope {
+func (stack *scopeStack) pushScope(code bytecode.Code, numLocals int, isCaptured bool, captures []*objs.Obj) *scope {
 	funcScope := scopePool.Get().(*scope)
-	*funcScope = scope{
-		code:        funcTemplate.Code,
-		vars:        getScopeVars(funcTemplate.NumLocals),
-		captures:    function.Captures,
-		canFreeVars: !funcTemplate.IsCaptured,
-		parent:      stack.activeScope,
-	}
+	funcScope.code = code
+	funcScope.vars = getScopeVars(numLocals)
+	funcScope.captures = captures
+	funcScope.canFreeVars = !isCaptured
+	funcScope.parent = stack.activeScope
+
 	stack.activeScope = funcScope
 
 	return funcScope

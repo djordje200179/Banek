@@ -223,18 +223,18 @@ func (vm *vm) opCall() {
 	switch funcObj.Tag {
 	case objs.TypeFunc:
 		function := bytecode.GetFunc(funcObj)
-		funcTemplate := &vm.program.FuncsPool[function.TemplateIndex]
+		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
 
 		if numArgs > funcTemplate.NumParams {
 			panic(errors.ErrTooManyArgs{Expected: funcTemplate.NumParams, Received: numArgs})
 		}
 
 		vm.activeScope.savedPC = vm.pc
+		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, funcTemplate.IsCaptured, function.Captures)
+		vm.locals = funcScope.vars
 		vm.code = funcTemplate.Code
 		vm.pc = 0
 
-		funcScope := vm.scopeStack.pushScope(funcTemplate, function)
-		vm.locals = funcScope.vars
 		vm.popMany(funcScope.vars[:numArgs])
 	case objs.TypeBuiltin:
 		builtin := builtins.GetBuiltin(funcObj)
@@ -257,7 +257,7 @@ func (vm *vm) opCall() {
 }
 
 func (vm *vm) opReturn() {
-	vm.scopeStack.popScope()
+	vm.popScope()
 	vm.pc = vm.activeScope.savedPC
 	vm.code = vm.activeScope.code
 	vm.locals = vm.activeScope.vars

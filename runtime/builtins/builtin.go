@@ -3,7 +3,6 @@ package builtins
 import (
 	"banek/runtime/objs"
 	"bytes"
-	"unsafe"
 )
 
 type Builtin struct {
@@ -13,14 +12,14 @@ type Builtin struct {
 	Func func(args []objs.Obj) (objs.Obj, error)
 }
 
-func GetBuiltin(objs objs.Obj) *Builtin {
-	return (*Builtin)(objs.PtrData)
+func GetBuiltin(objs objs.Obj) Builtin {
+	return Funcs[objs.IntData]
 }
 
-func (builtin *Builtin) MakeObj() objs.Obj {
-	ptrData := unsafe.Pointer(builtin)
+func (builtin Builtin) MakeObj() objs.Obj {
+	index := Find(builtin.Name)
 
-	return objs.Obj{Tag: objs.TypeBuiltin, PtrData: ptrData}
+	return objs.Obj{Tag: objs.TypeBuiltin, IntData: uint64(index)}
 }
 
 var Funcs = [...]Builtin{
@@ -84,10 +83,7 @@ func builtinString(obj objs.Obj) string {
 }
 
 func builtinEquals(first, second objs.Obj) bool {
-	firstBuiltin := GetBuiltin(first)
-	secondBuiltin := GetBuiltin(second)
-
-	return firstBuiltin.Name == secondBuiltin.Name
+	return first.IntData == second.IntData
 }
 
 func builtinMarshal(obj objs.Obj) ([]byte, error) {
