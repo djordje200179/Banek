@@ -10,18 +10,19 @@ import (
 type scope struct {
 	code bytecode.Code
 
-	savedPC  int
-	vars     []objs.Obj
-	captures []*objs.Obj
+	pc   int
+	vars []objs.Obj
 
-	canFreeVars bool
+	function *bytecode.Func
 
 	parent *scope
 }
 
 type scopeStack struct {
 	globalScope scope
-	activeScope *scope
+	activeScope scope
+
+	lastScope *scope
 }
 
 var scopePool = sync.Pool{
@@ -36,6 +37,22 @@ func (stack *scopeStack) getGlobal(index int) objs.Obj {
 
 func (stack *scopeStack) setGlobal(index int, value objs.Obj) {
 	stack.globalScope.vars[index] = value
+}
+
+func (stack *scopeStack) getLocal(index int) objs.Obj {
+	return stack.activeScope.vars[index]
+}
+
+func (stack *scopeStack) setLocal(index int, value objs.Obj) {
+	stack.activeScope.vars[index] = value
+}
+
+func (stack *scopeStack) getCaptured(index int) objs.Obj {
+	return *stack.activeScope.function.Captures[index]
+}
+
+func (stack *scopeStack) setCaptured(index int, value objs.Obj) {
+	*stack.activeScope.function.Captures[index] = value
 }
 
 var scopeVarsPools = [...]sync.Pool{
@@ -69,27 +86,20 @@ func returnScopeVars(arr []objs.Obj) {
 	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
 }
 
-func (stack *scopeStack) pushScope(code bytecode.Code, numLocals int, isCaptured bool, captures []*objs.Obj) *scope {
+func (stack *scopeStack) backupScope() {
 	funcScope := scopePool.Get().(*scope)
-	funcScope.code = code
-	funcScope.vars = getScopeVars(numLocals)
-	funcScope.captures = captures
-	funcScope.canFreeVars = !isCaptured
-	funcScope.parent = stack.activeScope
-
-	stack.activeScope = funcScope
-
-	return funcScope
+	*funcScope = stack.activeScope
+	stack.lastScope = funcScope
 }
 
-func (stack *scopeStack) popScope() {
-	removedScope := stack.activeScope
-	stack.activeScope = removedScope.parent
+func (stack *scopeStack) restoreScope() scope {
+	restoredScopeNode := stack.lastScope
+	stack.lastScope = stack.lastScope.parent
 
-	if removedScope.canFreeVars {
-		returnScopeVars(removedScope.vars)
-	}
+	restoredScope := *restoredScopeNode
 
-	removedScope.vars = nil
-	scopePool.Put(removedScope)
+	restoredScopeNode.vars = nil
+	scopePool.Put(restoredScopeNode)
+
+	return restoredScope
 }

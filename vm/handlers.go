@@ -70,7 +70,7 @@ func (vm *vm) opPushBuiltin() {
 
 func (vm *vm) opPushCaptured() {
 	capturedIndex := vm.readOperand(1)
-	captured := *vm.activeScope.captures[capturedIndex]
+	captured := vm.getCaptured(capturedIndex)
 
 	vm.push(captured)
 }
@@ -121,7 +121,7 @@ func (vm *vm) opPopCaptured() {
 	capturedIndex := vm.readOperand(1)
 	captured := vm.pop()
 
-	*vm.activeScope.captures[capturedIndex] = captured
+	vm.setCaptured(capturedIndex, captured)
 }
 
 func (vm *vm) opPopCollElem() {
@@ -163,7 +163,7 @@ func (vm *vm) opUnaryOp() {
 }
 
 func (vm *vm) opBranch() {
-	vm.pc += vm.readOperand(2)
+	vm.activeScope.pc += vm.readOperand(2)
 }
 
 func (vm *vm) opBranchIfFalse() {
@@ -176,7 +176,7 @@ func (vm *vm) opBranchIfFalse() {
 	}
 
 	if !operand.AsBool() {
-		vm.pc += offset
+		vm.activeScope.pc += offset
 	}
 }
 
@@ -199,8 +199,8 @@ func (vm *vm) opNewFunc() {
 
 	captures := make([]*objs.Obj, len(template.Captures))
 	for i, captureInfo := range template.Captures {
-		capturedVariableScope := vm.activeScope
-		for j := 0; j < captureInfo.Level; j++ {
+		capturedVariableScope := vm.lastScope
+		for j := 1; j < captureInfo.Level; j++ {
 			capturedVariableScope = capturedVariableScope.parent
 		}
 
@@ -229,13 +229,16 @@ func (vm *vm) opCall() {
 			panic(errors.ErrTooManyArgs{Expected: funcTemplate.NumParams, Received: numArgs})
 		}
 
-		vm.activeScope.savedPC = vm.pc
-		funcScope := vm.pushScope(funcTemplate.Code, funcTemplate.NumLocals, funcTemplate.IsCaptured, function.Captures)
-		vm.locals = funcScope.vars
-		vm.code = funcTemplate.Code
-		vm.pc = 0
+		vm.backupScope()
 
-		vm.popMany(funcScope.vars[:numArgs])
+		vm.activeScope = scope{
+			code:     funcTemplate.Code,
+			vars:     getScopeVars(funcTemplate.NumLocals),
+			function: function,
+			parent:   vm.lastScope,
+		}
+
+		vm.popMany(vm.activeScope.vars[:numArgs])
 	case objs.TypeBuiltin:
 		builtin := builtins.GetBuiltin(funcObj)
 		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {
@@ -257,10 +260,14 @@ func (vm *vm) opCall() {
 }
 
 func (vm *vm) opReturn() {
-	vm.popScope()
-	vm.pc = vm.activeScope.savedPC
-	vm.code = vm.activeScope.code
-	vm.locals = vm.activeScope.vars
+	function := vm.activeScope.function
+	funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
+
+	if !funcTemplate.IsCaptured {
+		returnScopeVars(vm.activeScope.vars)
+	}
+
+	vm.activeScope = vm.restoreScope()
 }
 
 func (vm *vm) opHalt() {
