@@ -171,8 +171,11 @@ func evalBinaryCaret(left, right objs.Obj) (objs.Obj, error) {
 	power := right.AsInt()
 
 	if power < 0 {
-		// TODO: fix negative power
-		return objs.Obj{}, ErrInvalidBinaryOpOperand{Operator: BinaryCaret, LeftOperand: left, RightOperand: right}
+		if base == 1 {
+			return objs.MakeInt(1), nil
+		}
+
+		return objs.MakeInt(0), nil
 	}
 
 	result := 1

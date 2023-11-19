@@ -71,19 +71,18 @@ func getScopeVars(size int) []objs.Obj {
 	arr := scopeVarsPools[size].Get().(*objs.Obj)
 	slice := unsafe.Slice(arr, size)
 
-	for i := range slice {
-		slice[i] = objs.Obj{}
-	}
-
 	return slice
 }
 
-func returnScopeVars(arr []objs.Obj) {
-	if len(arr) >= len(scopeVarsPools) {
+func returnScopeVars(slice []objs.Obj) {
+	if len(slice) >= len(scopeVarsPools) {
 		return
 	}
 
-	scopeVarsPools[len(arr)].Put(unsafe.SliceData(arr))
+	for i := range slice {
+		slice[i] = objs.Obj{}
+	}
+	scopeVarsPools[len(slice)].Put(unsafe.SliceData(slice))
 }
 
 func (stack *scopeStack) backupScope() {
@@ -92,14 +91,14 @@ func (stack *scopeStack) backupScope() {
 	stack.lastScope = funcScope
 }
 
-func (stack *scopeStack) restoreScope() scope {
+func (stack *scopeStack) restoreScope() {
 	restoredScopeNode := stack.lastScope
 	stack.lastScope = stack.lastScope.parent
-
-	restoredScope := *restoredScopeNode
+	stack.activeScope = *restoredScopeNode
 
 	restoredScopeNode.vars = nil
-	scopePool.Put(restoredScopeNode)
+	restoredScopeNode.function = nil
+	restoredScopeNode.parent = nil
 
-	return restoredScope
+	scopePool.Put(restoredScopeNode)
 }

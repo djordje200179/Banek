@@ -267,7 +267,7 @@ func (vm *vm) opReturn() {
 		returnScopeVars(vm.activeScope.vars)
 	}
 
-	vm.activeScope = vm.restoreScope()
+	vm.restoreScope()
 }
 
 func (vm *vm) opHalt() {
