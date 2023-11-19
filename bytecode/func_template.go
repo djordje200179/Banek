@@ -1,6 +1,7 @@
 package bytecode
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -10,12 +11,12 @@ type Capture struct {
 }
 
 type FuncTemplate struct {
-	Name string
+	Name      string
+	NumParams int
 
-	Code Code
+	NumLocals int
+	Code      Code
 
-	Params     []string
-	NumLocals  int
 	IsCaptured bool
 
 	Captures []Capture
@@ -35,9 +36,8 @@ func (template FuncTemplate) String() string {
 	}
 
 	sb.WriteByte('(')
-	sb.WriteString(strings.Join(template.Params, ", "))
-	sb.WriteByte(')')
-	sb.WriteByte('\n')
+	sb.WriteString(strconv.Itoa(template.NumParams))
+	sb.WriteString(" params)\n")
 
 	sb.WriteString(template.Code.String())
 

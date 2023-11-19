@@ -225,8 +225,8 @@ func (vm *vm) opCall() {
 		function := bytecode.GetFunc(funcObj)
 		funcTemplate := &vm.program.FuncsPool[function.TemplateIndex]
 
-		if numArgs > len(funcTemplate.Params) {
-			panic(errors.ErrTooManyArgs{Expected: len(funcTemplate.Params), Received: numArgs})
+		if numArgs > funcTemplate.NumParams {
+			panic(errors.ErrTooManyArgs{Expected: funcTemplate.NumParams, Received: numArgs})
 		}
 
 		vm.activeScope.savedPC = vm.pc

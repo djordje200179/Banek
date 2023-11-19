@@ -121,7 +121,7 @@ func (scope *Func) MakeFunction() bytecode.FuncTemplate {
 	return bytecode.FuncTemplate{
 		Code: scope.code,
 
-		Params:    scope.params,
+		NumParams: len(scope.params),
 		NumLocals: len(scope.vars),
 		Captures:  scope.captures,
 
