@@ -60,7 +60,6 @@ var scopeVarsPools = [...]sync.Pool{
 	{New: func() any { return &(new([1]objs.Obj)[0]) }},
 	{New: func() any { return &(new([2]objs.Obj)[0]) }},
 	{New: func() any { return &(new([3]objs.Obj)[0]) }},
-	{New: func() any { return &(new([4]objs.Obj)[0]) }},
 }
 
 func getScopeVars(size int) []objs.Obj {
@@ -79,9 +78,7 @@ func returnScopeVars(slice []objs.Obj) {
 		return
 	}
 
-	for i := range slice {
-		slice[i] = objs.Obj{}
-	}
+	clear(slice)
 	scopeVarsPools[len(slice)].Put(unsafe.SliceData(slice))
 }
 
@@ -96,9 +93,6 @@ func (stack *scopeStack) restoreScope() {
 	stack.lastScope = stack.lastScope.parent
 	stack.activeScope = *restoredScopeNode
 
-	restoredScopeNode.vars = nil
-	restoredScopeNode.function = nil
-	restoredScopeNode.parent = nil
-
+	*restoredScopeNode = scope{}
 	scopePool.Put(restoredScopeNode)
 }
