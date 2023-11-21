@@ -11,8 +11,6 @@ type vm struct {
 
 	operandStack
 	scopeStack
-
-	halted bool
 }
 
 type handler func(vm *vm)
@@ -48,7 +46,6 @@ var handlers = [...]handler{
 
 	instrs.OpCall:   (*vm).opCall,
 	instrs.OpReturn: (*vm).opReturn,
-	instrs.OpHalt:   (*vm).opHalt,
 
 	instrs.OpNewArray: (*vm).opNewArray,
 	instrs.OpNewFunc:  (*vm).opNewFunc,
@@ -66,9 +63,13 @@ func Execute(program bytecode.Executable) {
 	}
 	vm.activeScope = vm.globalScope
 
-	for !vm.halted {
+	for {
 		opcode := instrs.Opcode(vm.activeScope.code[vm.activeScope.pc])
 		vm.activeScope.pc++
+
+		if opcode == instrs.OpHalt {
+			break
+		}
 
 		handlers[opcode](&vm)
 	}

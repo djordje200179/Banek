@@ -269,7 +269,3 @@ func (vm *vm) opReturn() {
 
 	vm.restoreScope()
 }
-
-func (vm *vm) opHalt() {
-	vm.halted = true
-}
