@@ -3,7 +3,11 @@ package instrs
 type Opcode byte
 
 const (
-	OpPushDup Opcode = iota
+	OpHalt Opcode = iota
+	OpCall
+	OpReturn
+
+	OpPushDup
 	OpPushConst
 	OpPush0
 	OpPush1
@@ -30,10 +34,6 @@ const (
 
 	OpBranch
 	OpBranchIfFalse
-
-	OpCall
-	OpReturn
-	OpHalt
 
 	OpNewArray
 	OpNewFunc
@@ -72,6 +72,10 @@ func (instrInfo InstrInfo) OperandOffset(index int) int {
 }
 
 var InstrInfos = [...]InstrInfo{
+	OpHalt:   {"HALT", []OperandInfo{}},
+	OpCall:   {"CALL", []OperandInfo{{1, OperandLiteral}}},
+	OpReturn: {"RET", []OperandInfo{}},
+
 	OpPushDup:       {"PUSH.D", []OperandInfo{}},
 	OpPushConst:     {"PUSH.C", []OperandInfo{{2, OperandConst}}},
 	OpPush0:         {"PUSH.0", []OperandInfo{}},
@@ -99,10 +103,6 @@ var InstrInfos = [...]InstrInfo{
 
 	OpBranch:        {"BR", []OperandInfo{{2, OperandLiteral}}},
 	OpBranchIfFalse: {"BR.F", []OperandInfo{{2, OperandLiteral}}},
-
-	OpCall:   {"CALL", []OperandInfo{{1, OperandLiteral}}},
-	OpReturn: {"RET", []OperandInfo{}},
-	OpHalt:   {"HALT", []OperandInfo{}},
 
 	OpNewArray: {"NEW.A", []OperandInfo{{2, OperandLiteral}}},
 	OpNewFunc:  {"NEW.F", []OperandInfo{{2, OperandFunc}}},

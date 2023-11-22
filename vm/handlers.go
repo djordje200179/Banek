@@ -6,128 +6,103 @@ import (
 	"banek/runtime/errors"
 	"banek/runtime/objs"
 	"banek/runtime/ops"
+	"banek/vm/scopes"
+	"banek/vm/stack"
 )
 
-func (vm *vm) opPushDup() {
-	vm.push(vm.peek())
+func opPushDup(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(operandStack.PopAndReserve())
 }
 
-func (vm *vm) opPushConst() {
-	constIndex := vm.readOperand(2)
-	constant := vm.program.ConstsPool[constIndex]
+func opPushConst(program *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	constant := program.ConstsPool[scopeStack.ReadOperand(2)]
 
-	vm.push(constant.Clone())
+	operandStack.Push(constant.Clone())
 }
 
-func (vm *vm) opPush0() {
-	vm.push(objs.MakeInt(0))
+func opPush0(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(objs.MakeInt(0))
 }
 
-func (vm *vm) opPush1() {
-	vm.push(objs.MakeInt(1))
+func opPush1(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(objs.MakeInt(1))
 }
 
-func (vm *vm) opPush2() {
-	vm.push(objs.MakeInt(2))
+func opPush2(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(objs.MakeInt(2))
 }
 
-func (vm *vm) opPushUndefined() {
-	vm.push(objs.Obj{})
+func opPushUndefined(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(objs.Obj{})
 }
 
-func (vm *vm) opPushLocal() {
-	localIndex := vm.readOperand(1)
-	local := vm.getLocal(localIndex)
-
-	vm.push(local)
+func opPushLocal(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(scopeStack.GetLocal(scopeStack.ReadOperand(1)))
 }
 
-func (vm *vm) opPushLocal0() {
-	local := vm.getLocal(0)
-
-	vm.push(local)
+func opPushLocal0(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(scopeStack.GetLocal(0))
 }
 
-func (vm *vm) opPushLocal1() {
-	local := vm.getLocal(1)
-
-	vm.push(local)
+func opPushLocal1(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(scopeStack.GetLocal(1))
 }
 
-func (vm *vm) opPushGlobal() {
-	globalIndex := vm.readOperand(1)
-	global := vm.getGlobal(globalIndex)
-
-	vm.push(global)
+func opPushGlobal(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(scopeStack.GetGlobal(scopeStack.ReadOperand(1)))
 }
 
-func (vm *vm) opPushBuiltin() {
-	index := vm.readOperand(1)
+func opPushBuiltin(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	index := scopeStack.ReadOperand(1)
 	builtin := &builtins.Funcs[index]
 
-	vm.push(builtin.MakeObj())
+	operandStack.Push(builtin.MakeObj())
 }
 
-func (vm *vm) opPushCaptured() {
-	capturedIndex := vm.readOperand(1)
-	captured := vm.getCaptured(capturedIndex)
-
-	vm.push(captured)
+func opPushCaptured(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Push(scopeStack.GetCaptured(scopeStack.ReadOperand(1)))
 }
 
-func (vm *vm) opPushCollElem() {
-	key := vm.pop()
-	coll := vm.peek()
+func opPushCollElem(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	key := operandStack.Pop()
+	coll := operandStack.PopAndReserve()
 
 	value, err := ops.EvalCollGet(coll, key)
 	if err != nil {
 		panic(err)
 	}
 
-	vm.swap(value)
+	operandStack.PushReservation(value)
 }
 
-func (vm *vm) opPop() {
-	vm.pop()
+func opPop(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	operandStack.Pop()
 }
 
-func (vm *vm) opPopLocal() {
-	localIndex := vm.readOperand(1)
-	local := vm.pop()
-
-	vm.setLocal(localIndex, local)
+func opPopLocal(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	scopeStack.SetLocal(scopeStack.ReadOperand(1), operandStack.Pop())
 }
 
-func (vm *vm) opPopLocal0() {
-	local := vm.pop()
-
-	vm.setLocal(0, local)
+func opPopLocal0(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	scopeStack.SetLocal(0, operandStack.Pop())
 }
 
-func (vm *vm) opPopLocal1() {
-	local := vm.pop()
-
-	vm.setLocal(1, local)
+func opPopLocal1(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	scopeStack.SetLocal(1, operandStack.Pop())
 }
 
-func (vm *vm) opPopGlobal() {
-	globalIndex := vm.readOperand(1)
-	global := vm.pop()
-
-	vm.setGlobal(globalIndex, global)
+func opPopGlobal(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	scopeStack.SetGlobal(scopeStack.ReadOperand(1), operandStack.Pop())
 }
 
-func (vm *vm) opPopCaptured() {
-	capturedIndex := vm.readOperand(1)
-	captured := vm.pop()
-
-	vm.setCaptured(capturedIndex, captured)
+func opPopCaptured(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	scopeStack.SetCaptured(scopeStack.ReadOperand(1), operandStack.Pop())
 }
 
-func (vm *vm) opPopCollElem() {
-	key := vm.pop()
-	coll := vm.pop()
-	value := vm.pop()
+func opPopCollElem(_ *bytecode.Executable, _ *scopes.Stack, operandStack *stack.Stack) {
+	key := operandStack.Pop()
+	coll := operandStack.Pop()
+	value := operandStack.Pop()
 
 	err := ops.EvalCollSet(coll, key, value)
 	if err != nil {
@@ -135,76 +110,71 @@ func (vm *vm) opPopCollElem() {
 	}
 }
 
-func (vm *vm) opBinaryOp() {
-	operator := ops.BinaryOperator(vm.readOperand(1))
+func opBinaryOp(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operator := ops.BinaryOperator(scopeStack.ReadOperand(1))
 
-	right := vm.pop()
-	left := vm.peek()
+	right := operandStack.Pop()
+	left := operandStack.PopAndReserve()
 
 	result, err := ops.BinaryOps[operator](left, right)
 	if err != nil {
 		panic(err)
 	}
 
-	vm.swap(result)
+	operandStack.PushReservation(result)
 }
 
-func (vm *vm) opUnaryOp() {
-	operator := ops.UnaryOperator(vm.readOperand(1))
+func opUnaryOp(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	operator := ops.UnaryOperator(scopeStack.ReadOperand(1))
 
-	operand := vm.peek()
+	operand := operandStack.PopAndReserve()
 
 	result, err := ops.UnaryOps[operator](operand)
 	if err != nil {
 		panic(err)
 	}
 
-	vm.swap(result)
+	operandStack.PushReservation(result)
 }
 
-func (vm *vm) opBranch() {
-	vm.activeScope.pc += vm.readOperand(2)
+func opBranch(_ *bytecode.Executable, scopeStack *scopes.Stack, _ *stack.Stack) {
+	scopeStack.MovePC(scopeStack.ReadOperand(2))
 }
 
-func (vm *vm) opBranchIfFalse() {
-	offset := vm.readOperand(2)
+func opBranchIfFalse(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	offset := scopeStack.ReadOperand(2)
 
-	operand := vm.pop()
+	operand := operandStack.Pop()
 
 	if operand.Tag != objs.TypeBool {
 		panic(errors.ErrNotBool{Obj: operand})
 	}
 
 	if !operand.AsBool() {
-		vm.activeScope.pc += offset
+		scopeStack.MovePC(offset)
 	}
 }
 
-func (vm *vm) opNewArray() {
-	size := vm.readOperand(2)
+func opNewArray(_ *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	size := scopeStack.ReadOperand(2)
 
 	arr := &objs.Array{
 		Slice: make([]objs.Obj, size),
 	}
 
-	vm.popMany(arr.Slice)
+	operandStack.PopMany(arr.Slice)
 
-	vm.push(objs.MakeArray(arr))
+	operandStack.Push(objs.MakeArray(arr))
 }
 
-func (vm *vm) opNewFunc() {
-	templateIndex := vm.readOperand(2)
+func opNewFunc(program *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	templateIndex := scopeStack.ReadOperand(2)
 
-	template := vm.program.FuncsPool[templateIndex]
+	template := program.FuncsPool[templateIndex]
 
 	captures := make([]*objs.Obj, len(template.Captures))
 	for i, captureInfo := range template.Captures {
-		capturedVariableScope := vm.lastScope
-		for j := 1; j < captureInfo.Level; j++ {
-			capturedVariableScope = capturedVariableScope.parent
-		}
-
-		captures[i] = &capturedVariableScope.vars[captureInfo.Index]
+		captures[i] = scopeStack.GetCapture(captureInfo)
 	}
 
 	function := &bytecode.Func{
@@ -212,33 +182,26 @@ func (vm *vm) opNewFunc() {
 		Captures:      captures,
 	}
 
-	vm.push(function.MakeObj())
+	operandStack.Push(function.MakeObj())
 }
 
-func (vm *vm) opCall() {
-	numArgs := vm.readOperand(1)
+func opCall(program *bytecode.Executable, scopeStack *scopes.Stack, operandStack *stack.Stack) {
+	numArgs := scopeStack.ReadOperand(1)
 
-	funcObj := vm.pop()
+	funcObj := operandStack.Pop()
 
 	switch funcObj.Tag {
 	case objs.TypeFunc:
 		function := bytecode.GetFunc(funcObj)
-		funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
+		template := &program.FuncsPool[function.TemplateIndex]
 
-		if numArgs > funcTemplate.NumParams {
-			panic(errors.ErrTooManyArgs{Expected: funcTemplate.NumParams, Received: numArgs})
+		if numArgs > template.NumParams {
+			panic(errors.ErrTooManyArgs{Expected: template.NumParams, Received: numArgs})
 		}
 
-		vm.backupScope()
+		locals := scopeStack.NewScope(function, template)
 
-		vm.activeScope = scope{
-			code:     funcTemplate.Code,
-			vars:     getScopeVars(funcTemplate.NumLocals),
-			function: function,
-			parent:   vm.lastScope,
-		}
-
-		vm.popMany(vm.activeScope.vars[:numArgs])
+		operandStack.PopMany(locals[:numArgs])
 	case objs.TypeBuiltin:
 		builtin := builtins.GetBuiltin(funcObj)
 		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {
@@ -246,26 +209,19 @@ func (vm *vm) opCall() {
 		}
 
 		args := make([]objs.Obj, numArgs)
-		vm.popMany(args)
+		operandStack.PopMany(args)
 
 		result, err := builtin.Func(args)
 		if err != nil {
 			panic(err)
 		}
 
-		vm.push(result)
+		operandStack.Push(result)
 	default:
 		panic(errors.ErrNotCallable{Obj: funcObj})
 	}
 }
 
-func (vm *vm) opReturn() {
-	function := vm.activeScope.function
-	funcTemplate := vm.program.FuncsPool[function.TemplateIndex]
-
-	if !funcTemplate.IsCaptured {
-		returnScopeVars(vm.activeScope.vars)
-	}
-
-	vm.restoreScope()
+func opReturn(_ *bytecode.Executable, scopeStack *scopes.Stack, _ *stack.Stack) {
+	scopeStack.RestoreScope()
 }

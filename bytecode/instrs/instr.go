@@ -26,7 +26,7 @@ func ReadInstr(instr []byte) (Opcode, []int, int) {
 
 	offset := 1
 	for i, operand := range instrInfo.Operands {
-		operands[i] = ReadOperandValue(instr[offset:], operand.Width)
+		operands[i] = ReadOperandValue(instr[offset : offset+operand.Width])
 		offset += operand.Width
 	}
 

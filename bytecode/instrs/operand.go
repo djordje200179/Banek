@@ -1,7 +1,7 @@
 package instrs
 
 import (
-	"encoding/binary"
+	"unsafe"
 )
 
 type OperandType byte
@@ -22,26 +22,34 @@ type OperandInfo struct {
 }
 
 func MakeOperandValue(value int, width int) []byte {
-	code := make([]byte, width)
+	operand := make([]byte, width)
+	ptr := unsafe.Pointer(unsafe.SliceData(operand))
+
 	switch width {
 	case 1:
-		code[0] = byte(value)
+		*(*int8)(ptr) = int8(value)
 	case 2:
-		binary.LittleEndian.PutUint16(code, uint16(value))
+		*(*int16)(ptr) = int16(value)
+	case 4:
+		*(*int32)(ptr) = int32(value)
+	case 8:
+		*(*int64)(ptr) = int64(value)
 	default:
-		return nil
+		panic("invalid operand width")
 	}
 
-	return code
+	return operand
 }
 
-func ReadOperandValue(code []byte, width int) int {
-	switch width {
-	case 1:
-		return int(code[0])
-	case 2:
-		return int(int16(binary.LittleEndian.Uint16(code)))
-	}
+func ReadOperandValue(operand []byte) int {
+	ptr := unsafe.Pointer(unsafe.SliceData(operand))
+	data := *(*int)(ptr)
 
-	return 0
+	width := len(operand)
+	width *= 8
+
+	mask := ^uint(0) >> uint(64-width)
+	data &= int(mask)
+
+	return data
 }

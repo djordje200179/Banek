@@ -1,4 +1,4 @@
-package vm
+package stack
 
 import (
 	"banek/runtime/objs"
@@ -6,7 +6,7 @@ import (
 
 const stackSize = 4 * 1024
 
-type operandStack struct {
+type Stack struct {
 	array [stackSize]objs.Obj
 
 	ptr int
@@ -18,15 +18,7 @@ func (err ErrStackOverflow) Error() string {
 	return "stack overflow"
 }
 
-func (stack *operandStack) peek() objs.Obj {
-	return stack.array[stack.ptr-1]
-}
-
-func (stack *operandStack) swap(obj objs.Obj) {
-	stack.array[stack.ptr-1] = obj
-}
-
-func (stack *operandStack) push(obj objs.Obj) {
+func (stack *Stack) Push(obj objs.Obj) {
 	if stack.ptr >= stackSize {
 		panic(ErrStackOverflow{})
 	}
@@ -35,7 +27,11 @@ func (stack *operandStack) push(obj objs.Obj) {
 	stack.ptr++
 }
 
-func (stack *operandStack) pop() objs.Obj {
+func (stack *Stack) PushReservation(obj objs.Obj) {
+	stack.array[stack.ptr-1] = obj
+}
+
+func (stack *Stack) Pop() objs.Obj {
 	stack.ptr--
 
 	elem := stack.array[stack.ptr]
@@ -44,7 +40,11 @@ func (stack *operandStack) pop() objs.Obj {
 	return elem
 }
 
-func (stack *operandStack) popMany(arr []objs.Obj) {
+func (stack *Stack) PopAndReserve() objs.Obj {
+	return stack.array[stack.ptr-1]
+}
+
+func (stack *Stack) PopMany(arr []objs.Obj) {
 	nextPtr := stack.ptr - len(arr)
 	copy(arr, stack.array[nextPtr:stack.ptr])
 	clear(stack.array[nextPtr:stack.ptr])
