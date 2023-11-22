@@ -1,2 +1,4 @@
 .idea
 *.bac
+*.exe
+*.S
