@@ -4,7 +4,6 @@ import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
 	"banek/runtime/objs"
-	"unsafe"
 )
 
 type Stack struct {
@@ -80,11 +79,7 @@ func (stack *Stack) RestoreScope() {
 }
 
 func (stack *Stack) ReadOpcode() instrs.Opcode {
-	codePtr := unsafe.Pointer(unsafe.SliceData(stack.active.code))
-	offset := uintptr(stack.active.pc) * unsafe.Sizeof(instrs.Opcode(0))
-	addr := unsafe.Add(codePtr, offset)
-
-	opcode := *(*instrs.Opcode)(addr)
+	opcode := instrs.Opcode(stack.active.code[stack.active.pc])
 	stack.active.pc++
 
 	return opcode
