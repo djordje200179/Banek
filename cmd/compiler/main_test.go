@@ -74,3 +74,19 @@ func TestAnonymousFunctions(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestWhileLoop(t *testing.T) {
+	code := `
+		let mut x = 0;
+		while x < 5 do {
+			x += 1;
+			print(x);
+		}
+		println();
+		println("Final:", x);
+	`
+	err := runCode(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

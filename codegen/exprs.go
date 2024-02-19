@@ -129,16 +129,16 @@ func (g *generator) compileIdent(expr exprs.Ident) {
 
 func (g *generator) compileIfExpr(expr exprs.If) {
 	g.compileExpr(expr.Cond)
-	jumpPc := g.currAddr()
+	jumpPC := g.currAddr()
 	g.emitInstr(instrs.OpBranchFalse, 0)
 
 	g.compileExpr(expr.Cons)
 
-	altJumpPc := g.currAddr()
+	altJumpPC := g.currAddr()
 	g.emitInstr(instrs.OpJump, 0)
-	g.patchJumpOperand(jumpPc, 0)
+	g.patchJumpOperand(jumpPC, 0)
 	g.compileExpr(expr.Alt)
-	g.patchJumpOperand(altJumpPc, 0)
+	g.patchJumpOperand(altJumpPC, 0)
 }
 
 func (g *generator) compileUnaryOp(expr exprs.UnaryOp) {
@@ -189,7 +189,7 @@ func (g *generator) compileStringLiteral(expr exprs.StringLiteral) {
 	g.emitInstr(instrs.OpPushStr, i)
 }
 
-func (g *generator) compileUndefinedLiteral(expr exprs.UndefinedLiteral) {
+func (g *generator) compileUndefinedLiteral(_ exprs.UndefinedLiteral) {
 	g.emitInstr(instrs.OpPushUndef)
 }
 

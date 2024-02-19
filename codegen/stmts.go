@@ -125,19 +125,19 @@ func (g *generator) compileFuncCallStmt(expr stmts.FuncCall) {
 
 func (g *generator) compileIfStmt(stmt stmts.If) {
 	g.compileExpr(stmt.Cond)
-	jumpPc := g.currAddr()
+	jumpPC := g.currAddr()
 	g.emitInstr(instrs.OpBranchFalse, 0)
 
 	g.compileStmt(stmt.Cons)
 
 	if stmt.Alt != nil {
-		altJumpPc := g.currAddr()
+		altJumpPC := g.currAddr()
 		g.emitInstr(instrs.OpJump, 0)
-		g.patchJumpOperand(jumpPc, 0)
+		g.patchJumpOperand(jumpPC, 0)
 		g.compileStmt(stmt.Alt)
-		g.patchJumpOperand(altJumpPc, 0)
+		g.patchJumpOperand(altJumpPC, 0)
 	} else {
-		g.patchJumpOperand(jumpPc, 0)
+		g.patchJumpOperand(jumpPC, 0)
 	}
 }
 
@@ -164,5 +164,14 @@ func (g *generator) compileVarDecl(stmt stmts.VarDecl) {
 }
 
 func (g *generator) compileWhile(stmt stmts.While) {
+	startPC := g.currAddr()
+	g.compileExpr(stmt.Cond)
 
+	jumpPC := g.currAddr()
+	g.emitInstr(instrs.OpBranchFalse, 0)
+
+	g.compileStmt(stmt.Body)
+
+	g.emitInstr(instrs.OpJump, startPC-(g.currAddr()+instrs.OpJump.Info().Size()))
+	g.patchJumpOperand(jumpPC, 0)
 }
