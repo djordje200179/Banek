@@ -10,9 +10,11 @@ import (
 func builtinPrint(args []runtime.Obj) (runtime.Obj, error) {
 	var sb strings.Builder
 
-	for _, arg := range args {
+	for i, arg := range args {
+		if i != 0 {
+			sb.WriteByte(' ')
+		}
 		sb.WriteString(arg.String())
-		sb.WriteByte(' ')
 	}
 
 	fmt.Print(sb.String())
@@ -23,9 +25,11 @@ func builtinPrint(args []runtime.Obj) (runtime.Obj, error) {
 func builtinPrintln(args []runtime.Obj) (runtime.Obj, error) {
 	var sb strings.Builder
 
-	for _, arg := range args {
+	for i, arg := range args {
+		if i != 0 {
+			sb.WriteByte(' ')
+		}
 		sb.WriteString(arg.String())
-		sb.WriteByte(' ')
 	}
 	sb.WriteByte('\n')
 
