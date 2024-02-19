@@ -8,21 +8,19 @@ import (
 
 type Stack struct {
 	global Scope
-	active Scope
-
-	last *Scope
+	active *Scope
 }
 
-func NewStack(program *bytecode.Executable) *Stack {
-	globals := make([]runtime.Obj, program.FuncPool[0].NumLocals)
+func NewStack(entryFunc bytecode.FuncTemplate) *Stack {
+	globals := make([]runtime.Obj, entryFunc.NumLocals)
 
 	stack := &Stack{
 		global: Scope{
 			vars: globals,
-			code: program.FuncPool[0].Code,
+			code: entryFunc.Code,
 		},
 	}
-	stack.active = stack.global
+	stack.active = &stack.global
 
 	return stack
 }
@@ -37,8 +35,8 @@ func (s *Stack) GetCaptured(index int) runtime.Obj        { return *s.active.fun
 func (s *Stack) SetCaptured(index int, value runtime.Obj) { *s.active.function.Captures[index] = value }
 
 func (s *Stack) GetCapture(captureInfo bytecode.Capture) *runtime.Obj {
-	varScope := s.last
-	for j := 1; j < captureInfo.Level; j++ {
+	varScope := s.active
+	for range captureInfo.Level {
 		varScope = varScope.parent
 	}
 
@@ -46,19 +44,17 @@ func (s *Stack) GetCapture(captureInfo bytecode.Capture) *runtime.Obj {
 }
 
 func (s *Stack) NewScope(function *bytecode.Func, template *bytecode.FuncTemplate) []runtime.Obj {
-	funcScope := scopePool.Get().(*Scope)
-	*funcScope = s.active
-	s.last = funcScope
-
 	locals := newScopeVars(template.NumLocals)
 
-	s.active = Scope{
+	funcScope := scopePool.Get().(*Scope)
+	*funcScope = Scope{
 		code:     template.Code,
 		vars:     locals,
 		function: function,
 		template: template,
-		parent:   s.last,
+		parent:   s.active,
 	}
+	s.active = funcScope
 
 	return locals
 }
@@ -68,9 +64,8 @@ func (s *Stack) RestoreScope() {
 		freeScopeVars(s.active.vars)
 	}
 
-	restoredScope := s.last
-	s.last = restoredScope.parent
-	s.active = *restoredScope
+	restoredScope := s.active
+	s.active = s.active.parent
 
 	*restoredScope = Scope{}
 	scopePool.Put(restoredScope)

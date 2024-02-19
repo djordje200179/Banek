@@ -89,7 +89,7 @@ func Execute(program *bytecode.Executable) (err error) {
 
 	e := emulator{
 		program:    program,
-		scopeStack: scopes.NewStack(program),
+		scopeStack: scopes.NewStack(program.FuncPool[0]),
 	}
 
 	for {
