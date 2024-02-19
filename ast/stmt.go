@@ -7,3 +7,8 @@ type Stmt interface {
 
 	StmtNode()
 }
+
+type DesStmt interface {
+	Stmt
+	DesStmtNode()
+}
