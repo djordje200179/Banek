@@ -18,7 +18,7 @@ func (g *generator) compileExpr(expr ast.Expr) {
 	case exprs.BoolLiteral:
 		g.compileBoolLiteral(expr)
 	case exprs.CollIndex:
-		g.compileCollIndex(expr)
+		g.compileCollIndex(expr, true)
 	case exprs.FuncCall:
 		g.compileFuncCall(expr)
 	case exprs.FuncLiteral:
@@ -81,8 +81,13 @@ func (g *generator) compileBinaryOp(expr exprs.BinaryOp) {
 
 }
 
-func (g *generator) compileCollIndex(expr exprs.CollIndex) {
+func (g *generator) compileCollIndex(expr exprs.CollIndex, load bool) {
+	g.compileExpr(expr.Coll)
+	g.compileExpr(expr.Key)
 
+	if load {
+		g.emitInstr(instrs.OpPushCollElem)
+	}
 }
 
 func (g *generator) compileFuncCall(expr exprs.FuncCall) {
@@ -223,8 +228,7 @@ func (g *generator) compilePreStore(expr ast.Expr) {
 	switch expr := expr.(type) {
 	case exprs.Ident:
 	case exprs.CollIndex:
-		g.compileExpr(expr.Coll)
-		g.compileExpr(expr.Key)
+		g.compileCollIndex(expr, false)
 	default:
 		panic("unreachable")
 	}

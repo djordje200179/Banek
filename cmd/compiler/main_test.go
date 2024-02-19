@@ -52,3 +52,17 @@ func BenchmarkVariableDeclaration(t *testing.B) {
 		}
 	}
 }
+
+func BenchmarkArrayManipulation(t *testing.B) {
+	code := `
+		let arr = [1, 2, 3, 4, 5];
+		arr[1] += 1;
+		println(arr[1]);
+	`
+	for range t.N {
+		err := runCode(code)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}

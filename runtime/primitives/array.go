@@ -64,3 +64,36 @@ func (arr Array) Mul(other runtime.Obj) (runtime.Obj, bool) {
 
 	return res, true
 }
+
+func (arr Array) Len() int {
+	return len(arr)
+}
+
+func (arr Array) Get(index runtime.Obj) (runtime.Obj, bool) {
+	var intIndex Int
+	var ok bool
+	if intIndex, ok = index.(Int); !ok {
+		return nil, false
+	}
+
+	if int(intIndex) < 0 || int(intIndex) >= len(arr) {
+		return Undefined{}, true
+	}
+
+	return arr[intIndex], true
+}
+
+func (arr Array) Set(index runtime.Obj, value runtime.Obj) bool {
+	var intIndex Int
+	var ok bool
+	if intIndex, ok = index.(Int); !ok {
+		return false
+	}
+
+	if intIndex < 0 || int(intIndex) >= len(arr) {
+		return false
+	}
+
+	arr[intIndex] = value
+	return true
+}

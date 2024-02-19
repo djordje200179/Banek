@@ -48,3 +48,12 @@ type InvalidTypeError struct {
 func (err InvalidTypeError) Error() string {
 	return fmt.Sprintf("invalid type for %d. argument of %s: %s", err.ArgIndex+1, err.BuiltinName, err.Arg.String())
 }
+
+type NotIndexableError struct {
+	Coll Obj
+	Key  Obj
+}
+
+func (err NotIndexableError) Error() string {
+	return fmt.Sprintf("not indexable: %s, for key: %s", err.Coll.String(), err.Key.String())
+}

@@ -12,8 +12,8 @@ type Obj interface {
 type Coll interface {
 	Obj
 	Len() int
-	Get(index Obj) Obj
-	Set(index Obj, value Obj)
+	Get(index Obj) (Obj, bool)
+	Set(index Obj, value Obj) bool
 }
 
 type Adder interface {

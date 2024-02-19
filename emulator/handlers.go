@@ -369,3 +369,46 @@ func (e *emulator) handleReturn() {
 func (_ *emulator) handleHalt() {
 	panic(struct{}{})
 }
+
+func (e *emulator) handlePushCollElem() {
+	key := e.operandStack.Pop()
+	coll := e.operandStack.Pop()
+
+	err := runtime.NotIndexableError{
+		Coll: coll,
+		Key:  key,
+	}
+
+	indexer, ok := coll.(runtime.Coll)
+	if !ok {
+		panic(err)
+	}
+
+	elem, ok := indexer.Get(key)
+	if !ok {
+		panic(err)
+	}
+
+	e.operandStack.Push(elem)
+}
+
+func (e *emulator) handlePopCollElem() {
+	value := e.operandStack.Pop()
+	key := e.operandStack.Pop()
+	coll := e.operandStack.Pop()
+
+	err := runtime.NotIndexableError{
+		Coll: coll,
+		Key:  key,
+	}
+
+	indexer, ok := coll.(runtime.Coll)
+	if !ok {
+		panic(err)
+	}
+
+	ok = indexer.Set(key, value)
+	if !ok {
+		panic(err)
+	}
+}
