@@ -61,8 +61,11 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 	}
 
 	g.compileStmtBlock(stmt.Body)
-	g.emitInstr(instrs.OpPushUndef)
-	g.emitInstr(instrs.OpReturn)
+
+	if g.code[len(g.container.code)-1] != byte(instrs.OpReturn) {
+		g.emitInstr(instrs.OpPushUndef)
+		g.emitInstr(instrs.OpReturn)
+	}
 
 	g.funcPool = append(g.funcPool, bytecode.FuncTemplate{
 		Name:      stmt.Name.String(),
