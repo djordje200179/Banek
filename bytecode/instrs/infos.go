@@ -38,9 +38,8 @@ var instrInfos = [...]InstrInfo{
 	OpPopLocal1:   {"POP.L1", nil},
 	OpPopLocal2:   {"POP.L2", nil},
 
-	OpDup:  {"DUP.", nil},
-	OpDup2: {"DUP2", nil},
-	OpDup3: {"DUP.3", nil},
+	OpDup:  {"DUP.1", nil},
+	OpDup2: {"DUP.2", nil},
 	OpSwap: {"SWAP", nil},
 
 	OpBinaryAdd: {"ADD", nil},

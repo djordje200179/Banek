@@ -1,6 +1,8 @@
-package scopes
+package emulator
 
 import (
+	"banek/bytecode"
+	"banek/bytecode/instrs"
 	"banek/runtime"
 	"sync"
 	"unsafe"
@@ -31,4 +33,22 @@ func freeScopeVars(slice []runtime.Obj) {
 
 	clear(slice)
 	scopeVarsPools[len(slice)].Put(unsafe.SliceData(slice))
+}
+
+type scope struct {
+	code instrs.Code
+
+	pc   int
+	vars []runtime.Obj
+
+	function *bytecode.Func
+	template *bytecode.FuncTemplate
+
+	parent *scope
+}
+
+var scopePool = sync.Pool{
+	New: func() interface{} {
+		return &scope{}
+	},
 }

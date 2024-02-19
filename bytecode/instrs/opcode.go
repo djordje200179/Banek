@@ -52,7 +52,6 @@ const (
 const (
 	OpDup Opcode = 0x2C + iota
 	OpDup2
-	OpDup3
 	OpSwap
 )
 

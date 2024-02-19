@@ -3,8 +3,6 @@ package emulator
 import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
-	"banek/emulator/scopes"
-	"banek/emulator/stack"
 	"banek/runtime"
 )
 
@@ -48,7 +46,6 @@ var handlers = [...]func(e *emulator){
 
 	instrs.OpDup:  (*emulator).handleDup,
 	instrs.OpDup2: (*emulator).handleDup2,
-	instrs.OpDup3: (*emulator).handleDup3,
 	instrs.OpSwap: (*emulator).handleSwap,
 
 	instrs.OpBinaryAdd: (*emulator).handleBinaryAdd,
@@ -75,9 +72,30 @@ var handlers = [...]func(e *emulator){
 type emulator struct {
 	program *bytecode.Executable
 
-	scopeStack   *scopes.Stack
-	operandStack stack.Stack
+	stack stack
+
+	globalScope scope
+	activeScope *scope
 }
+
+func (e *emulator) readOpcode() instrs.Opcode {
+	opcode := instrs.Opcode(e.activeScope.code[e.activeScope.pc])
+	e.activeScope.pc++
+
+	return opcode
+}
+
+func (e *emulator) readOperand(op instrs.Opcode, index int) int {
+	width := op.Info().Operands[index].Width
+
+	operandSlice := e.activeScope.code[e.activeScope.pc : e.activeScope.pc+width]
+	operandValue := instrs.ReadOperandValue(operandSlice)
+	e.activeScope.pc += width
+
+	return operandValue
+}
+
+func (e *emulator) movePC(offset int) { e.activeScope.pc += offset }
 
 func Execute(program *bytecode.Executable) (err error) {
 	defer func() {
@@ -87,13 +105,19 @@ func Execute(program *bytecode.Executable) (err error) {
 		}
 	}()
 
+	entryFunc := program.FuncPool[0]
+
 	e := emulator{
-		program:    program,
-		scopeStack: scopes.NewStack(program.FuncPool[0]),
+		program: program,
+		globalScope: scope{
+			vars: make([]runtime.Obj, entryFunc.NumLocals),
+			code: entryFunc.Code,
+		},
 	}
+	e.activeScope = &e.globalScope
 
 	for {
-		opcode := e.scopeStack.ReadOpcode()
+		opcode := e.readOpcode()
 		handlers[opcode](&e)
 	}
 }

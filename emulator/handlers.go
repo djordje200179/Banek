@@ -8,104 +8,103 @@ import (
 	"banek/runtime/primitives"
 )
 
-func (e *emulator) handleDup()  { e.operandStack.Dup() }
-func (e *emulator) handleDup2() { e.operandStack.Dup2() }
-func (e *emulator) handleDup3() { e.operandStack.Dup3() }
-func (e *emulator) handleSwap() { e.operandStack.Swap() }
+func (e *emulator) handleDup()  { e.stack.dup() }
+func (e *emulator) handleDup2() { e.stack.dup2() }
+func (e *emulator) handleSwap() { e.stack.Swap() }
 
 func (e *emulator) handleJump() {
-	offset := e.scopeStack.ReadOperand(instrs.OpJump, 0)
-	e.scopeStack.MovePC(offset)
+	offset := e.readOperand(instrs.OpJump, 0)
+	e.movePC(offset)
 }
 
 func (e *emulator) handleBranchFalse() {
-	offset := e.scopeStack.ReadOperand(instrs.OpBranchFalse, 0)
+	offset := e.readOperand(instrs.OpBranchFalse, 0)
 
-	if !e.operandStack.Pop().Truthy() {
-		e.scopeStack.MovePC(offset)
+	if !e.stack.pop().Truthy() {
+		e.movePC(offset)
 	}
 }
 
 func (e *emulator) handleBranchTrue() {
-	offset := e.scopeStack.ReadOperand(instrs.OpBranchTrue, 0)
+	offset := e.readOperand(instrs.OpBranchTrue, 0)
 
-	if e.operandStack.Pop().Truthy() {
-		e.scopeStack.MovePC(offset)
+	if e.stack.pop().Truthy() {
+		e.movePC(offset)
 	}
 }
 
 func (e *emulator) handlePushBuiltin() {
-	builtin := e.scopeStack.ReadOperand(instrs.OpPushBuiltin, 0)
-	e.operandStack.Push(&builtins.Funcs[builtin])
+	builtin := e.readOperand(instrs.OpPushBuiltin, 0)
+	e.stack.push(&builtins.Funcs[builtin])
 }
 
 func (e *emulator) handlePushGlobal() {
-	index := e.scopeStack.ReadOperand(instrs.OpPushGlobal, 0)
-	e.operandStack.Push(e.scopeStack.GetGlobal(index))
+	index := e.readOperand(instrs.OpPushGlobal, 0)
+	e.stack.push(e.globalScope.vars[index])
 }
 
 func (e *emulator) handlePushLocal() {
-	index := e.scopeStack.ReadOperand(instrs.OpPushLocal, 0)
-	e.operandStack.Push(e.scopeStack.GetLocal(index))
+	index := e.readOperand(instrs.OpPushLocal, 0)
+	e.stack.push(e.activeScope.vars[index])
 }
 
-func (e *emulator) handlePushLocal0() { e.operandStack.Push(e.scopeStack.GetLocal(0)) }
-func (e *emulator) handlePushLocal1() { e.operandStack.Push(e.scopeStack.GetLocal(1)) }
-func (e *emulator) handlePushLocal2() { e.operandStack.Push(e.scopeStack.GetLocal(2)) }
+func (e *emulator) handlePushLocal0() { e.stack.push(e.activeScope.vars[0]) }
+func (e *emulator) handlePushLocal1() { e.stack.push(e.activeScope.vars[1]) }
+func (e *emulator) handlePushLocal2() { e.stack.push(e.activeScope.vars[2]) }
 
-func (e *emulator) handlePush0()  { e.operandStack.Push(primitives.Int(0)) }
-func (e *emulator) handlePush1()  { e.operandStack.Push(primitives.Int(1)) }
-func (e *emulator) handlePush2()  { e.operandStack.Push(primitives.Int(2)) }
-func (e *emulator) handlePush3()  { e.operandStack.Push(primitives.Int(3)) }
-func (e *emulator) handlePushN1() { e.operandStack.Push(primitives.Int(-1)) }
+func (e *emulator) handlePush0()  { e.stack.push(primitives.Int(0)) }
+func (e *emulator) handlePush1()  { e.stack.push(primitives.Int(1)) }
+func (e *emulator) handlePush2()  { e.stack.push(primitives.Int(2)) }
+func (e *emulator) handlePush3()  { e.stack.push(primitives.Int(3)) }
+func (e *emulator) handlePushN1() { e.stack.push(primitives.Int(-1)) }
 
 func (e *emulator) handlePushInt() {
-	value := e.scopeStack.ReadOperand(instrs.OpPushInt, 0)
-	e.operandStack.Push(primitives.Int(value))
+	value := e.readOperand(instrs.OpPushInt, 0)
+	e.stack.push(primitives.Int(value))
 }
 
 func (e *emulator) handlePushStr() {
-	index := e.scopeStack.ReadOperand(instrs.OpPushStr, 0)
+	index := e.readOperand(instrs.OpPushStr, 0)
 	value := primitives.String(e.program.StringPool[index])
-	e.operandStack.Push(value)
+	e.stack.push(value)
 }
 
-func (e *emulator) handlePushTrue()  { e.operandStack.Push(primitives.Bool(true)) }
-func (e *emulator) handlePushFalse() { e.operandStack.Push(primitives.Bool(false)) }
-func (e *emulator) handlePushUndef() { e.operandStack.Push(primitives.Undefined{}) }
+func (e *emulator) handlePushTrue()  { e.stack.push(primitives.Bool(true)) }
+func (e *emulator) handlePushFalse() { e.stack.push(primitives.Bool(false)) }
+func (e *emulator) handlePushUndef() { e.stack.push(primitives.Undefined{}) }
 
-func (e *emulator) handlePop() { e.operandStack.Pop() }
+func (e *emulator) handlePop() { e.stack.pop() }
 
 func (e *emulator) handlePopGlobal() {
-	index := e.scopeStack.ReadOperand(instrs.OpPopGlobal, 0)
-	e.scopeStack.SetGlobal(index, e.operandStack.Pop())
+	index := e.readOperand(instrs.OpPopGlobal, 0)
+	e.globalScope.vars[index] = e.stack.pop()
 }
 
 func (e *emulator) handlePopLocal() {
-	index := e.scopeStack.ReadOperand(instrs.OpPopLocal, 0)
-	e.scopeStack.SetLocal(index, e.operandStack.Pop())
+	index := e.readOperand(instrs.OpPopLocal, 0)
+	e.activeScope.vars[index] = e.stack.pop()
 }
 
-func (e *emulator) handlePopLocal0() { e.scopeStack.SetLocal(0, e.operandStack.Pop()) }
-func (e *emulator) handlePopLocal1() { e.scopeStack.SetLocal(1, e.operandStack.Pop()) }
-func (e *emulator) handlePopLocal2() { e.scopeStack.SetLocal(2, e.operandStack.Pop()) }
+func (e *emulator) handlePopLocal0() { e.activeScope.vars[0] = e.stack.pop() }
+func (e *emulator) handlePopLocal1() { e.activeScope.vars[1] = e.stack.pop() }
+func (e *emulator) handlePopLocal2() { e.activeScope.vars[2] = e.stack.pop() }
 
 func (e *emulator) handleMakeArray() {
-	size := e.scopeStack.ReadOperand(instrs.OpMakeArray, 0)
+	size := e.readOperand(instrs.OpMakeArray, 0)
 	arr := make(primitives.Array, size)
-	e.operandStack.PopMany(arr)
-	e.operandStack.Push(arr)
+	e.stack.popMany(arr)
+	e.stack.push(arr)
 }
 
 func (e *emulator) handleNewArray() {
-	size := e.operandStack.Pop().(primitives.Int)
+	size := e.stack.pop().(primitives.Int)
 	arr := make(primitives.Array, size)
-	e.operandStack.Push(arr)
+	e.stack.push(arr)
 }
 
 func (e *emulator) handleBinaryAdd() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
 	err := runtime.InvalidOperandsError{
 		Operator: runtime.AddOperator,
@@ -123,12 +122,12 @@ func (e *emulator) handleBinaryAdd() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleBinarySub() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
 	err := runtime.InvalidOperandsError{
 		Operator: runtime.SubOperator,
@@ -146,12 +145,12 @@ func (e *emulator) handleBinarySub() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleBinaryMul() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
 	err := runtime.InvalidOperandsError{
 		Operator: runtime.MulOperator,
@@ -169,12 +168,12 @@ func (e *emulator) handleBinaryMul() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleBinaryDiv() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
 	err := runtime.InvalidOperandsError{
 		Operator: runtime.DivOperator,
@@ -192,12 +191,12 @@ func (e *emulator) handleBinaryDiv() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleBinaryMod() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
 	err := runtime.InvalidOperandsError{
 		Operator: runtime.ModOperator,
@@ -215,27 +214,27 @@ func (e *emulator) handleBinaryMod() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleBinaryEq() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
-	e.operandStack.Push(primitives.Bool(left.Equals(right)))
+	e.stack.push(primitives.Bool(left.Equals(right)))
 }
 
 func (e *emulator) handleBinaryNeq() {
-	right := e.operandStack.Pop()
-	left := e.operandStack.Pop()
+	right := e.stack.pop()
+	left := e.stack.pop()
 
-	e.operandStack.Push(primitives.Bool(!left.Equals(right)))
+	e.stack.push(primitives.Bool(!left.Equals(right)))
 }
 
 func makeComparisonHandler(op runtime.BinaryOperator) func(*emulator) {
 	return func(e *emulator) {
-		right := e.operandStack.Pop()
-		left := e.operandStack.Pop()
+		right := e.stack.pop()
+		left := e.stack.pop()
 
 		err := runtime.InvalidOperandsError{
 			Operator: op,
@@ -267,12 +266,12 @@ func makeComparisonHandler(op runtime.BinaryOperator) func(*emulator) {
 			panic("unreachable")
 		}
 
-		e.operandStack.Push(res)
+		e.stack.push(res)
 	}
 }
 
 func (e *emulator) handleUnaryNeg() {
-	operand := e.operandStack.Pop()
+	operand := e.stack.pop()
 
 	err := runtime.InvalidOperandError{
 		Operator: runtime.NegOperator,
@@ -289,11 +288,11 @@ func (e *emulator) handleUnaryNeg() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleUnaryNot() {
-	operand := e.operandStack.Pop()
+	operand := e.stack.pop()
 
 	err := runtime.InvalidOperandError{
 		Operator: runtime.NotOperator,
@@ -310,11 +309,11 @@ func (e *emulator) handleUnaryNot() {
 		panic(err)
 	}
 
-	e.operandStack.Push(res)
+	e.stack.push(res)
 }
 
 func (e *emulator) handleMakeFunc() {
-	templateIndex := e.scopeStack.ReadOperand(instrs.OpMakeFunc, 0)
+	templateIndex := e.readOperand(instrs.OpMakeFunc, 0)
 	template := e.program.FuncPool[templateIndex]
 
 	captures := make([]*runtime.Obj, len(template.Captures))
@@ -328,42 +327,61 @@ func (e *emulator) handleMakeFunc() {
 		Captures:      captures,
 	}
 
-	e.operandStack.Push(fn)
+	e.stack.push(fn)
 }
 
 func (e *emulator) handleCall() {
-	numArgs := e.scopeStack.ReadOperand(instrs.OpCall, 0)
+	numArgs := e.readOperand(instrs.OpCall, 0)
 
-	switch function := e.operandStack.Pop().(type) {
+	switch function := e.stack.pop().(type) {
 	case *bytecode.Func:
 		template := &e.program.FuncPool[function.TemplateIndex]
 		if numArgs > template.NumParams {
 			panic(runtime.TooManyArgsError{Expected: template.NumParams, Actual: numArgs})
 		}
 
-		locals := e.scopeStack.NewScope(function, template)
-		e.operandStack.PopMany(locals[:numArgs])
+		locals := newScopeVars(template.NumLocals)
+
+		newScope := scopePool.Get().(*scope)
+		*newScope = scope{
+			code:     template.Code,
+			vars:     locals,
+			function: function,
+			template: template,
+			parent:   e.activeScope,
+		}
+		e.activeScope = newScope
+
+		e.stack.popMany(locals[:numArgs])
 	case *builtins.Builtin:
 		if function.NumArgs != -1 && numArgs != function.NumArgs {
 			panic(runtime.TooManyArgsError{Expected: function.NumArgs, Actual: numArgs})
 		}
 
 		args := make([]runtime.Obj, numArgs)
-		e.operandStack.PopMany(args)
+		e.stack.popMany(args)
 
 		res, err := function.Func(args)
 		if err != nil {
 			panic(err)
 		}
 
-		e.operandStack.Push(res)
+		e.stack.push(res)
 	default:
 		panic(runtime.NotCallableError{Func: function})
 	}
 }
 
 func (e *emulator) handleReturn() {
-	e.scopeStack.RestoreScope()
+	if !e.activeScope.template.IsCaptured {
+		freeScopeVars(e.activeScope.vars)
+	}
+
+	restoredScope := e.activeScope
+	e.activeScope = e.activeScope.parent
+
+	*restoredScope = scope{}
+	scopePool.Put(restoredScope)
 }
 
 func (_ *emulator) handleHalt() {
@@ -371,8 +389,8 @@ func (_ *emulator) handleHalt() {
 }
 
 func (e *emulator) handlePushCollElem() {
-	key := e.operandStack.Pop()
-	coll := e.operandStack.Pop()
+	key := e.stack.pop()
+	coll := e.stack.pop()
 
 	err := runtime.NotIndexableError{
 		Coll: coll,
@@ -389,13 +407,13 @@ func (e *emulator) handlePushCollElem() {
 		panic(err)
 	}
 
-	e.operandStack.Push(elem)
+	e.stack.push(elem)
 }
 
 func (e *emulator) handlePopCollElem() {
-	value := e.operandStack.Pop()
-	key := e.operandStack.Pop()
-	coll := e.operandStack.Pop()
+	value := e.stack.pop()
+	key := e.stack.pop()
+	coll := e.stack.pop()
 
 	err := runtime.NotIndexableError{
 		Coll: coll,
