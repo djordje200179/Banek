@@ -28,7 +28,10 @@ func builtinInt(args []runtime.Obj) (runtime.Obj, error) {
 			return primitives.Int(0), nil
 		}
 	default:
-		// TODO: error
-		return nil, nil
+		return nil, runtime.InvalidTypeError{
+			BuiltinName: "int",
+			ArgIndex:    0,
+			Arg:         args[0],
+		}
 	}
 }

@@ -12,7 +12,10 @@ func builtinLen(args []runtime.Obj) (runtime.Obj, error) {
 	case primitives.Array:
 		return primitives.Int(len(arg)), nil
 	default:
-		// TODO: error
-		return nil, nil
+		return nil, runtime.InvalidTypeError{
+			BuiltinName: "len",
+			ArgIndex:    0,
+			Arg:         args[0],
+		}
 	}
 }

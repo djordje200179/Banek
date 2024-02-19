@@ -70,11 +70,3 @@ func (b *Builtin) Equals(other runtime.Obj) bool {
 
 	return b.Name == otherBuiltin.Name
 }
-
-type OperandNotValidError struct {
-	Operand runtime.Obj
-}
-
-func (e OperandNotValidError) Error() string {
-	return "operand type not valid: " + e.Operand.String()
-}

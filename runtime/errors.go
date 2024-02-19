@@ -37,3 +37,14 @@ type NotCallableError struct {
 func (err NotCallableError) Error() string {
 	return "not callable: " + err.Func.String()
 }
+
+type InvalidTypeError struct {
+	BuiltinName string
+	ArgIndex    int
+
+	Arg Obj
+}
+
+func (err InvalidTypeError) Error() string {
+	return fmt.Sprintf("invalid type for argument %d to %s: %s", err.ArgIndex, err.BuiltinName, err.Arg)
+}
