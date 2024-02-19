@@ -39,30 +39,27 @@ func BenchmarkRecursiveFibonacci(t *testing.B) {
 	}
 }
 
-func BenchmarkVariableDeclaration(t *testing.B) {
+func TestVariableDeclaration(t *testing.T) {
 	code := `
 		let mut x;
 		x = 2;
 		println(x);
 	`
-	for range t.N {
-		err := runCode(code)
-		if err != nil {
-			t.Fatal(err)
-		}
+	err := runCode(code)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
-func BenchmarkArrayManipulation(t *testing.B) {
+func TestArrayManipulation(t *testing.T) {
 	code := `
 		let arr = [1, 2, 3, 4, 5];
 		arr[1] += 1;
 		println(arr[1]);
+		println([0] + arr);
 	`
-	for range t.N {
-		err := runCode(code)
-		if err != nil {
-			t.Fatal(err)
-		}
+	err := runCode(code)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
