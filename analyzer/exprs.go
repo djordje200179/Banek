@@ -156,8 +156,26 @@ func (a *analyzer) analyzeIfExpr(expr exprs.If) (ast.Expr, error) {
 	return expr, nil
 }
 
-func (a *analyzer) analyzeFuncLiteral(expr exprs.FuncLiteral) (ast.Expr, error) {
-	//TODO: fix
+func (a *analyzer) analyzeFuncLiteral(decl exprs.FuncLiteral) (ast.Expr, error) {
+	a.funcCnt++
+	defer func() { a.funcCnt-- }()
 
-	return expr, nil
+	decl.Container = a.symTable.OpenContainer()
+	defer a.symTable.CloseContainer()
+
+	for _, param := range decl.Params {
+		_, ok := a.symTable.Insert(param.String(), true)
+		if !ok {
+			return nil, RedeclaredIdentError(param)
+		}
+	}
+
+	body, err := a.analyzeExpr(decl.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	decl.Body = body
+
+	return decl, nil
 }
