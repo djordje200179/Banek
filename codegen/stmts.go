@@ -6,6 +6,7 @@ import (
 	"banek/ast/stmts"
 	"banek/bytecode"
 	"banek/bytecode/instrs"
+	"banek/tokens"
 )
 
 func (g *generator) compileStmt(stmt ast.Stmt) {
@@ -34,11 +35,40 @@ func (g *generator) compileStmt(stmt ast.Stmt) {
 }
 
 func (g *generator) compileAssignment(stmt stmts.Assignment) {
-
+	g.compilePreStore(stmt.Var)
+	g.compileExpr(stmt.Value)
+	g.compileStore(stmt.Var)
 }
 
 func (g *generator) compileCompoundAssignment(stmt stmts.CompoundAssignment) {
+	switch v := stmt.Var.(type) {
+	case exprs.Ident:
+		g.compileIdent(v)
+	case exprs.CollIndex:
+		g.compilePreStore(v)
+		g.emitInstr(instrs.OpDup2)
+		g.emitInstr(instrs.OpPushCollElem)
+	default:
+		panic("unreachable")
+	}
+	g.compileExpr(stmt.Value)
 
+	switch stmt.Operator {
+	case tokens.PlusAssign:
+		g.emitInstr(instrs.OpBinaryAdd)
+	case tokens.MinusAssign:
+		g.emitInstr(instrs.OpBinarySub)
+	case tokens.AsteriskAssign:
+		g.emitInstr(instrs.OpBinaryMul)
+	case tokens.SlashAssign:
+		g.emitInstr(instrs.OpBinaryDiv)
+	case tokens.PercentAssign:
+		g.emitInstr(instrs.OpBinaryMod)
+	default:
+		panic("unreachable")
+	}
+
+	g.compileStore(stmt.Var)
 }
 
 func (g *generator) compileStmtBlock(stmt stmts.Block) {
@@ -115,6 +145,9 @@ func (g *generator) compileVarDecl(stmt stmts.VarDecl) {
 	if g.level == 0 {
 		g.vars++
 	}
+
+	g.compileExpr(stmt.Value)
+	g.compileStore(stmt.Var)
 }
 
 func (g *generator) compileWhile(stmt stmts.While) {

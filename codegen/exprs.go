@@ -216,6 +216,19 @@ func (g *generator) compileStore(expr ast.Expr) {
 		default:
 			g.emitInstr(instrs.OpPopCaptured, g.level-sym.Level, sym.Index)
 		}
+	case exprs.CollIndex:
+		g.emitInstr(instrs.OpPopCollElem)
+	default:
+		panic("unreachable")
+	}
+}
+
+func (g *generator) compilePreStore(expr ast.Expr) {
+	switch expr := expr.(type) {
+	case exprs.Ident:
+	case exprs.CollIndex:
+		g.compileExpr(expr.Coll)
+		g.compileExpr(expr.Key)
 	default:
 		panic("unreachable")
 	}

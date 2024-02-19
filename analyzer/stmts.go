@@ -66,10 +66,12 @@ func (a *analyzer) analyzeWhile(stmt stmts.While) (ast.Stmt, error) {
 }
 
 func (a *analyzer) analyzeVarDecl(decl stmts.VarDecl) (ast.Stmt, error) {
-	_, ok := a.symTable.Insert(decl.Var.String(), decl.Mutable)
+	v, ok := a.symTable.Insert(decl.Var.String(), decl.Mutable)
 	if !ok {
 		return nil, RedeclaredIdentError(decl.Var)
 	}
+
+	decl.Var = exprs.Ident{v}
 
 	if decl.Value != nil {
 		value, err := a.analyzeExpr(decl.Value)
