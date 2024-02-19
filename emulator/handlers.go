@@ -347,7 +347,6 @@ func (e *emulator) handleCall() {
 			code:     template.Code,
 			vars:     locals,
 			function: function,
-			template: template,
 			parent:   e.activeScope,
 		}
 		e.activeScope = newScope
@@ -373,12 +372,13 @@ func (e *emulator) handleCall() {
 }
 
 func (e *emulator) handleReturn() {
-	if !e.activeScope.template.IsCaptured {
-		freeScopeVars(e.activeScope.vars)
-	}
-
 	restoredScope := e.activeScope
 	e.activeScope = e.activeScope.parent
+
+	funcTemplate := &e.program.FuncPool[restoredScope.function.TemplateIndex]
+	if !funcTemplate.IsCaptured {
+		freeScopeVars(restoredScope.vars)
+	}
 
 	*restoredScope = scope{}
 	scopePool.Put(restoredScope)

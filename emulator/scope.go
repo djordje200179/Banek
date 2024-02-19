@@ -42,7 +42,6 @@ type scope struct {
 	vars []runtime.Obj
 
 	function *bytecode.Func
-	template *bytecode.FuncTemplate
 
 	parent *scope
 }
