@@ -1,4 +1,4 @@
-package vm
+package emulator
 
 import (
 	"banek/bytecode"

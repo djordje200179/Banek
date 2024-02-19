@@ -1,4 +1,4 @@
-package vm
+package emulator
 
 import (
 	"banek/bytecode"
@@ -6,8 +6,6 @@ import (
 	"banek/emulator/scopes"
 	"banek/emulator/stack"
 	"banek/runtime"
-	"fmt"
-	"os"
 )
 
 var handlers = [...]func(e *emulator){
@@ -81,11 +79,11 @@ type emulator struct {
 	operandStack stack.Stack
 }
 
-func Execute(program *bytecode.Executable) {
+func Execute(program *bytecode.Executable) (err error) {
 	defer func() {
 		status := recover()
-		if err, ok := status.(error); ok {
-			_, _ = fmt.Fprintln(os.Stderr, err)
+		if statusErr, ok := status.(error); ok {
+			err = statusErr
 		}
 	}()
 
