@@ -23,11 +23,5 @@ func (expr ArrayLiteral) String() string {
 }
 
 func (expr ArrayLiteral) IsConst() bool {
-	for _, elem := range expr {
-		if !elem.IsConst() {
-			return false
-		}
-	}
-
-	return true
+	return false
 }

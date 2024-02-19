@@ -2,7 +2,6 @@ package stmts
 
 import (
 	"banek/ast"
-	"banek/tokens"
 	"strings"
 )
 
@@ -13,13 +12,10 @@ type Return struct {
 func (stmt Return) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.Return.String())
-	sb.WriteByte(' ')
+	sb.WriteString("return ")
 	sb.WriteString(stmt.Value.String())
 
 	return sb.String()
 }
 
-func (stmt Return) HasSideEffects() bool {
-	return !stmt.Value.IsConst()
-}
+func (stmt Return) StmtNode() {}

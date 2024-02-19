@@ -5,14 +5,12 @@ import (
 	"strings"
 )
 
-type Block struct {
-	Stmts []ast.Stmt
-}
+type Block []ast.Stmt
 
 func (stmt Block) String() string {
 	var sb strings.Builder
 
-	for i, stmt := range stmt.Stmts {
+	for i, stmt := range stmt {
 		if i != 0 {
 			sb.WriteByte('\n')
 		}
@@ -23,12 +21,4 @@ func (stmt Block) String() string {
 	return sb.String()
 }
 
-func (stmt Block) HasSideEffects() bool {
-	for _, stmt := range stmt.Stmts {
-		if stmt.HasSideEffects() {
-			return true
-		}
-	}
-
-	return false
-}
+func (stmt Block) StmtNode() {}

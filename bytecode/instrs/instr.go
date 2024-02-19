@@ -1,9 +1,9 @@
 package instrs
 
-func MakeInstr(opcode Opcode, operands ...int) []byte {
+func MakeInstr(opcode Opcode, operands ...int) Code {
 	instrInfo := opcode.Info()
 
-	instr := make([]byte, instrInfo.Size())
+	instr := make(Code, instrInfo.Size())
 	instr[0] = byte(opcode)
 
 	offset := 1
@@ -18,7 +18,7 @@ func MakeInstr(opcode Opcode, operands ...int) []byte {
 	return instr
 }
 
-func ReadInstr(instr []byte) (Opcode, []int, int) {
+func ReadInstr(instr Code) (Opcode, []int, int) {
 	opcode := Opcode(instr[0])
 	instrInfo := opcode.Info()
 

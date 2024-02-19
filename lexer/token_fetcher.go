@@ -2,68 +2,44 @@ package lexer
 
 import (
 	"banek/tokens"
-	"strings"
 	"unicode"
 )
 
-func (lexer *lexer) nextToken() tokens.Token {
-	lexer.skipBlank()
-
-	nextChar := lexer.nextChar()
-	if nextChar == '#' {
-		lexer.skipLineComment()
-		nextChar = lexer.nextChar()
+func (l *lexer) nextToken() (tokens.Token, error) {
+	err := l.skipBlank()
+	if err != nil {
+		return tokens.Token{}, err
 	}
 
-	if nextChar == 0 {
-		return tokens.Token{Type: tokens.EOF}
-	}
-
-	switch {
-	case unicode.IsLetter(nextChar):
-		_ = lexer.codeReader.UnreadRune()
-
-		identifier := lexer.readIdentifier()
-		tokenType := tokens.LookupIdentifier(identifier)
-
-		return tokens.Token{Type: tokenType, Literal: identifier}
-	case unicode.IsDigit(nextChar):
-		_ = lexer.codeReader.UnreadRune()
-
-		number := lexer.readNumber()
-		return tokens.Token{Type: tokens.Integer, Literal: number}
-	case nextChar == '"':
-		return lexer.readString()
-	}
-
-	var possibleCharTokens []string
-	for token := range tokens.CharTokens {
-		if strings.HasPrefix(token, string(nextChar)) {
-			possibleCharTokens = append(possibleCharTokens, token)
-		}
-	}
-
-	var currToken strings.Builder
+	var nextChar rune
 	for {
-		newToken := currToken.String() + string(nextChar)
-		var nextPossibleCharTokens []string
-		for _, possibleCharToken := range possibleCharTokens {
-			if strings.HasPrefix(possibleCharToken, newToken) {
-				nextPossibleCharTokens = append(nextPossibleCharTokens, possibleCharToken)
-			}
+		nextChar, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
 		}
 
-		if len(nextPossibleCharTokens) == 0 {
-			_ = lexer.codeReader.UnreadRune()
+		if nextChar != '#' {
 			break
 		}
 
-		currToken.WriteRune(nextChar)
-		nextChar = lexer.nextChar()
-		if nextChar == 0 {
-			continue
+		err = l.skipLine()
+		if err != nil {
+			return tokens.Token{}, err
 		}
 	}
 
-	return tokens.Token{Type: tokens.CharTokens[currToken.String()]}
+	_ = l.reader.UnreadRune()
+
+	switch {
+	case unicode.IsLetter(nextChar):
+		return l.readIdent()
+	case unicode.IsDigit(nextChar):
+		return l.readNum()
+	case nextChar == '"':
+		return l.readString()
+	case nextChar == 0:
+		return tokens.Token{Type: tokens.EOF}, nil
+	default:
+		return l.readChar()
+	}
 }

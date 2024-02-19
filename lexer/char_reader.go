@@ -1,39 +1,51 @@
 package lexer
 
-import "unicode"
+import (
+	"errors"
+	"io"
+	"unicode"
+)
 
-func (lexer *lexer) nextChar() rune {
-	ch, _, err := lexer.codeReader.ReadRune()
+func (l *lexer) nextChar() (rune, error) {
+	ch, _, err := l.reader.ReadRune()
 	if err != nil {
-		return 0
+		if errors.Is(err, io.EOF) {
+			return 0, nil
+		}
+
+		return 0, err
 	}
 
-	return ch
+	return ch, nil
 }
 
-func (lexer *lexer) skipBlank() {
+func (l *lexer) skipBlank() error {
 	for {
-		ch, _, err := lexer.codeReader.ReadRune()
+		ch, err := l.nextChar()
 		if err != nil {
-			return
+			return err
 		}
 
 		if !unicode.IsSpace(ch) {
-			_ = lexer.codeReader.UnreadRune()
-			return
+			break
 		}
 	}
+
+	_ = l.reader.UnreadRune()
+	return nil
 }
 
-func (lexer *lexer) skipLineComment() {
+func (l *lexer) skipLine() error {
 	for {
-		ch, _, err := lexer.codeReader.ReadRune()
+		ch, err := l.nextChar()
 		if err != nil {
-			return
+			return err
 		}
 
-		if ch == '\n' || ch == 0 {
-			return
+		if ch == '\n' || ch == '\r' {
+			break
 		}
 	}
+
+	return nil
 }

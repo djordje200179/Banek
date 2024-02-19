@@ -16,30 +16,35 @@ func Tokenize(codeReader io.Reader, bufferSize int) <-chan tokens.Token {
 }
 
 type lexer struct {
-	codeReader *bufio.Reader
+	reader *bufio.Reader
 }
 
-func lexingThread(codeReader io.Reader, tokenChan chan<- tokens.Token) {
+func lexingThread(reader io.Reader, tokenChan chan<- tokens.Token) {
 	runtime.LockOSThread()
 
 	var bufferedReader *bufio.Reader
-	if codeReaderBuffered, ok := codeReader.(*bufio.Reader); ok {
-		bufferedReader = codeReaderBuffered
-	} else {
-		bufferedReader = bufio.NewReader(codeReader)
+	var ok bool
+	if bufferedReader, ok = reader.(*bufio.Reader); !ok {
+		bufferedReader = bufio.NewReader(reader)
 	}
 
 	lexer := lexer{
-		codeReader: bufferedReader,
+		reader: bufferedReader,
 	}
 
 	for {
-		token := lexer.nextToken()
+		token, err := lexer.nextToken()
+		if err != nil {
+			close(tokenChan)
+			panic(err)
+		}
+
 		tokenChan <- token
 
 		if token.Type == tokens.EOF {
-			close(tokenChan)
 			break
 		}
 	}
+
+	close(tokenChan)
 }

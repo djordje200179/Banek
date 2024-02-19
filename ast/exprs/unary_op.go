@@ -2,12 +2,12 @@ package exprs
 
 import (
 	"banek/ast"
-	"banek/runtime/ops"
+	"banek/tokens"
 	"strings"
 )
 
 type UnaryOp struct {
-	Operator ops.UnaryOperator
+	Operator tokens.Type
 
 	Operand ast.Expr
 }

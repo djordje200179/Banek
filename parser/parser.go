@@ -2,10 +2,17 @@ package parser
 
 import (
 	"banek/ast"
-	"banek/ast/stmts"
 	"banek/tokens"
 	"runtime"
 )
+
+func Parse(tokenChan <-chan tokens.Token, bufferSize int) <-chan ast.Stmt {
+	stmtChan := make(chan ast.Stmt, bufferSize)
+
+	go parsingThread(tokenChan, stmtChan)
+
+	return stmtChan
+}
 
 type (
 	prefixExprHandler func() (ast.Expr, error)
@@ -23,14 +30,6 @@ type parser struct {
 	stmtHandlers       map[tokens.Type]stmtHandler
 }
 
-func Parse(tokenChan <-chan tokens.Token, bufferSize int) <-chan ast.Stmt {
-	stmtChan := make(chan ast.Stmt, bufferSize)
-
-	go parsingThread(tokenChan, stmtChan)
-
-	return stmtChan
-}
-
 func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Stmt) {
 	runtime.LockOSThread()
 
@@ -42,7 +41,8 @@ func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Stmt) {
 	for parser.currToken.Type != tokens.EOF {
 		stmt, err := parser.parseStmt()
 		if err != nil {
-			stmt = stmts.Invalid{Err: err}
+			close(stmtChan)
+			panic(err)
 		}
 
 		stmtChan <- stmt
@@ -51,62 +51,60 @@ func parsingThread(tokenChan <-chan tokens.Token, stmtChan chan<- ast.Stmt) {
 	close(stmtChan)
 }
 
-func (parser *parser) initHandlers() {
-	parser.prefixExprHandlers = map[tokens.Type]prefixExprHandler{
-		tokens.Identifier: parser.parseIdentifier,
+func (p *parser) initHandlers() {
+	p.prefixExprHandlers = map[tokens.Type]prefixExprHandler{
+		tokens.Ident: p.parseIdent,
 
-		tokens.Integer:   parser.parseInteger,
-		tokens.Boolean:   parser.parseBoolean,
-		tokens.String:    parser.parseString,
-		tokens.Undefined: parser.parseUndefined,
+		tokens.Int:       p.parseInt,
+		tokens.Bool:      p.parseBool,
+		tokens.String:    p.parseString,
+		tokens.Undefined: p.parseUndefined,
 
-		tokens.Minus:     parser.parseUnaryOp,
-		tokens.Bang:      parser.parseUnaryOp,
-		tokens.LeftArrow: parser.parseUnaryOp,
+		tokens.Minus:  p.parseUnaryOp,
+		tokens.Bang:   p.parseUnaryOp,
+		tokens.LArrow: p.parseUnaryOp,
 
-		tokens.LeftParen: parser.parseGroupedExpr,
+		tokens.LParen: p.parseGroupedExpr,
 
-		tokens.If:          parser.parseIfExpr,
-		tokens.VerticalBar: parser.parseFuncLiteral,
+		tokens.If:   p.parseIfExpr,
+		tokens.VBar: p.parseFuncLiteral,
 
-		tokens.LeftBracket: parser.parseArray,
+		tokens.LBracket: p.parseArray,
 	}
 
-	parser.infixExprHandlers = map[tokens.Type]infixExprHandler{
-		tokens.Equals:        parser.parseBinaryOp,
-		tokens.NotEquals:     parser.parseBinaryOp,
-		tokens.Less:          parser.parseBinaryOp,
-		tokens.Greater:       parser.parseBinaryOp,
-		tokens.LessEquals:    parser.parseBinaryOp,
-		tokens.GreaterEquals: parser.parseBinaryOp,
+	p.infixExprHandlers = map[tokens.Type]infixExprHandler{
+		tokens.Equals:        p.parseBinaryOp,
+		tokens.NotEquals:     p.parseBinaryOp,
+		tokens.Less:          p.parseBinaryOp,
+		tokens.Greater:       p.parseBinaryOp,
+		tokens.LessEquals:    p.parseBinaryOp,
+		tokens.GreaterEquals: p.parseBinaryOp,
 
-		tokens.Plus:      parser.parseBinaryOp,
-		tokens.Minus:     parser.parseBinaryOp,
-		tokens.Asterisk:  parser.parseBinaryOp,
-		tokens.Slash:     parser.parseBinaryOp,
-		tokens.Modulo:    parser.parseBinaryOp,
-		tokens.Caret:     parser.parseBinaryOp,
-		tokens.LeftArrow: parser.parseBinaryOp,
+		tokens.Plus:     p.parseBinaryOp,
+		tokens.Minus:    p.parseBinaryOp,
+		tokens.Asterisk: p.parseBinaryOp,
+		tokens.Slash:    p.parseBinaryOp,
+		tokens.Percent:  p.parseBinaryOp,
+		tokens.LArrow:   p.parseBinaryOp,
 
-		tokens.Assign:         parser.parseAssignment,
-		tokens.PlusAssign:     parser.parseAssignment,
-		tokens.MinusAssign:    parser.parseAssignment,
-		tokens.AsteriskAssign: parser.parseAssignment,
-		tokens.SlashAssign:    parser.parseAssignment,
-		tokens.ModuloAssign:   parser.parseAssignment,
-		tokens.CaretAssign:    parser.parseAssignment,
+		tokens.Assign:         p.parseBinaryOp,
+		tokens.PlusAssign:     p.parseBinaryOp,
+		tokens.MinusAssign:    p.parseBinaryOp,
+		tokens.AsteriskAssign: p.parseBinaryOp,
+		tokens.SlashAssign:    p.parseBinaryOp,
+		tokens.PercentAssign:  p.parseBinaryOp,
 
-		tokens.LeftParen:   parser.parseFuncCall,
-		tokens.LeftBracket: parser.parseIndexExpr,
+		tokens.LParen:   p.parseFuncCall,
+		tokens.LBracket: p.parseIndexExpr,
 	}
 
-	parser.stmtHandlers = map[tokens.Type]stmtHandler{
-		tokens.Let: parser.parseVarDeclaration,
+	p.stmtHandlers = map[tokens.Type]stmtHandler{
+		tokens.Let: p.parseVarDecl,
 
-		tokens.Return:    parser.parseReturn,
-		tokens.LeftBrace: parser.parseBlock,
-		tokens.Func:      parser.parseFuncStmt,
-		tokens.If:        parser.parseIfStmt,
-		tokens.While:     parser.parseWhile,
+		tokens.Return: p.parseReturn,
+		tokens.LBrace: p.parseBlock,
+		tokens.Func:   p.parseFuncStmt,
+		tokens.If:     p.parseIfStmt,
+		tokens.While:  p.parseWhile,
 	}
 }

@@ -1,6 +1,7 @@
 package bytecode
 
 import (
+	"banek/bytecode/instrs"
 	"strconv"
 	"strings"
 )
@@ -15,31 +16,29 @@ type FuncTemplate struct {
 	NumParams int
 
 	NumLocals int
-	Code      Code
+	Code      instrs.Code
 
 	IsCaptured bool
 
 	Captures []Capture
 }
 
-func (template FuncTemplate) IsClosure() bool {
-	return len(template.Captures) > 0
-}
+func (t *FuncTemplate) IsClosure() bool { return len(t.Captures) > 0 }
 
-func (template FuncTemplate) String() string {
+func (t *FuncTemplate) String() string {
 	var sb strings.Builder
 
-	if template.Name != "" {
-		sb.WriteString(template.Name)
+	if t.Name != "" {
+		sb.WriteString(t.Name)
 	} else {
 		sb.WriteString("<anonymous>")
 	}
 
 	sb.WriteByte('(')
-	sb.WriteString(strconv.Itoa(template.NumParams))
+	sb.WriteString(strconv.Itoa(t.NumParams))
 	sb.WriteString(" params)\n")
 
-	sb.WriteString(template.Code.String())
+	sb.WriteString(t.Code.String())
 
 	return sb.String()
 }

@@ -7,187 +7,201 @@ import (
 	"banek/tokens"
 )
 
-func (parser *parser) parseStmt() (ast.Stmt, error) {
-	for parser.currToken.Type == tokens.SemiColon {
-		parser.fetchToken()
+func (p *parser) parseStmt() (ast.Stmt, error) {
+	for p.currToken.Type == tokens.SemiColon {
+		p.fetchToken()
 	}
 
-	stmtHandler := parser.stmtHandlers[parser.currToken.Type]
+	stmtHandler := p.stmtHandlers[p.currToken.Type]
 	if stmtHandler == nil {
-		stmtHandler = parser.parseExprStmt
+		stmtHandler = p.parseExprStmt
 	}
 
 	return stmtHandler()
 }
 
-func (parser *parser) parseVarDeclaration() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseVarDecl() (ast.Stmt, error) {
+	p.fetchToken()
 
 	var isMutable bool
-	if parser.currToken.Type == tokens.Mut {
+	if p.currToken.Type == tokens.Mut {
 		isMutable = true
-		parser.fetchToken()
+		p.fetchToken()
 	}
 
-	if err := parser.assertToken(tokens.Identifier); err != nil {
+	if err := p.assertToken(tokens.Ident); err != nil {
 		return nil, err
 	}
 
-	name, err := parser.parseIdentifier()
+	name, err := p.parseIdent()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Assign); err != nil {
+	if err := p.assertToken(tokens.Assign); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	value, err := parser.parseExpr(Lowest)
+	value, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.SemiColon); err != nil {
+	if err := p.assertToken(tokens.SemiColon); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return stmts.VarDecl{Mutable: isMutable, Name: name.(exprs.Identifier), Value: value}, nil
+	return stmts.VarDecl{Mutable: isMutable, Var: name.(exprs.Ident), Value: value}, nil
 }
 
-func (parser *parser) parseReturn() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseReturn() (ast.Stmt, error) {
+	p.fetchToken()
 
-	value, err := parser.parseExpr(Lowest)
+	value, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.SemiColon); err != nil {
+	if err := p.assertToken(tokens.SemiColon); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
 	return stmts.Return{Value: value}, nil
 }
 
-func (parser *parser) parseExprStmt() (ast.Stmt, error) {
-	expr, err := parser.parseExpr(Lowest)
+func (p *parser) parseExprStmt() (ast.Stmt, error) {
+	expr, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if parser.currToken.Type == tokens.SemiColon {
-		parser.fetchToken()
+	if p.currToken.Type == tokens.SemiColon {
+		p.fetchToken()
 	}
 
-	return stmts.Expr{Expr: expr}, nil
+	switch expr := expr.(type) {
+	case exprs.FuncCall:
+		return stmts.FuncCall(expr), nil
+	case exprs.BinaryOp:
+		switch expr.Operator {
+		case tokens.Assign:
+			return stmts.Assignment{Var: expr.Left, Value: expr.Right}, nil
+		case tokens.PlusAssign, tokens.MinusAssign, tokens.AsteriskAssign, tokens.SlashAssign, tokens.PercentAssign:
+			return stmts.CompoundAssignment{Var: expr.Left, Value: expr.Right, Operator: expr.Operator}, nil
+		default:
+			return nil, InvalidExprStmtError{expr}
+		}
+	}
+
+	return nil, InvalidExprStmtError{expr}
 }
 
-func (parser *parser) parseBlock() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseBlock() (ast.Stmt, error) {
+	p.fetchToken()
 
-	var stmtsArray []ast.Stmt
-	for parser.currToken.Type != tokens.RightBrace {
-		stmt, err := parser.parseStmt()
+	var block stmts.Block
+	for p.currToken.Type != tokens.RBrace {
+		stmt, err := p.parseStmt()
 		if err != nil {
 			return nil, err
 		}
 
-		stmtsArray = append(stmtsArray, stmt)
+		block = append(block, stmt)
 	}
 
-	if err := parser.assertToken(tokens.RightBrace); err != nil {
+	if err := p.assertToken(tokens.RBrace); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return stmts.Block{Stmts: stmtsArray}, nil
+	return block, nil
 }
 
-func (parser *parser) parseFuncStmt() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseFuncStmt() (ast.Stmt, error) {
+	p.fetchToken()
 
-	if err := parser.assertToken(tokens.Identifier); err != nil {
+	if err := p.assertToken(tokens.Ident); err != nil {
 		return nil, err
 	}
 
-	name, err := parser.parseIdentifier()
+	name, err := p.parseIdent()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.LeftParen); err != nil {
+	if err := p.assertToken(tokens.LParen); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	params, err := parser.parseFuncParams(tokens.RightParen)
+	params, err := p.parseFuncParams(tokens.RParen)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := parser.parseBlock()
+	body, err := p.parseBlock()
 	if err != nil {
 		return nil, err
 	}
 
-	return stmts.Func{Name: name.(exprs.Identifier), Params: params, Body: body.(stmts.Block)}, nil
+	return stmts.FuncDecl{Name: name.(exprs.Ident), Params: params, Body: body.(stmts.Block)}, nil
 }
 
-func (parser *parser) parseIfStmt() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseIfStmt() (ast.Stmt, error) {
+	p.fetchToken()
 
-	cond, err := parser.parseExpr(Lowest)
+	cond, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Then); err != nil {
+	if err := p.assertToken(tokens.Then); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	consequence, err := parser.parseStmt()
+	cons, err := p.parseStmt()
 	if err != nil {
 		return nil, err
 	}
 
-	var alternative ast.Stmt
-	if parser.currToken.Type == tokens.Else {
-		parser.fetchToken()
+	var alt ast.Stmt
+	if p.currToken.Type == tokens.Else {
+		p.fetchToken()
 
-		alternative, err = parser.parseStmt()
+		alt, err = p.parseStmt()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return stmts.If{Cond: cond, Consequence: consequence, Alternative: alternative}, nil
+	return stmts.If{Cond: cond, Cons: cons, Alt: alt}, nil
 }
 
-func (parser *parser) parseWhile() (ast.Stmt, error) {
-	parser.fetchToken()
+func (p *parser) parseWhile() (ast.Stmt, error) {
+	p.fetchToken()
 
-	cond, err := parser.parseExpr(Lowest)
+	cond, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Do); err != nil {
+	if err := p.assertToken(tokens.Do); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	body, err := parser.parseStmt()
+	body, err := p.parseStmt()
 	if err != nil {
 		return nil, err
 	}

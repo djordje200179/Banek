@@ -8,7 +8,7 @@ import (
 type If struct {
 	Cond ast.Expr
 
-	Consequence, Alternative ast.Expr
+	Cons, Alt ast.Expr
 }
 
 func (expr If) String() string {
@@ -17,11 +17,11 @@ func (expr If) String() string {
 	sb.WriteString("if")
 	sb.WriteString(expr.Cond.String())
 	sb.WriteString(" then {\n")
-	sb.WriteString(expr.Consequence.String())
+	sb.WriteString(expr.Cons.String())
 	sb.WriteString("\n}")
-	if expr.Alternative != nil {
+	if expr.Alt != nil {
 		sb.WriteString(" else {\n")
-		sb.WriteString(expr.Alternative.String())
+		sb.WriteString(expr.Alt.String())
 		sb.WriteString("\n}")
 	}
 
@@ -29,5 +29,5 @@ func (expr If) String() string {
 }
 
 func (expr If) IsConst() bool {
-	return expr.Cond.IsConst() && expr.Consequence.IsConst() && expr.Alternative.IsConst()
+	return expr.Cond.IsConst() && expr.Cons.IsConst() && expr.Alt.IsConst()
 }

@@ -1,37 +1,34 @@
 package builtins
 
 import (
-	"banek/runtime/objs"
+	"banek/runtime"
+	"banek/runtime/primitives"
 	"strconv"
 )
 
-func builtinStr(args []objs.Obj) (objs.Obj, error) {
-	arg := args[0]
-	return objs.MakeStr(arg.String()), nil
+func builtinStr(args []runtime.Obj) (runtime.Obj, error) {
+	return primitives.String(args[0].String()), nil
 }
 
-func builtinInt(args []objs.Obj) (objs.Obj, error) {
-	arg := args[0]
-
-	switch arg.Tag {
-	case objs.TypeInt:
+func builtinInt(args []runtime.Obj) (runtime.Obj, error) {
+	switch arg := args[0].(type) {
+	case primitives.Int:
 		return arg, nil
-	case objs.TypeStr:
-		str := arg.AsStr()
-		integer, err := strconv.Atoi(str)
+	case primitives.String:
+		val, err := strconv.Atoi(string(arg))
 		if err != nil {
-			return objs.Obj{}, err
+			return nil, err
 		}
-		return objs.MakeInt(integer), nil
-	case objs.TypeBool:
-		boolean := arg.AsBool()
-		if boolean {
-			return objs.MakeInt(1), nil
+
+		return primitives.Int(val), nil
+	case primitives.Bool:
+		if arg {
+			return primitives.Int(1), nil
 		} else {
-			return objs.MakeInt(0), nil
+			return primitives.Int(0), nil
 		}
 	default:
 		// TODO: error
-		return objs.Obj{}, nil
+		return nil, nil
 	}
 }

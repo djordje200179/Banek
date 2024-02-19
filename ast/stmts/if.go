@@ -8,7 +8,7 @@ import (
 type If struct {
 	Cond ast.Expr
 
-	Consequence, Alternative ast.Stmt
+	Cons, Alt ast.Stmt
 }
 
 func (stmt If) String() string {
@@ -17,21 +17,15 @@ func (stmt If) String() string {
 	sb.WriteString("if ")
 	sb.WriteString(stmt.Cond.String())
 	sb.WriteString(" then {\n")
-	sb.WriteString(stmt.Consequence.String())
+	sb.WriteString(stmt.Cons.String())
 	sb.WriteString("\n}")
-	if stmt.Alternative != nil {
+	if stmt.Alt != nil {
 		sb.WriteString(" else {\n")
-		sb.WriteString(stmt.Alternative.String())
+		sb.WriteString(stmt.Alt.String())
 		sb.WriteString("\n}")
 	}
 
 	return sb.String()
 }
 
-func (stmt If) HasSideEffects() bool {
-	if !stmt.Cond.IsConst() {
-		return true
-	}
-
-	return stmt.Consequence.HasSideEffects() || stmt.Alternative.HasSideEffects()
-}
+func (stmt If) StmtNode() {}

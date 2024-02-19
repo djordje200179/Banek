@@ -23,10 +23,4 @@ func (stmt While) String() string {
 	return sb.String()
 }
 
-func (stmt While) HasSideEffects() bool {
-	if !stmt.Cond.IsConst() {
-		return true
-	}
-
-	return stmt.Body.HasSideEffects()
-}
+func (stmt While) StmtNode() {}

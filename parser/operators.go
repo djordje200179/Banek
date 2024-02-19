@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"banek/runtime/ops"
 	"banek/tokens"
 )
 
@@ -31,42 +30,16 @@ var infixOperatorPrecedences = map[tokens.Type]OperatorPrecedence{
 
 	tokens.Asterisk: Product,
 	tokens.Slash:    Product,
-	tokens.Modulo:   Product,
-	tokens.Caret:    Product,
+	tokens.Percent:  Product,
 
-	tokens.LeftParen:   Call,
-	tokens.LeftBracket: Call,
+	tokens.LParen:   Call,
+	tokens.LBracket: Call,
 
 	tokens.Assign:         Assignment,
 	tokens.PlusAssign:     Assignment,
 	tokens.MinusAssign:    Assignment,
 	tokens.AsteriskAssign: Assignment,
 	tokens.SlashAssign:    Assignment,
-	tokens.ModuloAssign:   Assignment,
-	tokens.CaretAssign:    Assignment,
-	tokens.LeftArrow:      Assignment,
-}
-
-var binaryOps = map[tokens.Type]ops.BinaryOperator{
-	tokens.Plus:     ops.BinaryPlus,
-	tokens.Minus:    ops.BinaryMinus,
-	tokens.Asterisk: ops.BinaryAsterisk,
-	tokens.Slash:    ops.BinarySlash,
-	tokens.Modulo:   ops.BinaryModulo,
-	tokens.Caret:    ops.BinaryCaret,
-
-	tokens.Equals:        ops.BinaryEquals,
-	tokens.NotEquals:     ops.BinaryNotEquals,
-	tokens.Less:          ops.BinaryLess,
-	tokens.Greater:       ops.BinaryGreater,
-	tokens.LessEquals:    ops.BinaryLessEquals,
-	tokens.GreaterEquals: ops.BinaryGreaterEquals,
-
-	tokens.LeftArrow: ops.BinaryLeftArrow,
-}
-
-var unaryOps = map[tokens.Type]ops.UnaryOperator{
-	tokens.Minus:     ops.UnaryMinus,
-	tokens.Bang:      ops.UnaryBang,
-	tokens.LeftArrow: ops.UnaryLeftArrow,
+	tokens.PercentAssign:  Assignment,
+	tokens.LArrow:         Assignment,
 }

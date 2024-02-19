@@ -2,21 +2,21 @@ package exprs
 
 import (
 	"banek/ast"
-	"banek/tokens"
+	"banek/symtable"
 	"strings"
 )
 
 type FuncLiteral struct {
-	Params []Identifier
+	Params []Ident
 	Body   ast.Expr
+
+	Container *symtable.Container
 }
 
 func (expr FuncLiteral) String() string {
 	var sb strings.Builder
 
-	sb.WriteString(tokens.Func.String())
-
-	sb.WriteByte('(')
+	sb.WriteString("func (")
 	for i, param := range expr.Params {
 		if i != 0 {
 			sb.WriteString(", ")
@@ -31,4 +31,6 @@ func (expr FuncLiteral) String() string {
 	return sb.String()
 }
 
-func (expr FuncLiteral) IsConst() bool { return false }
+func (expr FuncLiteral) IsConst() bool {
+	return false
+}

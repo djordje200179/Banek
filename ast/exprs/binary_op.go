@@ -2,14 +2,14 @@ package exprs
 
 import (
 	"banek/ast"
-	"banek/runtime/ops"
+	"banek/tokens"
 	"strings"
 )
 
 type BinaryOp struct {
 	Left, Right ast.Expr
 
-	Operator ops.BinaryOperator
+	Operator tokens.Type
 }
 
 func (expr BinaryOp) String() string {

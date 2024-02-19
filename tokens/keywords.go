@@ -14,15 +14,25 @@ var keywords = map[string]Type{
 	"while": While,
 	"do":    Do,
 
-	"true":      Boolean,
-	"false":     Boolean,
+	"true":      Bool,
+	"false":     Bool,
 	"undefined": Undefined,
 }
 
-func LookupIdentifier(identifier string) Type {
-	if tokenType, ok := keywords[identifier]; ok {
+func LookupIdent(ident string) Type {
+	if tokenType, ok := keywords[ident]; ok {
 		return tokenType
 	}
 
-	return Identifier
+	return Ident
+}
+
+func lookupKeyword(t Type) (string, bool) {
+	for k, v := range keywords {
+		if v == t {
+			return k, true
+		}
+	}
+
+	return "", false
 }

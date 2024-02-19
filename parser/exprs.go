@@ -3,15 +3,15 @@ package parser
 import (
 	"banek/ast"
 	"banek/ast/exprs"
-	"banek/runtime/objs"
+	"banek/symtable/symbols"
 	"banek/tokens"
 	"strconv"
 )
 
-func (parser *parser) parseExpr(precedence OperatorPrecedence) (ast.Expr, error) {
-	exprHandler := parser.prefixExprHandlers[parser.currToken.Type]
+func (p *parser) parseExpr(precedence OperatorPrecedence) (ast.Expr, error) {
+	exprHandler := p.prefixExprHandlers[p.currToken.Type]
 	if exprHandler == nil {
-		return nil, ErrUnknownToken{TokenType: parser.currToken.Type}
+		return nil, InvalidTokenError{p.currToken.Type}
 	}
 
 	leftExpr, err := exprHandler()
@@ -19,8 +19,8 @@ func (parser *parser) parseExpr(precedence OperatorPrecedence) (ast.Expr, error)
 		return nil, err
 	}
 
-	for parser.currToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[parser.currToken.Type] {
-		exprHandler := parser.infixExprHandlers[parser.currToken.Type]
+	for p.currToken.Type != tokens.SemiColon && precedence < infixOperatorPrecedences[p.currToken.Type] {
+		exprHandler := p.infixExprHandlers[p.currToken.Type]
 		if exprHandler == nil {
 			return leftExpr, nil
 		}
@@ -34,71 +34,71 @@ func (parser *parser) parseExpr(precedence OperatorPrecedence) (ast.Expr, error)
 	return leftExpr, nil
 }
 
-func (parser *parser) parseIdentifier() (ast.Expr, error) {
-	literal := parser.currToken.Literal
+func (p *parser) parseIdent() (ast.Expr, error) {
+	literal := p.currToken.Literal
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return exprs.Identifier(literal), nil
+	return exprs.Ident{Symbol: symbols.Ident(literal)}, nil
 }
 
-func (parser *parser) parseInteger() (ast.Expr, error) {
-	value, err := strconv.ParseInt(parser.currToken.Literal, 0, 64)
+func (p *parser) parseInt() (ast.Expr, error) {
+	value, err := strconv.ParseInt(p.currToken.Literal, 0, 64)
 	if err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.MakeInt(int(value))}, nil
+	return exprs.IntLiteral(value), nil
 }
 
-func (parser *parser) parseBoolean() (ast.Expr, error) {
-	value, err := strconv.ParseBool(parser.currToken.Literal)
+func (p *parser) parseBool() (ast.Expr, error) {
+	value, err := strconv.ParseBool(p.currToken.Literal)
 	if err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.MakeBool(value)}, nil
+	return exprs.BoolLiteral(value), nil
 }
 
-func (parser *parser) parseString() (ast.Expr, error) {
-	value := parser.currToken.Literal
+func (p *parser) parseString() (ast.Expr, error) {
+	value := p.currToken.Literal
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.MakeStr(value)}, nil
+	return exprs.StringLiteral(value), nil
 }
 
-func (parser *parser) parseUndefined() (ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseUndefined() (ast.Expr, error) {
+	p.fetchToken()
 
-	return exprs.ConstLiteral{Value: objs.Obj{}}, nil
+	return exprs.UndefinedLiteral{}, nil
 }
 
-func (parser *parser) parseArray() (ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseArray() (ast.Expr, error) {
+	p.fetchToken()
 
 	var elems exprs.ArrayLiteral
 
-	if parser.currToken.Type == tokens.RightBracket {
-		parser.fetchToken()
+	if p.currToken.Type == tokens.RBracket {
+		p.fetchToken()
 		return elems, nil
 	}
 
-	elem, err := parser.parseExpr(Lowest)
+	elem, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
 	elems = append(elems, elem)
 
-	for parser.currToken.Type == tokens.Comma {
-		parser.fetchToken()
+	for p.currToken.Type == tokens.Comma {
+		p.fetchToken()
 
-		elem, err = parser.parseExpr(Lowest)
+		elem, err = p.parseExpr(Lowest)
 		if err != nil {
 			return nil, err
 		}
@@ -106,135 +106,109 @@ func (parser *parser) parseArray() (ast.Expr, error) {
 		elems = append(elems, elem)
 	}
 
-	if err := parser.assertToken(tokens.RightBracket); err != nil {
+	if err := p.assertToken(tokens.RBracket); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
 	return elems, nil
 }
 
-func (parser *parser) parseUnaryOp() (ast.Expr, error) {
-	opToken := parser.currToken
+func (p *parser) parseUnaryOp() (ast.Expr, error) {
+	operator := p.currToken.Type
+	p.fetchToken()
 
-	parser.fetchToken()
-
-	operand, err := parser.parseExpr(Prefix)
+	operand, err := p.parseExpr(Prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	return exprs.UnaryOp{Operator: unaryOps[opToken.Type], Operand: operand}, nil
+	return exprs.UnaryOp{Operator: operator, Operand: operand}, nil
 }
 
-func (parser *parser) parseBinaryOp(left ast.Expr) (ast.Expr, error) {
-	opToken := parser.currToken
+func (p *parser) parseBinaryOp(left ast.Expr) (ast.Expr, error) {
+	operator := p.currToken.Type
+	p.fetchToken()
 
-	precedence, ok := infixOperatorPrecedences[opToken.Type]
+	precedence, ok := infixOperatorPrecedences[operator]
 	if !ok {
-		return nil, ErrUnknownToken{TokenType: opToken.Type}
+		return nil, InvalidTokenError{operator}
 	}
 
-	parser.fetchToken()
-
-	right, err := parser.parseExpr(precedence)
+	right, err := p.parseExpr(precedence)
 	if err != nil {
 		return nil, err
 	}
 
-	return exprs.BinaryOp{Left: left, Operator: binaryOps[opToken.Type], Right: right}, nil
+	return exprs.BinaryOp{Left: left, Operator: operator, Right: right}, nil
 }
 
-func (parser *parser) parseAssignment(variable ast.Expr) (ast.Expr, error) {
-	var valueWrapper exprs.BinaryOp
-	hasWrapper := false
-	if parser.currToken.Type != tokens.Assign {
-		op := tokens.CharTokens[parser.currToken.Type.String()[0:1]]
-		valueWrapper = exprs.BinaryOp{Left: variable, Operator: binaryOps[op]}
-		hasWrapper = true
-	}
+func (p *parser) parseGroupedExpr() (ast.Expr, error) {
+	p.fetchToken()
 
-	parser.fetchToken()
-
-	value, err := parser.parseExpr(Lowest)
+	expr, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if hasWrapper {
-		valueWrapper.Right = value
-		value = valueWrapper
-	}
-
-	return exprs.Assignment{Var: variable, Value: value}, nil
-}
-
-func (parser *parser) parseGroupedExpr() (ast.Expr, error) {
-	parser.fetchToken()
-
-	expr, err := parser.parseExpr(Lowest)
-	if err != nil {
+	if err := p.assertToken(tokens.RParen); err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.RightParen); err != nil {
-		return nil, err
-	}
-
-	parser.fetchToken()
+	p.fetchToken()
 
 	return expr, nil
 }
 
-func (parser *parser) parseIfExpr() (ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseIfExpr() (ast.Expr, error) {
+	p.fetchToken()
 
-	condition, err := parser.parseExpr(Lowest)
+	condition, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Then); err != nil {
+	if err := p.assertToken(tokens.Then); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	consequence, err := parser.parseExpr(Lowest)
+	cons, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.Else); err != nil {
+	if err := p.assertToken(tokens.Else); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	alternative, err := parser.parseExpr(Lowest)
+	alt, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	return exprs.If{Cond: condition, Consequence: consequence, Alternative: alternative}, nil
+	return exprs.If{Cond: condition, Cons: cons, Alt: alt}, nil
 }
 
-func (parser *parser) parseFuncLiteral() (ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseFuncLiteral() (ast.Expr, error) {
+	p.fetchToken()
 
-	params, err := parser.parseFuncParams(tokens.VerticalBar)
+	params, err := p.parseFuncParams(tokens.VBar)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.RightArrow); err != nil {
+	if err := p.assertToken(tokens.RArrow); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
-	expr, err := parser.parseExpr(Lowest)
+	expr, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
@@ -242,43 +216,43 @@ func (parser *parser) parseFuncLiteral() (ast.Expr, error) {
 	return exprs.FuncLiteral{Params: params, Body: expr}, nil
 }
 
-func (parser *parser) parseFuncParams(end tokens.Type) ([]exprs.Identifier, error) {
-	if parser.currToken.Type == end {
-		parser.fetchToken()
+func (p *parser) parseFuncParams(end tokens.Type) ([]exprs.Ident, error) {
+	if p.currToken.Type == end {
+		p.fetchToken()
 		return nil, nil
 	}
 
-	var params []exprs.Identifier
+	var params []exprs.Ident
 
-	identifier, err := parser.parseIdentifier()
+	identifier, err := p.parseIdent()
 	if err != nil {
 		return nil, err
 	}
 
-	params = append(params, identifier.(exprs.Identifier))
+	params = append(params, identifier.(exprs.Ident))
 
-	for parser.currToken.Type == tokens.Comma {
-		parser.fetchToken()
+	for p.currToken.Type == tokens.Comma {
+		p.fetchToken()
 
-		identifier, err = parser.parseIdentifier()
+		identifier, err = p.parseIdent()
 		if err != nil {
 			return nil, err
 		}
 
-		params = append(params, identifier.(exprs.Identifier))
+		params = append(params, identifier.(exprs.Ident))
 	}
 
-	if err := parser.assertToken(end); err != nil {
+	if err := p.assertToken(end); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
 	return params, nil
 }
 
-func (parser *parser) parseFuncCall(function ast.Expr) (ast.Expr, error) {
-	arguments, err := parser.parseFuncCallArgs()
+func (p *parser) parseFuncCall(function ast.Expr) (ast.Expr, error) {
+	arguments, err := p.parseFuncCallArgs()
 	if err != nil {
 		return nil, err
 	}
@@ -286,44 +260,44 @@ func (parser *parser) parseFuncCall(function ast.Expr) (ast.Expr, error) {
 	return exprs.FuncCall{Func: function, Args: arguments}, nil
 }
 
-func (parser *parser) parseIndexExpr(collection ast.Expr) (ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseIndexExpr(collection ast.Expr) (ast.Expr, error) {
+	p.fetchToken()
 
-	index, err := parser.parseExpr(Lowest)
+	index, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := parser.assertToken(tokens.RightBracket); err != nil {
+	if err := p.assertToken(tokens.RBracket); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
 	return exprs.CollIndex{Coll: collection, Key: index}, nil
 }
 
-func (parser *parser) parseFuncCallArgs() ([]ast.Expr, error) {
-	parser.fetchToken()
+func (p *parser) parseFuncCallArgs() ([]ast.Expr, error) {
+	p.fetchToken()
 
-	if parser.currToken.Type == tokens.RightParen {
-		parser.fetchToken()
+	if p.currToken.Type == tokens.RParen {
+		p.fetchToken()
 		return nil, nil
 	}
 
 	var args []ast.Expr
 
-	arg, err := parser.parseExpr(Lowest)
+	arg, err := p.parseExpr(Lowest)
 	if err != nil {
 		return nil, err
 	}
 
 	args = append(args, arg)
 
-	for parser.currToken.Type == tokens.Comma {
-		parser.fetchToken()
+	for p.currToken.Type == tokens.Comma {
+		p.fetchToken()
 
-		arg, err = parser.parseExpr(Lowest)
+		arg, err = p.parseExpr(Lowest)
 		if err != nil {
 			return nil, err
 		}
@@ -331,11 +305,11 @@ func (parser *parser) parseFuncCallArgs() ([]ast.Expr, error) {
 		args = append(args, arg)
 	}
 
-	if err := parser.assertToken(tokens.RightParen); err != nil {
+	if err := p.assertToken(tokens.RParen); err != nil {
 		return nil, err
 	}
 
-	parser.fetchToken()
+	p.fetchToken()
 
 	return args, nil
 }

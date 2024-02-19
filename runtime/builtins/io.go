@@ -1,12 +1,13 @@
 package builtins
 
 import (
-	"banek/runtime/objs"
+	"banek/runtime"
+	"banek/runtime/primitives"
 	"fmt"
 	"strings"
 )
 
-func builtinPrint(args []objs.Obj) (objs.Obj, error) {
+func builtinPrint(args []runtime.Obj) (runtime.Obj, error) {
 	var sb strings.Builder
 
 	for _, arg := range args {
@@ -16,10 +17,10 @@ func builtinPrint(args []objs.Obj) (objs.Obj, error) {
 
 	fmt.Print(sb.String())
 
-	return objs.Obj{}, nil
+	return primitives.Undefined{}, nil
 }
 
-func builtinPrintln(args []objs.Obj) (objs.Obj, error) {
+func builtinPrintln(args []runtime.Obj) (runtime.Obj, error) {
 	var sb strings.Builder
 
 	for _, arg := range args {
@@ -30,25 +31,25 @@ func builtinPrintln(args []objs.Obj) (objs.Obj, error) {
 
 	fmt.Print(sb.String())
 
-	return objs.Obj{}, nil
+	return primitives.Undefined{}, nil
 }
 
-func builtinRead(_ []objs.Obj) (objs.Obj, error) {
+func builtinRead(_ []runtime.Obj) (runtime.Obj, error) {
 	var input string
 	_, err := fmt.Scan(&input)
 	if err != nil {
-		return objs.Obj{}, err
+		return nil, err
 	}
 
-	return objs.MakeStr(input), nil
+	return primitives.String(input), nil
 }
 
-func builtinReadln(_ []objs.Obj) (objs.Obj, error) {
+func builtinReadln(_ []runtime.Obj) (runtime.Obj, error) {
 	var input string
 	_, err := fmt.Scanln(&input)
 	if err != nil {
-		return objs.Obj{}, err
+		return nil, err
 	}
 
-	return objs.MakeStr(input), nil
+	return primitives.String(input), nil
 }

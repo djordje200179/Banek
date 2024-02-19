@@ -6,45 +6,86 @@ const (
 	OpHalt Opcode = iota
 	OpCall
 	OpReturn
+)
 
-	OpPushDup
-	OpPushConst
-	OpPush0
-	OpPush1
-	OpPush2
-	OpPushUndefined
-	OpPushBuiltin
-	OpPushLocal
-	OpPushLocal0
-	OpPushLocal1
+const (
+	OpJump Opcode = 0x04 + iota
+	OpBranchFalse
+	OpBranchTrue
+)
+
+const (
+	OpPushBuiltin Opcode = 0x08 + iota
 	OpPushGlobal
 	OpPushCaptured
 	OpPushCollElem
+	OpPushLocal
+	OpPushLocal0
+	OpPushLocal1
+	OpPushLocal2
+)
 
-	OpPop
-	OpPopLocal
-	OpPopLocal0
-	OpPopLocal1
+const (
+	OpPush0 Opcode = 0x10 + iota
+	OpPush1
+	OpPush2
+	OpPush3
+	OpPushN1
+	OpPushInt
+	OpPushStr
+	OpPushTrue
+	OpPushFalse
+	OpPushUndef
+)
+
+const (
+	OpPop Opcode = 0x20 + iota
 	OpPopGlobal
 	OpPopCaptured
 	OpPopCollElem
+	OpPopLocal
+	OpPopLocal0
+	OpPopLocal1
+	OpPopLocal2
+)
 
-	OpBinaryOp
-	OpUnaryOp
+const (
+	OpDup Opcode = 0x2C + iota
+	OpDup2
+	OpDup3
+	OpSwap
+)
 
-	OpBranch
-	OpBranchIfFalse
+const (
+	OpBinaryAdd Opcode = 0x30 + iota
+	OpBinarySub
+	OpBinaryMul
+	OpBinaryDiv
+	OpBinaryMod
+	OpBinaryEq
+	OpBinaryNe
+	OpBinaryLt
+	OpBinaryLe
+	OpBinaryGt
+	OpBinaryGe
+)
 
+const (
+	OpUnaryNeg Opcode = 0x3C + iota
+	OpUnaryNot
+)
+
+const (
+	OpMakeArray Opcode = 0x40 + iota
 	OpNewArray
-	OpNewFunc
+	OpMakeFunc
 )
 
 func (opcode Opcode) String() string {
 	return opcode.Info().Name
 }
-
 func (opcode Opcode) Info() InstrInfo {
-	return InstrInfos[opcode]
+	return instrInfos[opcode]
 }
 
 type InstrInfo struct {
@@ -69,41 +110,4 @@ func (instrInfo InstrInfo) OperandOffset(index int) int {
 	}
 
 	return offset
-}
-
-var InstrInfos = [...]InstrInfo{
-	OpHalt:   {"HALT", []OperandInfo{}},
-	OpCall:   {"CALL", []OperandInfo{{1, OperandLiteral}}},
-	OpReturn: {"RET", []OperandInfo{}},
-
-	OpPushDup:       {"PUSH.D", []OperandInfo{}},
-	OpPushConst:     {"PUSH.C", []OperandInfo{{2, OperandConst}}},
-	OpPush0:         {"PUSH.0", []OperandInfo{}},
-	OpPush1:         {"PUSH.1", []OperandInfo{}},
-	OpPush2:         {"PUSH.2", []OperandInfo{}},
-	OpPushUndefined: {"PUSH.UND", []OperandInfo{}},
-	OpPushBuiltin:   {"PUSH.B", []OperandInfo{{1, OperandBuiltin}}},
-	OpPushLocal:     {"PUSH.L", []OperandInfo{{1, OperandLiteral}}},
-	OpPushLocal0:    {"PUSH.L#0", []OperandInfo{}},
-	OpPushLocal1:    {"PUSH.L#1", []OperandInfo{}},
-	OpPushGlobal:    {"PUSH.G", []OperandInfo{{1, OperandLiteral}}},
-	OpPushCaptured:  {"PUSH.O", []OperandInfo{{1, OperandLiteral}}},
-	OpPushCollElem:  {"PUSH.CE", []OperandInfo{}},
-
-	OpPop:         {"POP", []OperandInfo{}},
-	OpPopLocal:    {"POP.L", []OperandInfo{{1, OperandLiteral}}},
-	OpPopLocal0:   {"POP.L#0", []OperandInfo{}},
-	OpPopLocal1:   {"POP.L#1", []OperandInfo{}},
-	OpPopGlobal:   {"POP.G", []OperandInfo{{1, OperandLiteral}}},
-	OpPopCaptured: {"POP.O", []OperandInfo{{1, OperandLiteral}}},
-	OpPopCollElem: {"POP.CE", []OperandInfo{}},
-
-	OpBinaryOp: {"OP.I", []OperandInfo{{1, OperandBinaryOp}}},
-	OpUnaryOp:  {"OP.P", []OperandInfo{{1, OperandUnaryOp}}},
-
-	OpBranch:        {"BR", []OperandInfo{{2, OperandLiteral}}},
-	OpBranchIfFalse: {"BR.F", []OperandInfo{{2, OperandLiteral}}},
-
-	OpNewArray: {"NEW.A", []OperandInfo{{2, OperandLiteral}}},
-	OpNewFunc:  {"NEW.F", []OperandInfo{{2, OperandFunc}}},
 }

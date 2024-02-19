@@ -6,58 +6,219 @@ import (
 	"unicode"
 )
 
-func (lexer *lexer) readIdentifier() string {
+func (l *lexer) readIdent() (tokens.Token, error) {
 	var sb strings.Builder
 
-	firstChar, _, _ := lexer.codeReader.ReadRune()
-	sb.WriteRune(firstChar)
-
 	for {
-		ch := lexer.nextChar()
-		if unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_' {
-			sb.WriteRune(ch)
-		} else if ch == 0 {
-			break
-		} else {
-			_ = lexer.codeReader.UnreadRune()
-			break
+		ch, err := l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
 		}
-	}
 
-	return sb.String()
-}
-
-func (lexer *lexer) readNumber() string {
-	var sb strings.Builder
-
-	for {
-		ch := lexer.nextChar()
-		if unicode.IsDigit(ch) {
-			sb.WriteRune(ch)
-		} else if ch == 0 {
+		if !unicode.IsLetter(ch) && !unicode.IsDigit(ch) && ch != '_' {
+			_ = l.reader.UnreadRune()
 			break
-		} else {
-			_ = lexer.codeReader.UnreadRune()
-			break
-		}
-	}
-
-	return sb.String()
-}
-
-func (lexer *lexer) readString() tokens.Token {
-	var sb strings.Builder
-
-	for {
-		ch := lexer.nextChar()
-		if ch == '"' {
-			break
-		} else if ch == 0 {
-			return tokens.Token{Type: tokens.Illegal}
 		}
 
 		sb.WriteRune(ch)
 	}
 
-	return tokens.Token{Type: tokens.String, Literal: sb.String()}
+	tokenType := tokens.LookupIdent(sb.String())
+	return tokens.Token{Type: tokenType, Literal: sb.String()}, nil
+}
+
+func (l *lexer) readNum() (tokens.Token, error) {
+	var sb strings.Builder
+
+	for {
+		ch, err := l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		if !unicode.IsDigit(ch) {
+			_ = l.reader.UnreadRune()
+			break
+		}
+
+		sb.WriteRune(ch)
+	}
+
+	return tokens.Token{Type: tokens.Int, Literal: sb.String()}, nil
+}
+
+func (l *lexer) readString() (tokens.Token, error) {
+	var sb strings.Builder
+
+	_, _ = l.nextChar()
+
+	for {
+		ch, err := l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		if ch == '"' {
+			break
+		}
+
+		sb.WriteRune(ch)
+	}
+
+	return tokens.Token{Type: tokens.String, Literal: sb.String()}, nil
+}
+
+func (l *lexer) readChar() (tokens.Token, error) {
+	var tokenType tokens.Type
+
+	ch, err := l.nextChar()
+	if err != nil {
+		return tokens.Token{}, err
+	}
+
+	switch ch {
+	case '+':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.PlusAssign
+		default:
+			tokenType = tokens.Plus
+			_ = l.reader.UnreadRune()
+		}
+	case '-':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '>':
+			tokenType = tokens.RArrow
+		case '=':
+			tokenType = tokens.MinusAssign
+		default:
+			tokenType = tokens.Minus
+			_ = l.reader.UnreadRune()
+		}
+	case '*':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.AsteriskAssign
+		default:
+			tokenType = tokens.Asterisk
+			_ = l.reader.UnreadRune()
+		}
+	case '/':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.SlashAssign
+		default:
+			tokenType = tokens.Slash
+			_ = l.reader.UnreadRune()
+		}
+	case '%':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.PercentAssign
+		default:
+			tokenType = tokens.Percent
+			_ = l.reader.UnreadRune()
+		}
+	case '!':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.NotEquals
+		default:
+			tokenType = tokens.Bang
+			_ = l.reader.UnreadRune()
+		}
+	case '<':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '-':
+			tokenType = tokens.LArrow
+		case '=':
+			tokenType = tokens.LessEquals
+		default:
+			tokenType = tokens.Less
+			_ = l.reader.UnreadRune()
+		}
+	case '|':
+		tokenType = tokens.VBar
+	case ',':
+		tokenType = tokens.Comma
+	case ';':
+		tokenType = tokens.SemiColon
+	case '(':
+		tokenType = tokens.LParen
+	case ')':
+		tokenType = tokens.RParen
+	case '{':
+		tokenType = tokens.LBrace
+	case '}':
+		tokenType = tokens.RBrace
+	case '[':
+		tokenType = tokens.LBracket
+	case ']':
+		tokenType = tokens.RBracket
+	case '=':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.Equals
+		default:
+			tokenType = tokens.Assign
+			_ = l.reader.UnreadRune()
+		}
+	case '>':
+		ch, err = l.nextChar()
+		if err != nil {
+			return tokens.Token{}, err
+		}
+
+		switch ch {
+		case '=':
+			tokenType = tokens.GreaterEquals
+		default:
+			tokenType = tokens.Greater
+			_ = l.reader.UnreadRune()
+		}
+	default:
+		return tokens.Token{Type: tokens.Illegal, Literal: string(ch)}, nil
+	}
+
+	return tokens.Token{Type: tokenType}, nil
 }
