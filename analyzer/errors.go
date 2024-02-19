@@ -1,8 +1,8 @@
 package analyzer
 
 import (
+	"banek/ast"
 	"banek/ast/exprs"
-	"banek/ast/stmts"
 	"banek/tokens"
 	"errors"
 )
@@ -17,12 +17,24 @@ func (e RedeclaredIdentError) Error() string { return "redeclared identifier: " 
 
 var ErrReturnOutsideFunc = errors.New("return statement outside of function")
 
-type InvalidAssignmentError stmts.Assignment
+type InvalidAssignmentError struct {
+	ast.Stmt
+}
 
 func (e InvalidAssignmentError) Error() string {
-	return "invalid assignment: " + stmts.Assignment(e).String()
+	return "invalid assignment: " + e.Stmt.String()
 }
 
 type InvalidOpError tokens.Type
 
 func (e InvalidOpError) Error() string { return "invalid operator: " + tokens.Type(e).String() }
+
+type UninitializedVarError exprs.Ident
+
+func (e UninitializedVarError) Error() string { return "uninitialized variable: " + e.String() }
+
+type ImmutableAssignmentError exprs.Ident
+
+func (e ImmutableAssignmentError) Error() string {
+	return "assignment to immutable variable: " + e.String()
+}

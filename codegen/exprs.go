@@ -193,17 +193,13 @@ func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
 func (g *generator) compileStore(expr ast.Expr) {
 	switch expr := expr.(type) {
 	case exprs.Ident:
-		var sym symbols.Var
-		var ok bool
-		if sym, ok = expr.Symbol.(symbols.Var); !ok {
-			panic("unreachable")
-		}
+		v := expr.Symbol.(symbols.Var)
 
 		switch {
-		case sym.Level == 0:
-			g.emitInstr(instrs.OpPopGlobal, sym.Index)
-		case sym.Level == g.level:
-			switch sym.Index {
+		case v.Level == 0:
+			g.emitInstr(instrs.OpPopGlobal, v.Index)
+		case v.Level == g.level:
+			switch v.Index {
 			case 0:
 				g.emitInstr(instrs.OpPopLocal0)
 			case 1:
@@ -211,10 +207,10 @@ func (g *generator) compileStore(expr ast.Expr) {
 			case 2:
 				g.emitInstr(instrs.OpPopLocal2)
 			default:
-				g.emitInstr(instrs.OpPopLocal, sym.Index)
+				g.emitInstr(instrs.OpPopLocal, v.Index)
 			}
 		default:
-			g.emitInstr(instrs.OpPopCaptured, g.level-sym.Level, sym.Index)
+			g.emitInstr(instrs.OpPopCaptured, g.level-v.Level, v.Index)
 		}
 	case exprs.CollIndex:
 		g.emitInstr(instrs.OpPopCollElem)

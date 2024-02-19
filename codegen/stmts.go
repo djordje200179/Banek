@@ -146,7 +146,12 @@ func (g *generator) compileVarDecl(stmt stmts.VarDecl) {
 		g.vars++
 	}
 
-	g.compileExpr(stmt.Value)
+	if stmt.Value != nil {
+		g.compileExpr(stmt.Value)
+	} else {
+		g.emitInstr(instrs.OpPushUndef)
+	}
+
 	g.compileStore(stmt.Var)
 }
 

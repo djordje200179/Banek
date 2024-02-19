@@ -41,8 +41,8 @@ func BenchmarkRecursiveFibonacci(t *testing.B) {
 
 func BenchmarkVariableDeclaration(t *testing.B) {
 	code := `
-		let x = 5;
-		x += 2;
+		let mut x;
+		x = 2;
 		println(x);
 	`
 	for range t.N {

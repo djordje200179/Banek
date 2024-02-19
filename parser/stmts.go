@@ -38,6 +38,11 @@ func (p *parser) parseVarDecl() (ast.Stmt, error) {
 		return nil, err
 	}
 
+	if p.currToken.Type == tokens.SemiColon {
+		p.fetchToken()
+		return stmts.VarDecl{Mutable: isMutable, Var: name.(exprs.Ident)}, nil
+	}
+
 	if err := p.assertToken(tokens.Assign); err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"banek/ast"
 	"banek/ast/exprs"
 	"banek/ast/stmts"
+	"banek/symtable/symbols"
 )
 
 func (a *analyzer) analyzeStmt(stmt ast.Stmt) (ast.Stmt, error) {
@@ -72,6 +73,10 @@ func (a *analyzer) analyzeVarDecl(decl stmts.VarDecl) (ast.Stmt, error) {
 	}
 
 	decl.Var = exprs.Ident{v}
+
+	if !decl.Mutable && decl.Value == nil {
+		return nil, UninitializedVarError(decl.Var)
+	}
 
 	if decl.Value != nil {
 		value, err := a.analyzeExpr(decl.Value)
@@ -161,13 +166,22 @@ func (a *analyzer) analyzeAssignment(stmt stmts.Assignment) (ast.Stmt, error) {
 		return nil, err
 	}
 
-	switch v.(type) {
-	case exprs.Ident, exprs.CollIndex:
-	default:
-		return nil, InvalidAssignmentError{}
-	}
-
 	stmt.Var = v
+
+	switch v := v.(type) {
+	case exprs.Ident:
+		sym, ok := v.Symbol.(symbols.Var)
+		if !ok {
+			return nil, InvalidAssignmentError{stmt}
+		}
+
+		if !sym.Mutable {
+			return nil, ImmutableAssignmentError(v)
+		}
+	case exprs.CollIndex:
+	default:
+		return nil, InvalidAssignmentError{stmt}
+	}
 
 	v, err = a.analyzeExpr(stmt.Value)
 	if err != nil {
@@ -185,12 +199,19 @@ func (a *analyzer) analyzeCompoundAssignment(stmt stmts.CompoundAssignment) (ast
 		return nil, err
 	}
 
-	switch v.(type) {
+	switch v := v.(type) {
 	case exprs.Ident:
+		sym, ok := v.Symbol.(symbols.Var)
+		if !ok {
+			return nil, InvalidAssignmentError{stmt}
+		}
+
+		if !sym.Mutable {
+			return nil, ImmutableAssignmentError(v)
+		}
 	case exprs.CollIndex:
-		break
 	default:
-		return nil, InvalidAssignmentError{}
+		return nil, InvalidAssignmentError{stmt}
 	}
 
 	stmt.Var = v
