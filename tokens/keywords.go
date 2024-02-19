@@ -27,13 +27,3 @@ func LookupIdent(ident string) Type {
 
 	return Ident
 }
-
-func lookupKeyword(t Type) (string, bool) {
-	for k, v := range keywords {
-		if v == t {
-			return k, true
-		}
-	}
-
-	return "", false
-}
