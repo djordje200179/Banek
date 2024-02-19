@@ -105,7 +105,7 @@ func (instrInfo InstrInfo) Size() int {
 
 func (instrInfo InstrInfo) OperandOffset(index int) int {
 	offset := 1
-	for i := 0; i < index; i++ {
+	for i := range index {
 		offset += instrInfo.Operands[i].Width
 	}
 

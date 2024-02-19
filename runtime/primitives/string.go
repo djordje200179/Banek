@@ -31,7 +31,7 @@ func (s String) Mul(other runtime.Obj) (runtime.Obj, bool) {
 	}
 
 	var sb strings.Builder
-	for i := 0; i < int(otherInt); i++ {
+	for range otherInt {
 		sb.WriteString(string(s))
 	}
 

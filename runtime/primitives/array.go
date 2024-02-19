@@ -58,7 +58,7 @@ func (arr Array) Mul(other runtime.Obj) (runtime.Obj, bool) {
 	}
 
 	res := make(Array, len(arr)*int(otherInt))
-	for i := 0; i < int(otherInt); i++ {
+	for i := range int(otherInt) {
 		copy(res[i*len(arr):(i+1)*len(arr)], arr)
 	}
 
