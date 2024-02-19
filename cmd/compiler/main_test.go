@@ -90,3 +90,15 @@ func TestWhileLoop(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestForLoop(t *testing.T) {
+	code := `
+		let mut i;
+		for i = 0; i < 5; i += 1 do
+			print(i);
+	`
+	err := runCode(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

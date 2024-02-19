@@ -61,6 +61,7 @@ const (
 
 	While
 	Do
+	For
 
 	tokenCount
 )

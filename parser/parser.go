@@ -106,5 +106,6 @@ func (p *parser) initHandlers() {
 		tokens.Func:   p.parseFuncStmt,
 		tokens.If:     p.parseIfStmt,
 		tokens.While:  p.parseWhile,
+		tokens.For:    p.parseFor,
 	}
 }

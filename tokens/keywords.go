@@ -13,6 +13,7 @@ var keywords = map[string]Type{
 
 	"while": While,
 	"do":    Do,
+	"for":   For,
 
 	"true":      Bool,
 	"false":     Bool,

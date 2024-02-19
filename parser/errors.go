@@ -27,3 +27,11 @@ type InvalidExprStmtError struct {
 func (err InvalidExprStmtError) Error() string {
 	return "invalid expression statement: " + err.Expr.String()
 }
+
+type InvalidDesStmtError struct {
+	ast.Stmt
+}
+
+func (err InvalidDesStmtError) Error() string {
+	return "invalid designator statement: " + err.Stmt.String()
+}

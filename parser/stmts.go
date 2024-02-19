@@ -213,3 +213,51 @@ func (p *parser) parseWhile() (ast.Stmt, error) {
 
 	return stmts.While{Cond: cond, Body: body}, nil
 }
+
+func (p *parser) parseFor() (ast.Stmt, error) {
+	p.fetchToken()
+
+	initStmt, err := p.parseStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	init, ok := initStmt.(ast.DesStmt)
+	if !ok {
+		return nil, InvalidDesStmtError{initStmt}
+	}
+
+	cond, err := p.parseExpr(Lowest)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := p.assertToken(tokens.SemiColon); err != nil {
+		return nil, err
+	}
+
+	p.fetchToken()
+
+	postStmt, err := p.parseStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	post, ok := postStmt.(ast.DesStmt)
+	if !ok {
+		return nil, InvalidDesStmtError{postStmt}
+	}
+
+	if err := p.assertToken(tokens.Do); err != nil {
+		return nil, err
+	}
+
+	p.fetchToken()
+
+	body, err := p.parseStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	return stmts.For{Init: init, Cond: cond, Post: post, Body: body}, nil
+}

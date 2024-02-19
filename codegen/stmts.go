@@ -29,6 +29,8 @@ func (g *generator) compileStmt(stmt ast.Stmt) {
 		g.compileVarDecl(stmt)
 	case stmts.While:
 		g.compileWhile(stmt)
+	case stmts.For:
+		g.compileFor(stmt)
 	default:
 		panic("unreachable")
 	}
@@ -171,6 +173,22 @@ func (g *generator) compileWhile(stmt stmts.While) {
 	g.emitInstr(instrs.OpBranchFalse, 0)
 
 	g.compileStmt(stmt.Body)
+
+	g.emitInstr(instrs.OpJump, startPC-(g.currAddr()+instrs.OpJump.Info().Size()))
+	g.patchJumpOperand(jumpPC, 0)
+}
+
+func (g *generator) compileFor(stmt stmts.For) {
+	g.compileStmt(stmt.Init)
+
+	startPC := g.currAddr()
+	g.compileExpr(stmt.Cond)
+
+	jumpPC := g.currAddr()
+	g.emitInstr(instrs.OpBranchFalse, 0)
+
+	g.compileStmt(stmt.Body)
+	g.compileStmt(stmt.Post)
 
 	g.emitInstr(instrs.OpJump, startPC-(g.currAddr()+instrs.OpJump.Info().Size()))
 	g.patchJumpOperand(jumpPC, 0)

@@ -28,6 +28,8 @@ func (a *analyzer) analyzeStmt(stmt ast.Stmt) (ast.Stmt, error) {
 		return a.analyzeVarDecl(stmt)
 	case stmts.While:
 		return a.analyzeWhile(stmt)
+	case stmts.For:
+		return a.analyzeFor(stmt)
 	default:
 		panic("unreachable")
 	}
@@ -56,6 +58,46 @@ func (a *analyzer) analyzeWhile(stmt stmts.While) (ast.Stmt, error) {
 		return stmt, err
 	}
 	stmt.Cond = cond
+
+	body, err := a.analyzeStmt(stmt.Body)
+	if err != nil {
+		return stmt, err
+	}
+	stmt.Body = body
+
+	return stmt, nil
+}
+
+func (a *analyzer) analyzeFor(stmt stmts.For) (ast.Stmt, error) {
+	a.loopCnt++
+	defer func() { a.loopCnt-- }()
+
+	if stmt.Init != nil {
+		init, err := a.analyzeStmt(stmt.Init)
+		if err != nil {
+			return stmt, err
+		}
+		stmt.Init = init.(ast.DesStmt)
+	}
+
+	if stmt.Cond != nil {
+		cond, err := a.analyzeExpr(stmt.Cond)
+		if err != nil {
+			return stmt, err
+		}
+		stmt.Cond = cond
+	}
+
+	if stmt.Post != nil {
+		post, err := a.analyzeStmt(stmt.Post)
+		if err != nil {
+			return stmt, err
+		}
+		stmt.Post = post.(ast.DesStmt)
+	}
+
+	a.symTable.OpenScope()
+	defer a.symTable.CloseScope()
 
 	body, err := a.analyzeStmt(stmt.Body)
 	if err != nil {
