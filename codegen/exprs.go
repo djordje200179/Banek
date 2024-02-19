@@ -129,16 +129,16 @@ func (g *generator) compileIdent(expr exprs.Ident) {
 
 func (g *generator) compileIfExpr(expr exprs.If) {
 	g.compileExpr(expr.Cond)
-	jumpPc := g.container.currAddr()
+	jumpPc := g.currAddr()
 	g.emitInstr(instrs.OpBranchFalse, 0)
 
 	g.compileExpr(expr.Cons)
 
-	altJumpPc := g.container.currAddr()
+	altJumpPc := g.currAddr()
 	g.emitInstr(instrs.OpJump, 0)
-	g.container.patchJumpOperand(jumpPc, 0)
+	g.patchJumpOperand(jumpPc, 0)
 	g.compileExpr(expr.Alt)
-	g.container.patchJumpOperand(altJumpPc, 0)
+	g.patchJumpOperand(altJumpPc, 0)
 }
 
 func (g *generator) compileUnaryOp(expr exprs.UnaryOp) {
@@ -194,6 +194,9 @@ func (g *generator) compileUndefinedLiteral(expr exprs.UndefinedLiteral) {
 }
 
 func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
+	jumpAddr := g.currAddr()
+	g.emitInstr(instrs.OpJump, 0)
+
 	funcIndex := len(g.funcPool)
 	g.container = &container{
 		level:    g.container.level + 1,
@@ -202,16 +205,20 @@ func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
 		vars:     len(expr.Params),
 	}
 
+	funcTemplate := bytecode.FuncTemplate{
+		NumParams: len(expr.Params),
+		StartPC:   g.currAddr(),
+	}
+
 	g.compileExpr(expr.Body)
 	g.emitInstr(instrs.OpReturn)
 
-	g.funcPool = append(g.funcPool, bytecode.FuncTemplate{
-		NumParams: len(expr.Params),
-		NumLocals: g.container.vars,
-		Code:      g.container.code,
-	})
+	funcTemplate.NumLocals = g.container.vars
+	g.funcPool = append(g.funcPool, funcTemplate)
 
 	g.container = g.container.previous
+
+	g.patchJumpOperand(jumpAddr, 0)
 
 	g.emitInstr(instrs.OpMakeFunc, funcIndex)
 }

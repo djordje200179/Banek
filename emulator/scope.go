@@ -2,7 +2,6 @@ package emulator
 
 import (
 	"banek/bytecode"
-	"banek/bytecode/instrs"
 	"banek/runtime"
 	"sync"
 	"unsafe"
@@ -36,8 +35,6 @@ func freeScopeVars(slice []runtime.Obj) {
 }
 
 type scope struct {
-	code instrs.Code
-
 	pc   int
 	vars []runtime.Obj
 

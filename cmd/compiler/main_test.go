@@ -28,7 +28,7 @@ func BenchmarkRecursiveFibonacci(t *testing.B) {
 		    return fibonacci(n - 1) + fibonacci(n - 2);
 		}
 	
-		println(fibonacci(36));	
+		println(fibonacci(40));	
 	`
 
 	for range t.N {

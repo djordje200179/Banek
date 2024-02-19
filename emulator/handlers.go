@@ -344,10 +344,10 @@ func (e *emulator) handleCall() {
 
 		newScope := scopePool.Get().(*scope)
 		*newScope = scope{
-			code:     template.Code,
 			vars:     locals,
 			function: function,
 			parent:   e.activeScope,
+			pc:       template.StartPC,
 		}
 		e.activeScope = newScope
 

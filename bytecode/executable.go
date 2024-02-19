@@ -1,16 +1,19 @@
 package bytecode
 
 import (
+	"banek/bytecode/instrs"
 	"strconv"
 	"strings"
 )
 
 type Executable struct {
+	Code instrs.Code
+
 	StringPool []string
 	FuncPool   []FuncTemplate
 }
 
-func (e *Executable) String() string {
+func (e Executable) String() string {
 	var sb strings.Builder
 
 	replacePairs := make([]string, len(e.StringPool)*2)
@@ -20,6 +23,10 @@ func (e *Executable) String() string {
 	}
 	replacer := strings.NewReplacer(replacePairs...)
 
+	sb.WriteString("Code:\n")
+	sb.WriteString(e.Code.String())
+
+	sb.WriteString("Functions:\n")
 	for _, function := range e.FuncPool {
 		sb.WriteString(replacer.Replace(function.String()))
 		sb.WriteByte('\n')

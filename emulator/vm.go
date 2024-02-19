@@ -70,7 +70,7 @@ var handlers = [...]func(e *emulator){
 }
 
 type emulator struct {
-	program *bytecode.Executable
+	program bytecode.Executable
 
 	stack stack
 
@@ -79,7 +79,7 @@ type emulator struct {
 }
 
 func (e *emulator) readOpcode() instrs.Opcode {
-	opcode := instrs.Opcode(e.activeScope.code[e.activeScope.pc])
+	opcode := instrs.Opcode(e.program.Code[e.activeScope.pc])
 	e.activeScope.pc++
 
 	return opcode
@@ -88,7 +88,7 @@ func (e *emulator) readOpcode() instrs.Opcode {
 func (e *emulator) readOperand(op instrs.Opcode, index int) int {
 	width := op.Info().Operands[index].Width
 
-	operandSlice := e.activeScope.code[e.activeScope.pc : e.activeScope.pc+width]
+	operandSlice := e.program.Code[e.activeScope.pc : e.activeScope.pc+width]
 	operandValue := instrs.ReadOperandValue(operandSlice)
 	e.activeScope.pc += width
 
@@ -97,7 +97,7 @@ func (e *emulator) readOperand(op instrs.Opcode, index int) int {
 
 func (e *emulator) movePC(offset int) { e.activeScope.pc += offset }
 
-func Execute(program *bytecode.Executable) (err error) {
+func Execute(program bytecode.Executable) (err error) {
 	defer func() {
 		status := recover()
 		if statusErr, ok := status.(error); ok {
@@ -105,13 +105,10 @@ func Execute(program *bytecode.Executable) (err error) {
 		}
 	}()
 
-	entryFunc := program.FuncPool[0]
-
 	e := emulator{
 		program: program,
 		globalScope: scope{
-			vars: make([]runtime.Obj, entryFunc.NumLocals),
-			code: entryFunc.Code,
+			vars: make([]runtime.Obj, program.FuncPool[0].NumLocals),
 		},
 	}
 	e.activeScope = &e.globalScope

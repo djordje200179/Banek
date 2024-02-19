@@ -82,6 +82,9 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 		g.vars++
 	}
 
+	jmpAddr := g.currAddr()
+	g.emitInstr(instrs.OpJump, 0)
+
 	funcIndex := len(g.funcPool)
 	g.container = &container{
 		level:    g.container.level + 1,
@@ -90,21 +93,26 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 		vars:     len(stmt.Params),
 	}
 
+	funcTemplate := bytecode.FuncTemplate{
+		Name:      stmt.Name.String(),
+		NumParams: len(stmt.Params),
+
+		StartPC: g.currAddr(),
+	}
+
 	g.compileStmtBlock(stmt.Body)
 
-	if g.code[len(g.container.code)-1] != byte(instrs.OpReturn) {
+	if g.code[len(g.code)-1] != byte(instrs.OpReturn) {
 		g.emitInstr(instrs.OpPushUndef)
 		g.emitInstr(instrs.OpReturn)
 	}
 
-	g.funcPool = append(g.funcPool, bytecode.FuncTemplate{
-		Name:      stmt.Name.String(),
-		NumParams: len(stmt.Params),
-		NumLocals: g.container.vars,
-		Code:      g.container.code,
-	})
+	funcTemplate.NumLocals = g.container.vars
+	g.funcPool = append(g.funcPool, funcTemplate)
 
 	g.container = g.container.previous
+
+	g.patchJumpOperand(jmpAddr, 0)
 
 	g.emitInstr(instrs.OpMakeFunc, funcIndex)
 	g.compileStore(stmt.Name)
@@ -117,19 +125,19 @@ func (g *generator) compileFuncCallStmt(expr stmts.FuncCall) {
 
 func (g *generator) compileIfStmt(stmt stmts.If) {
 	g.compileExpr(stmt.Cond)
-	jumpPc := g.container.currAddr()
+	jumpPc := g.currAddr()
 	g.emitInstr(instrs.OpBranchFalse, 0)
 
 	g.compileStmt(stmt.Cons)
 
 	if stmt.Alt != nil {
-		altJumpPc := g.container.currAddr()
+		altJumpPc := g.currAddr()
 		g.emitInstr(instrs.OpJump, 0)
-		g.container.patchJumpOperand(jumpPc, 0)
+		g.patchJumpOperand(jumpPc, 0)
 		g.compileStmt(stmt.Alt)
-		g.container.patchJumpOperand(altJumpPc, 0)
+		g.patchJumpOperand(altJumpPc, 0)
 	} else {
-		g.container.patchJumpOperand(jumpPc, 0)
+		g.patchJumpOperand(jumpPc, 0)
 	}
 }
 
