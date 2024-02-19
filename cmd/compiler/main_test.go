@@ -63,3 +63,14 @@ func TestArrayManipulation(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAnonymousFunctions(t *testing.T) {
+	code := `
+		let f = |x| -> x + 1;
+		println(f(5));
+	`
+	err := runCode(code)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

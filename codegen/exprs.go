@@ -3,6 +3,7 @@ package codegen
 import (
 	"banek/ast"
 	"banek/ast/exprs"
+	"banek/bytecode"
 	"banek/bytecode/instrs"
 	"banek/symtable/symbols"
 	"banek/tokens"
@@ -193,6 +194,26 @@ func (g *generator) compileUndefinedLiteral(expr exprs.UndefinedLiteral) {
 }
 
 func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
+	funcIndex := len(g.funcPool)
+	g.container = &container{
+		level:    g.container.level + 1,
+		index:    funcIndex,
+		previous: g.container,
+		vars:     len(expr.Params),
+	}
+
+	g.compileExpr(expr.Body)
+	g.emitInstr(instrs.OpReturn)
+
+	g.funcPool = append(g.funcPool, bytecode.FuncTemplate{
+		NumParams: len(expr.Params),
+		NumLocals: g.container.vars,
+		Code:      g.container.code,
+	})
+
+	g.container = g.container.previous
+
+	g.emitInstr(instrs.OpMakeFunc, funcIndex)
 }
 
 func (g *generator) compileStore(expr ast.Expr) {
