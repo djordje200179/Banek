@@ -75,7 +75,7 @@ func (a *analyzer) analyzeVarDecl(decl stmts.VarDecl) (ast.Stmt, error) {
 	decl.Var = exprs.Ident{v}
 
 	if !decl.Mutable && decl.Value == nil {
-		return nil, UninitializedVarError(decl.Var)
+		return nil, UninitializedImmutableVarError(decl.Var)
 	}
 
 	if decl.Value != nil {
@@ -176,7 +176,7 @@ func (a *analyzer) analyzeAssignment(stmt stmts.Assignment) (ast.Stmt, error) {
 		}
 
 		if !sym.Mutable {
-			return nil, ImmutableAssignmentError(v)
+			return nil, ImmutableVarAssignmentError(v)
 		}
 	case exprs.CollIndex:
 	default:
@@ -207,7 +207,7 @@ func (a *analyzer) analyzeCompoundAssignment(stmt stmts.CompoundAssignment) (ast
 		}
 
 		if !sym.Mutable {
-			return nil, ImmutableAssignmentError(v)
+			return nil, ImmutableVarAssignmentError(v)
 		}
 	case exprs.CollIndex:
 	default:

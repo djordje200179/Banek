@@ -29,12 +29,14 @@ type InvalidOpError tokens.Type
 
 func (e InvalidOpError) Error() string { return "invalid operator: " + tokens.Type(e).String() }
 
-type UninitializedVarError exprs.Ident
+type UninitializedImmutableVarError exprs.Ident
 
-func (e UninitializedVarError) Error() string { return "uninitialized variable: " + e.String() }
+func (e UninitializedImmutableVarError) Error() string {
+	return "uninitialized immutable variable: " + e.String()
+}
 
-type ImmutableAssignmentError exprs.Ident
+type ImmutableVarAssignmentError exprs.Ident
 
-func (e ImmutableAssignmentError) Error() string {
+func (e ImmutableVarAssignmentError) Error() string {
 	return "assignment to immutable variable: " + e.String()
 }

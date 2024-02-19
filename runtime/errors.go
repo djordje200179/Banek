@@ -9,7 +9,7 @@ type InvalidOperandsError struct {
 }
 
 func (err InvalidOperandsError) Error() string {
-	return "invalid operands to " + err.Operator.String() + ": " + err.Left.String() + " and " + err.Right.String()
+	return fmt.Sprintf("invalid operands for %s: %s and %s", err.Operator.String(), err.Left.String(), err.Right.String())
 }
 
 type InvalidOperandError struct {
@@ -19,7 +19,7 @@ type InvalidOperandError struct {
 }
 
 func (err InvalidOperandError) Error() string {
-	return "invalid operand to " + err.Operator.String() + ": " + err.Operand.String()
+	return fmt.Sprintf("invalid operand for %s: %s", err.Operator.String(), err.Operand.String())
 }
 
 type TooManyArgsError struct {
@@ -46,5 +46,5 @@ type InvalidTypeError struct {
 }
 
 func (err InvalidTypeError) Error() string {
-	return fmt.Sprintf("invalid type for argument %d to %s: %s", err.ArgIndex, err.BuiltinName, err.Arg)
+	return fmt.Sprintf("invalid type for %d. argument of %s: %s", err.ArgIndex+1, err.BuiltinName, err.Arg.String())
 }

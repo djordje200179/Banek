@@ -11,7 +11,7 @@ import (
 func (p *parser) parseExpr(precedence OperatorPrecedence) (ast.Expr, error) {
 	exprHandler := p.prefixExprHandlers[p.currToken.Type]
 	if exprHandler == nil {
-		return nil, InvalidTokenError{p.currToken.Type}
+		return nil, InvalidOperatorError(p.currToken.Type)
 	}
 
 	leftExpr, err := exprHandler()
@@ -133,7 +133,7 @@ func (p *parser) parseBinaryOp(left ast.Expr) (ast.Expr, error) {
 
 	precedence, ok := infixOperatorPrecedences[operator]
 	if !ok {
-		return nil, InvalidTokenError{operator}
+		return nil, InvalidOperatorError(operator)
 	}
 
 	right, err := p.parseExpr(precedence)
