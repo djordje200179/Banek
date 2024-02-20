@@ -1,17 +1,13 @@
 package primitives
 
-import "banek/runtime"
+import (
+	"banek/runtime"
+	"strconv"
+)
 
 type Bool bool
 
-func (b Bool) String() string {
-	if b {
-		return "true"
-	} else {
-		return "false"
-	}
-}
-
+func (b Bool) String() string                { return strconv.FormatBool(bool(b)) }
 func (b Bool) Truthy() bool                  { return bool(b) }
 func (b Bool) Clone() runtime.Obj            { return b }
 func (b Bool) Equals(other runtime.Obj) bool { return b == other }
