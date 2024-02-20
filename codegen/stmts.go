@@ -80,41 +80,35 @@ func (g *generator) compileStmtBlock(stmt stmts.Block) {
 }
 
 func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
-	if g.level == 0 {
-		g.vars++
+	if g.active.level == 0 {
+		g.active.vars++
 	}
 
-	jmpAddr := g.currAddr()
-	g.emitInstr(instrs.OpJump, 0)
-
 	funcIndex := len(g.funcPool)
-	g.container = &container{
-		level:    g.container.level + 1,
+	g.active = &container{
+		level:    g.active.level + 1,
 		index:    funcIndex,
-		previous: g.container,
+		previous: g.active,
 		vars:     len(stmt.Params),
 	}
 
 	funcTemplate := bytecode.FuncTemplate{
 		Name:      stmt.Name.String(),
 		NumParams: len(stmt.Params),
-
-		StartPC: g.currAddr(),
 	}
 
 	g.compileStmtBlock(stmt.Body)
 
-	if g.code[len(g.code)-1] != byte(instrs.OpReturn) {
+	if g.active.code[len(g.active.code)-1] != byte(instrs.OpReturn) {
 		g.emitInstr(instrs.OpPushUndef)
 		g.emitInstr(instrs.OpReturn)
 	}
 
-	funcTemplate.NumLocals = g.container.vars
+	funcTemplate.NumLocals = g.active.vars
 	g.funcPool = append(g.funcPool, funcTemplate)
+	g.funcCodes[funcIndex] = g.active.code
 
-	g.container = g.container.previous
-
-	g.patchJumpOperand(jmpAddr, 0)
+	g.active = g.active.previous
 
 	g.emitInstr(instrs.OpMakeFunc, funcIndex)
 	g.compileStore(stmt.Name)
@@ -152,8 +146,8 @@ func (g *generator) compileReturn(stmt stmts.Return) {
 }
 
 func (g *generator) compileVarDecl(stmt stmts.VarDecl) {
-	if g.level == 0 {
-		g.vars++
+	if g.active.level == 0 {
+		g.active.vars++
 	}
 
 	if stmt.Value != nil {

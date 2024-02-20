@@ -347,7 +347,7 @@ func (e *emulator) handleCall() {
 			vars:     locals,
 			function: function,
 			parent:   e.activeScope,
-			pc:       template.StartPC,
+			pc:       template.Addr,
 		}
 		e.activeScope = newScope
 

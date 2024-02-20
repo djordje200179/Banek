@@ -108,7 +108,7 @@ func (g *generator) compileIdent(expr exprs.Ident) {
 		switch {
 		case sym.Level == 0:
 			g.emitInstr(instrs.OpPushGlobal, sym.Index)
-		case sym.Level == g.level:
+		case sym.Level == g.active.level:
 			switch sym.Index {
 			case 0:
 				g.emitInstr(instrs.OpPushLocal0)
@@ -120,7 +120,7 @@ func (g *generator) compileIdent(expr exprs.Ident) {
 				g.emitInstr(instrs.OpPushLocal, sym.Index)
 			}
 		default:
-			g.emitInstr(instrs.OpPushCaptured, g.level-sym.Level, sym.Index)
+			g.emitInstr(instrs.OpPushCaptured, g.active.level-sym.Level, sym.Index)
 		}
 	default:
 		panic("unreachable")
@@ -194,31 +194,26 @@ func (g *generator) compileUndefinedLiteral(_ exprs.UndefinedLiteral) {
 }
 
 func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
-	jumpAddr := g.currAddr()
-	g.emitInstr(instrs.OpJump, 0)
-
 	funcIndex := len(g.funcPool)
-	g.container = &container{
-		level:    g.container.level + 1,
+	g.active = &container{
+		level:    g.active.level + 1,
 		index:    funcIndex,
-		previous: g.container,
+		previous: g.active,
 		vars:     len(expr.Params),
 	}
 
 	funcTemplate := bytecode.FuncTemplate{
 		NumParams: len(expr.Params),
-		StartPC:   g.currAddr(),
 	}
 
 	g.compileExpr(expr.Body)
 	g.emitInstr(instrs.OpReturn)
 
-	funcTemplate.NumLocals = g.container.vars
+	funcTemplate.NumLocals = g.active.vars
 	g.funcPool = append(g.funcPool, funcTemplate)
+	g.funcCodes[funcIndex] = g.active.code
 
-	g.container = g.container.previous
-
-	g.patchJumpOperand(jumpAddr, 0)
+	g.active = g.active.previous
 
 	g.emitInstr(instrs.OpMakeFunc, funcIndex)
 }
@@ -231,7 +226,7 @@ func (g *generator) compileStore(expr ast.Expr) {
 		switch {
 		case v.Level == 0:
 			g.emitInstr(instrs.OpPopGlobal, v.Index)
-		case v.Level == g.level:
+		case v.Level == g.active.level:
 			switch v.Index {
 			case 0:
 				g.emitInstr(instrs.OpPopLocal0)
@@ -243,7 +238,7 @@ func (g *generator) compileStore(expr ast.Expr) {
 				g.emitInstr(instrs.OpPopLocal, v.Index)
 			}
 		default:
-			g.emitInstr(instrs.OpPopCaptured, g.level-v.Level, v.Index)
+			g.emitInstr(instrs.OpPopCaptured, g.active.level-v.Level, v.Index)
 		}
 	case exprs.CollIndex:
 		g.emitInstr(instrs.OpPopCollElem)

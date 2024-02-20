@@ -9,9 +9,10 @@ import (
 
 func Generate(stmtChan <-chan ast.Stmt) bytecode.Executable {
 	g := &generator{
-		funcPool: make([]bytecode.FuncTemplate, 1),
+		funcPool:  make([]bytecode.FuncTemplate, 1),
+		funcCodes: make(map[int]instrs.Code),
 	}
-	g.container = &g.global
+	g.active = &g.global
 
 	for stmt := range stmtChan {
 		g.compileStmt(stmt)
@@ -28,20 +29,40 @@ func Generate(stmtChan <-chan ast.Stmt) bytecode.Executable {
 	return g.makeExecutable()
 }
 
-type generator struct {
-	global container
-	*container
+type container struct {
+	level, index int
+	vars         int
 
 	code instrs.Code
+
+	previous *container
+}
+
+type generator struct {
+	global container
+	active *container
+
+	funcCodes map[int]instrs.Code
 
 	stringPool []string
 	funcPool   []bytecode.FuncTemplate
 }
 
 func (g *generator) makeExecutable() bytecode.Executable {
-	return bytecode.Executable{
-		Code: g.code,
+	totalCodeSize := len(g.global.code)
+	for _, code := range g.funcCodes {
+		totalCodeSize += len(code)
+	}
 
+	code := make(instrs.Code, 0, totalCodeSize)
+	code = append(code, g.global.code...)
+	for funcIndex, funcCode := range g.funcCodes {
+		g.funcPool[funcIndex].Addr = len(code)
+		code = append(code, funcCode...)
+	}
+
+	return bytecode.Executable{
+		Code:       code,
 		StringPool: g.stringPool,
 		FuncPool:   g.funcPool,
 	}
@@ -49,14 +70,14 @@ func (g *generator) makeExecutable() bytecode.Executable {
 
 func (g *generator) emitInstr(opcode instrs.Opcode, operands ...int) {
 	instr := instrs.MakeInstr(opcode, operands...)
-	g.code = slices.Concat(g.code, instr)
+	g.active.code = slices.Concat(g.active.code, instr)
 }
 
 func (g *generator) patchJumpOperand(addr int, operandIndex int) {
-	op := instrs.Opcode(g.code[addr])
+	op := instrs.Opcode(g.active.code[addr])
 	opInfo := op.Info()
 
-	instCode := g.code[addr : addr+opInfo.Size()]
+	instCode := g.active.code[addr : addr+opInfo.Size()]
 
 	operandWidth := opInfo.Operands[operandIndex].Width
 	operandOffset := opInfo.OperandOffset(operandIndex)
@@ -66,5 +87,5 @@ func (g *generator) patchJumpOperand(addr int, operandIndex int) {
 }
 
 func (g *generator) currAddr() int {
-	return len(g.code)
+	return len(g.active.code)
 }

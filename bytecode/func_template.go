@@ -15,7 +15,7 @@ type FuncTemplate struct {
 	NumParams int
 
 	NumLocals int
-	StartPC   int
+	Addr      int
 
 	IsCaptured bool
 
@@ -25,5 +25,5 @@ type FuncTemplate struct {
 func (t *FuncTemplate) IsClosure() bool { return len(t.Captures) > 0 }
 
 func (t *FuncTemplate) String() string {
-	return fmt.Sprintf("%s(%d params), starts at %04d", cmp.Or(t.Name, "<anonymous>"), t.NumParams, t.StartPC)
+	return fmt.Sprintf("%s(%d params), starts at %04d", cmp.Or(t.Name, "<anonymous>"), t.NumParams, t.Addr)
 }
