@@ -3,6 +3,7 @@ package emulator
 import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
+	"banek/emulator/stack"
 	"banek/runtime"
 )
 
@@ -72,7 +73,7 @@ var handlers = [...]func(e *emulator){
 type emulator struct {
 	program bytecode.Executable
 
-	stack stack
+	stack stack.Stack
 
 	globalScope scope
 	activeScope *scope
@@ -107,11 +108,9 @@ func Execute(program bytecode.Executable) (err error) {
 
 	e := emulator{
 		program: program,
-		globalScope: scope{
-			vars: make([]runtime.Obj, program.FuncPool[0].NumLocals),
-		},
 	}
 	e.activeScope = &e.globalScope
+	e.stack.Grow(program.FuncPool[0].NumLocals)
 
 	for {
 		opcode := e.readOpcode()
