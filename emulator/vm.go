@@ -3,8 +3,8 @@ package emulator
 import (
 	"banek/bytecode"
 	"banek/bytecode/instrs"
-	"banek/emulator/stack"
-	"banek/runtime"
+	"banek/emulator/callstack"
+	"banek/emulator/opstack"
 )
 
 var handlers = [...]func(e *emulator){
@@ -57,10 +57,10 @@ var handlers = [...]func(e *emulator){
 
 	instrs.OpBinaryEq: (*emulator).handleBinaryEq,
 	instrs.OpBinaryNe: (*emulator).handleBinaryNeq,
-	instrs.OpBinaryLt: makeComparisonHandler(runtime.LtOperator),
-	instrs.OpBinaryLe: makeComparisonHandler(runtime.LtEqOperator),
-	instrs.OpBinaryGt: makeComparisonHandler(runtime.GtOperator),
-	instrs.OpBinaryGe: makeComparisonHandler(runtime.GtEqOperator),
+	instrs.OpBinaryLt: (*emulator).handleCompLt,
+	instrs.OpBinaryLe: (*emulator).handleCompLe,
+	instrs.OpBinaryGt: (*emulator).handleCompGt,
+	instrs.OpBinaryGe: (*emulator).handleCompGe,
 
 	instrs.OpUnaryNeg: (*emulator).handleUnaryNeg,
 	instrs.OpUnaryNot: (*emulator).handleUnaryNot,
@@ -73,15 +73,14 @@ var handlers = [...]func(e *emulator){
 type emulator struct {
 	program bytecode.Executable
 
-	stack stack.Stack
-
-	globalScope scope
-	activeScope *scope
+	opStack   opstack.Stack
+	callStack callstack.Stack
 }
 
 func (e *emulator) readOpcode() instrs.Opcode {
-	opcode := instrs.Opcode(e.program.Code[e.activeScope.pc])
-	e.activeScope.pc++
+	frame := e.callStack.ActiveFrame()
+	opcode := instrs.Opcode(e.program.Code[frame.PC])
+	frame.PC++
 
 	return opcode
 }
@@ -89,14 +88,15 @@ func (e *emulator) readOpcode() instrs.Opcode {
 func (e *emulator) readOperand(op instrs.Opcode, index int) int {
 	width := op.Info().Operands[index].Width
 
-	operandSlice := e.program.Code[e.activeScope.pc : e.activeScope.pc+width]
+	frame := e.callStack.ActiveFrame()
+	operandSlice := e.program.Code[frame.PC : frame.PC+width]
 	operandValue := instrs.ReadOperandValue(operandSlice)
-	e.activeScope.pc += width
+	frame.PC += width
 
 	return operandValue
 }
 
-func (e *emulator) movePC(offset int) { e.activeScope.pc += offset }
+func (e *emulator) movePC(offset int) { e.callStack.ActiveFrame().PC += offset }
 
 func Execute(program bytecode.Executable) (err error) {
 	defer func() {
@@ -109,8 +109,7 @@ func Execute(program bytecode.Executable) (err error) {
 	e := emulator{
 		program: program,
 	}
-	e.activeScope = &e.globalScope
-	e.stack.Grow(program.FuncPool[0].NumLocals)
+	e.opStack.Grow(program.FuncPool[0].NumLocals)
 
 	for {
 		opcode := e.readOpcode()

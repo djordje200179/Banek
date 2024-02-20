@@ -1,17 +1,29 @@
 package bytecode
 
 import (
-	"banek/runtime"
-	"strconv"
+	"cmp"
+	"fmt"
 )
 
-type Func struct {
-	TemplateIndex int
-
-	Captures []*runtime.Obj
+type Capture struct {
+	Index int
+	Level int
 }
 
-func (f *Func) String() string                { return "func #" + strconv.Itoa(f.TemplateIndex) }
-func (f *Func) Truthy() bool                  { return true }
-func (f *Func) Clone() runtime.Obj            { return f }
-func (f *Func) Equals(other runtime.Obj) bool { return f == other }
+type Func struct {
+	Name      string
+	NumParams int
+
+	NumLocals int
+	Addr      int
+
+	IsCaptured bool
+
+	Captures []Capture
+}
+
+func (f *Func) IsClosure() bool { return len(f.Captures) > 0 }
+
+func (f *Func) String() string {
+	return fmt.Sprintf("%s(%d params), starts at %04d", cmp.Or(f.Name, "<anonymous>"), f.NumParams, f.Addr)
+}

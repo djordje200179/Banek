@@ -9,7 +9,7 @@ import (
 
 func Generate(stmtChan <-chan ast.Stmt) bytecode.Executable {
 	g := &generator{
-		funcPool:  make([]bytecode.FuncTemplate, 1),
+		funcPool:  make([]bytecode.Func, 1),
 		funcCodes: make(map[int]instrs.Code),
 	}
 	g.active = &g.global
@@ -20,7 +20,7 @@ func Generate(stmtChan <-chan ast.Stmt) bytecode.Executable {
 
 	g.emitInstr(instrs.OpHalt)
 
-	g.funcPool[0] = bytecode.FuncTemplate{
+	g.funcPool[0] = bytecode.Func{
 		Name:       "<entry>",
 		NumLocals:  g.global.vars,
 		IsCaptured: true,
@@ -45,7 +45,7 @@ type generator struct {
 	funcCodes map[int]instrs.Code
 
 	stringPool []string
-	funcPool   []bytecode.FuncTemplate
+	funcPool   []bytecode.Func
 }
 
 func (g *generator) makeExecutable() bytecode.Executable {

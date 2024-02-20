@@ -92,7 +92,7 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 		vars:     len(stmt.Params),
 	}
 
-	funcTemplate := bytecode.FuncTemplate{
+	f := bytecode.Func{
 		Name:      stmt.Name.String(),
 		NumParams: len(stmt.Params),
 	}
@@ -104,8 +104,8 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 		g.emitInstr(instrs.OpReturn)
 	}
 
-	funcTemplate.NumLocals = g.active.vars
-	g.funcPool = append(g.funcPool, funcTemplate)
+	f.NumLocals = g.active.vars
+	g.funcPool = append(g.funcPool, f)
 	g.funcCodes[funcIndex] = g.active.code
 
 	g.active = g.active.previous
@@ -152,11 +152,8 @@ func (g *generator) compileVarDecl(stmt stmts.VarDecl) {
 
 	if stmt.Value != nil {
 		g.compileExpr(stmt.Value)
-	} else {
-		g.emitInstr(instrs.OpPushUndef)
+		g.compileStore(stmt.Var)
 	}
-
-	g.compileStore(stmt.Var)
 }
 
 func (g *generator) compileWhile(stmt stmts.While) {

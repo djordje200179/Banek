@@ -10,7 +10,7 @@ type Executable struct {
 	Code instrs.Code
 
 	StringPool []string
-	FuncPool   []FuncTemplate
+	FuncPool   []Func
 }
 
 func (e Executable) String() string {
@@ -27,8 +27,8 @@ func (e Executable) String() string {
 	sb.WriteString(e.Code.String())
 
 	sb.WriteString("Functions:\n")
-	for _, function := range e.FuncPool {
-		sb.WriteString(replacer.Replace(function.String()))
+	for _, f := range e.FuncPool {
+		sb.WriteString(replacer.Replace(f.String()))
 		sb.WriteByte('\n')
 	}
 

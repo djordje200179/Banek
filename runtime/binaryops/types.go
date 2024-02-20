@@ -1,4 +1,4 @@
-package runtime
+package binaryops
 
 type BinaryOperator uint8
 
@@ -9,12 +9,7 @@ const (
 	DivOperator
 	ModOperator
 
-	LtOperator
-	LtEqOperator
-	GtOperator
-	GtEqOperator
-	EqOperator
-	NotEqOperator
+	binaryOperatorCount
 )
 
 func (op BinaryOperator) String() string {
@@ -29,20 +24,7 @@ func (op BinaryOperator) String() string {
 		return "/"
 	case ModOperator:
 		return "%"
-
-	case LtOperator:
-		return "<"
-	case LtEqOperator:
-		return "<="
-	case GtOperator:
-		return ">"
-	case GtEqOperator:
-		return ">="
-	case EqOperator:
-		return "=="
-	case NotEqOperator:
-		return "!="
+	default:
+		panic("unreachable")
 	}
-
-	panic("unreachable")
 }

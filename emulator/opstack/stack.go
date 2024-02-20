@@ -1,21 +1,21 @@
-package stack
+package opstack
 
 import (
-	"banek/runtime"
+	"banek/runtime/objs"
 	"errors"
 )
 
 const stackSize = 4 * 1024
 
 type Stack struct {
-	arr [stackSize]runtime.Obj
+	arr [stackSize]objs.Obj
 
 	ptr int
 }
 
 var ErrStackOverflow = errors.New("stack overflow")
 
-func (s *Stack) Push(obj runtime.Obj) {
+func (s *Stack) Push(obj objs.Obj) {
 	if s.ptr >= stackSize {
 		panic(ErrStackOverflow)
 	}
@@ -24,16 +24,16 @@ func (s *Stack) Push(obj runtime.Obj) {
 	s.ptr++
 }
 
-func (s *Stack) Pop() runtime.Obj {
+func (s *Stack) Pop() objs.Obj {
 	s.ptr--
 
 	elem := s.arr[s.ptr]
-	s.arr[s.ptr] = nil
+	s.arr[s.ptr] = objs.Obj{}
 
 	return elem
 }
 
-func (s *Stack) PopMany(arr []runtime.Obj) {
+func (s *Stack) PopMany(arr []objs.Obj) {
 	nextPtr := s.ptr - len(arr)
 	copy(arr, s.arr[nextPtr:s.ptr])
 	clear(s.arr[nextPtr:s.ptr])
@@ -63,11 +63,11 @@ func (s *Stack) Swap() {
 	s.arr[s.ptr-2] = top
 }
 
-func (s *Stack) ReadVar(bp, index int) runtime.Obj {
+func (s *Stack) ReadVar(bp, index int) objs.Obj {
 	return s.arr[bp+index]
 }
 
-func (s *Stack) WriteVar(bp, index int, obj runtime.Obj) {
+func (s *Stack) WriteVar(bp, index int, obj objs.Obj) {
 	s.arr[bp+index] = obj
 }
 

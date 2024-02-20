@@ -1,14 +1,14 @@
 package builtins
 
 import (
-	"banek/runtime"
+	"banek/runtime/objs"
 )
 
 type Builtin struct {
 	Name    string
 	NumArgs int
 
-	Func func(args []runtime.Obj) (runtime.Obj, error)
+	Func func(args []objs.Obj) (objs.Obj, error)
 }
 
 var Funcs = [...]Builtin{
@@ -54,19 +54,4 @@ var Funcs = [...]Builtin{
 
 		Func: builtinInt,
 	},
-}
-
-func (b *Builtin) Truthy() bool       { return true }
-func (b *Builtin) String() string     { return b.Name }
-func (b *Builtin) Clone() runtime.Obj { return b }
-
-func (b *Builtin) Equals(other runtime.Obj) bool {
-	var otherBuiltin *Builtin
-	var ok bool
-
-	if otherBuiltin, ok = other.(*Builtin); !ok {
-		return false
-	}
-
-	return b.Name == otherBuiltin.Name
 }

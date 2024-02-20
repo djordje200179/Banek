@@ -1,37 +1,35 @@
 package builtins
 
 import (
-	"banek/runtime"
-	"banek/runtime/primitives"
+	"banek/runtime/objs"
 	"strconv"
 )
 
-func builtinStr(args []runtime.Obj) (runtime.Obj, error) {
-	return primitives.String(args[0].String()), nil
+func builtinStr(args []objs.Obj) (objs.Obj, error) {
+	return objs.MakeString(args[0].String()), nil
 }
 
-func builtinInt(args []runtime.Obj) (runtime.Obj, error) {
-	switch arg := args[0].(type) {
-	case primitives.Int:
-		return arg, nil
-	case primitives.String:
-		val, err := strconv.Atoi(string(arg))
+func builtinInt(args []objs.Obj) (objs.Obj, error) {
+	res := objs.Obj{Type: objs.Int}
+
+	switch args[0].Type {
+	case objs.Int:
+		res.Int = args[0].Int
+	case objs.String:
+		val, err := strconv.Atoi(args[0].AsString())
 		if err != nil {
-			return nil, err
+			return objs.Obj{}, err
 		}
 
-		return primitives.Int(val), nil
-	case primitives.Bool:
-		if arg {
-			return primitives.Int(1), nil
-		} else {
-			return primitives.Int(0), nil
-		}
+		res.Int = val
+	case objs.Bool:
+		res.Int = args[0].Int
 	default:
-		return nil, runtime.InvalidTypeError{
-			BuiltinName: "int",
-			ArgIndex:    0,
-			Arg:         args[0],
+		return objs.Obj{}, InvalidTypeError{
+			ArgIndex: 0,
+			Arg:      args[0],
 		}
 	}
+
+	return res, nil
 }

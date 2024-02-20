@@ -1,21 +1,25 @@
 package builtins
 
 import (
-	"banek/runtime"
-	"banek/runtime/primitives"
+	"banek/runtime/objs"
 )
 
-func builtinLen(args []runtime.Obj) (runtime.Obj, error) {
-	switch arg := args[0].(type) {
-	case primitives.String:
-		return primitives.Int(len(arg)), nil
-	case primitives.Array:
-		return primitives.Int(len(arg)), nil
+func builtinLen(args []objs.Obj) (objs.Obj, error) {
+	res := objs.Obj{
+		Type: objs.Int,
+	}
+
+	switch args[0].Type {
+	case objs.String:
+		res.Int = len(args[0].AsString())
+	case objs.Array:
+		res.Int = len(args[0].AsArray())
 	default:
-		return nil, runtime.InvalidTypeError{
-			BuiltinName: "len",
-			ArgIndex:    0,
-			Arg:         args[0],
+		return objs.Obj{}, InvalidTypeError{
+			ArgIndex: 0,
+			Arg:      args[0],
 		}
 	}
+
+	return res, nil
 }

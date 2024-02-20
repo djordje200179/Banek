@@ -6,7 +6,6 @@ const (
 	OperandLiteral OperandType = iota
 	OperandString
 	OperandFunc
-	OperandBuiltin
 	OperandOffset
 )
 

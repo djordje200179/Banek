@@ -1,7 +1,6 @@
 package instrs
 
 import (
-	"banek/runtime/builtins"
 	"fmt"
 	"strconv"
 	"strings"
@@ -38,8 +37,6 @@ func (code Code) String() string {
 			case OperandFunc:
 				sb.WriteByte('#')
 				sb.WriteString(strconv.Itoa(operandValue))
-			case OperandBuiltin:
-				sb.WriteString(builtins.Funcs[operandValue].Name)
 			case OperandOffset:
 				sb.WriteString(strconv.Itoa(operandValue))
 				sb.WriteString(" (=")

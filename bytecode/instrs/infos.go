@@ -9,7 +9,7 @@ var instrInfos = [...]InstrInfo{
 	OpBranchFalse: {"BR.F", []OperandInfo{{2, OperandOffset}}},
 	OpBranchTrue:  {"BR.T", []OperandInfo{{2, OperandOffset}}},
 
-	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandBuiltin}}},
+	OpPushBuiltin:  {"PUSH.B", []OperandInfo{{1, OperandLiteral}}},
 	OpPushGlobal:   {"PUSH.G", []OperandInfo{{2, OperandLiteral}}},
 	OpPushCaptured: {"PUSH.C", []OperandInfo{{1, OperandLiteral}, {1, OperandLiteral}}},
 	OpPushCollElem: {"PUSH.CE", nil},

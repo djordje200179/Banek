@@ -1,10 +1,12 @@
-package runtime
+package unaryops
 
 type UnaryOperator uint8
 
 const (
 	NegOperator UnaryOperator = iota
 	NotOperator
+
+	unaryOperatorCount
 )
 
 func (op UnaryOperator) String() string {
@@ -13,7 +15,7 @@ func (op UnaryOperator) String() string {
 		return "-"
 	case NotOperator:
 		return "!"
+	default:
+		panic("unreachable")
 	}
-
-	panic("unreachable")
 }

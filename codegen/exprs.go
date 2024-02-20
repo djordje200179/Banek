@@ -202,15 +202,15 @@ func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
 		vars:     len(expr.Params),
 	}
 
-	funcTemplate := bytecode.FuncTemplate{
+	f := bytecode.Func{
 		NumParams: len(expr.Params),
 	}
 
 	g.compileExpr(expr.Body)
 	g.emitInstr(instrs.OpReturn)
 
-	funcTemplate.NumLocals = g.active.vars
-	g.funcPool = append(g.funcPool, funcTemplate)
+	f.NumLocals = g.active.vars
+	g.funcPool = append(g.funcPool, f)
 	g.funcCodes[funcIndex] = g.active.code
 
 	g.active = g.active.previous
