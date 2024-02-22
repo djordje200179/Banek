@@ -1,7 +1,6 @@
 package callstack
 
 import (
-	"banek/emulator/function"
 	"errors"
 )
 
@@ -15,25 +14,25 @@ type Stack struct {
 
 var ErrStackOverflow = errors.New("recursion limit exceeded")
 
-func (s *Stack) Push(pc, bp int, funcObj *function.Obj) *Frame {
+func (s *Stack) Push(frame Frame) {
 	if s.ptr == stackSize-1 {
 		panic(ErrStackOverflow)
 	}
 
+	s.arr[s.ptr] = frame
 	s.ptr++
-	s.arr[s.ptr] = Frame{pc, bp, funcObj}
-
-	return &s.arr[s.ptr]
 }
 
-func (s *Stack) Pop() {
+func (s *Stack) Pop() Frame {
 	s.ptr--
+
+	return s.arr[s.ptr]
 }
 
-func (s *Stack) GlobalFrame() *Frame {
-	return &s.arr[0]
-}
-
-func (s *Stack) ActiveFrame() *Frame {
-	return &s.arr[s.ptr]
-}
+//func (s *Stack) GlobalFrame() *Frame {
+//	return &s.arr[0]
+//}
+//
+//func (s *Stack) ActiveFrame() *Frame {
+//	return &s.arr[s.ptr]
+//}

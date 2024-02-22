@@ -73,14 +73,15 @@ var handlers = [...]func(e *emulator){
 type emulator struct {
 	program bytecode.Executable
 
+	frame callstack.Frame
+
 	opStack   opstack.Stack
 	callStack callstack.Stack
 }
 
 func (e *emulator) readOpcode() instrs.Opcode {
-	frame := e.callStack.ActiveFrame()
-	opcode := instrs.Opcode(e.program.Code[frame.PC])
-	frame.PC++
+	opcode := instrs.Opcode(e.program.Code[e.frame.PC])
+	e.frame.PC++
 
 	return opcode
 }
@@ -88,15 +89,14 @@ func (e *emulator) readOpcode() instrs.Opcode {
 func (e *emulator) readOperand(op instrs.Opcode, index int) int {
 	width := op.Info().Operands[index].Width
 
-	frame := e.callStack.ActiveFrame()
-	operandSlice := e.program.Code[frame.PC : frame.PC+width]
+	operandSlice := e.program.Code[e.frame.PC : e.frame.PC+width]
 	operandValue := instrs.ReadOperandValue(operandSlice)
-	frame.PC += width
+	e.frame.PC += width
 
 	return operandValue
 }
 
-func (e *emulator) movePC(offset int) { e.callStack.ActiveFrame().PC += offset }
+func (e *emulator) movePC(offset int) { e.frame.PC += offset }
 
 func Execute(program bytecode.Executable) (err error) {
 	defer func() {

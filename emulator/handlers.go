@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"banek/bytecode/instrs"
+	"banek/emulator/callstack"
 	"banek/emulator/function"
 	"banek/runtime"
 	"banek/runtime/binaryops"
@@ -44,25 +45,17 @@ func (e *emulator) handlePushBuiltin() {
 
 func (e *emulator) handlePushGlobal() {
 	index := e.readOperand(instrs.OpPushGlobal, 0)
-	e.opStack.Push(e.opStack.ReadVar(e.callStack.GlobalFrame().BP, index))
+	e.opStack.Push(e.opStack.ReadVar(0, index))
 }
 
 func (e *emulator) handlePushLocal() {
 	index := e.readOperand(instrs.OpPushLocal, 0)
-	e.opStack.Push(e.opStack.ReadVar(e.callStack.ActiveFrame().BP, index))
+	e.opStack.Push(e.opStack.ReadVar(e.frame.BP, index))
 }
 
-func (e *emulator) handlePushLocal0() {
-	e.opStack.Push(e.opStack.ReadVar(e.callStack.ActiveFrame().BP, 0))
-}
-
-func (e *emulator) handlePushLocal1() {
-	e.opStack.Push(e.opStack.ReadVar(e.callStack.ActiveFrame().BP, 1))
-}
-
-func (e *emulator) handlePushLocal2() {
-	e.opStack.Push(e.opStack.ReadVar(e.callStack.ActiveFrame().BP, 2))
-}
+func (e *emulator) handlePushLocal0() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 0)) }
+func (e *emulator) handlePushLocal1() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 1)) }
+func (e *emulator) handlePushLocal2() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 2)) }
 
 func (e *emulator) handlePush0()  { e.opStack.Push(objs.MakeInt(0)) }
 func (e *emulator) handlePush1()  { e.opStack.Push(objs.MakeInt(1)) }
@@ -91,25 +84,17 @@ func (e *emulator) handlePop() { e.opStack.Pop() }
 
 func (e *emulator) handlePopGlobal() {
 	index := e.readOperand(instrs.OpPopGlobal, 0)
-	e.opStack.WriteVar(e.callStack.GlobalFrame().BP, index, e.opStack.Pop())
+	e.opStack.WriteVar(0, index, e.opStack.Pop())
 }
 
 func (e *emulator) handlePopLocal() {
 	index := e.readOperand(instrs.OpPopLocal, 0)
-	e.opStack.WriteVar(e.callStack.ActiveFrame().BP, index, e.opStack.Pop())
+	e.opStack.WriteVar(e.frame.BP, index, e.opStack.Pop())
 }
 
-func (e *emulator) handlePopLocal0() {
-	e.opStack.WriteVar(e.callStack.ActiveFrame().BP, 0, e.opStack.Pop())
-}
-
-func (e *emulator) handlePopLocal1() {
-	e.opStack.WriteVar(e.callStack.ActiveFrame().BP, 1, e.opStack.Pop())
-}
-
-func (e *emulator) handlePopLocal2() {
-	e.opStack.WriteVar(e.callStack.ActiveFrame().BP, 2, e.opStack.Pop())
-}
+func (e *emulator) handlePopLocal0() { e.opStack.WriteVar(e.frame.BP, 0, e.opStack.Pop()) }
+func (e *emulator) handlePopLocal1() { e.opStack.WriteVar(e.frame.BP, 1, e.opStack.Pop()) }
+func (e *emulator) handlePopLocal2() { e.opStack.WriteVar(e.frame.BP, 2, e.opStack.Pop()) }
 
 func (e *emulator) handleMakeArray() {
 	size := e.readOperand(instrs.OpMakeArray, 0)
@@ -307,7 +292,14 @@ func (e *emulator) handleCall() {
 			panic(runtime.TooManyArgsError{Expected: template.NumParams, Actual: numArgs})
 		}
 
-		e.callStack.Push(template.Addr, e.opStack.SP()-numArgs, fn)
+		e.callStack.Push(e.frame)
+		e.frame = callstack.Frame{
+			PC: template.Addr,
+			BP: e.opStack.SP() - numArgs,
+
+			Func: fn,
+		}
+
 		e.opStack.Grow(template.NumLocals - numArgs)
 	case objs.Builtin:
 		builtinIndex := funcObj.Int
@@ -333,8 +325,8 @@ func (e *emulator) handleCall() {
 }
 
 func (e *emulator) handleReturn() {
-	e.opStack.PatchReturn(e.callStack.ActiveFrame().BP)
-	e.callStack.Pop()
+	e.opStack.PatchReturn(e.frame.BP)
+	e.frame = e.callStack.Pop()
 }
 
 func (_ *emulator) handleHalt() {
