@@ -15,38 +15,47 @@ const (
 )
 
 const (
-	OpPushBuiltin Opcode = 0x08 + iota
-	OpPushGlobal
-	OpPushCaptured
-	OpPushCollElem
-	OpPushLocal
-	OpPushLocal0
-	OpPushLocal1
-	OpPushLocal2
+	OpLoadGlobal Opcode = 0x08 + iota
+	OpLoadCaptured
+	OpLoadLocal
+	OpLoadLocal0
+	OpLoadLocal1
+	OpLoadLocal2
 )
 
 const (
-	OpPush0 Opcode = 0x10 + iota
-	OpPush1
-	OpPush2
-	OpPush3
-	OpPushN1
-	OpPushInt
-	OpPushStr
-	OpPushTrue
-	OpPushFalse
-	OpPushUndef
+	OpConst0 Opcode = 0x10 + iota
+	OpConst1
+	OpConst2
+	OpConst3
+	OpConstN1
+	OpConstInt
+	OpConstStr
+	OpConstTrue
+	OpConstFalse
+	OpConstUndef
+	OpBuiltin
+)
+
+const (
+	OpMakeArray Opcode = 0x1C + iota
+	OpNewArray
+	OpMakeFunc
 )
 
 const (
 	OpPop Opcode = 0x20 + iota
-	OpPopGlobal
-	OpPopCaptured
-	OpPopCollElem
-	OpPopLocal
-	OpPopLocal0
-	OpPopLocal1
-	OpPopLocal2
+	OpStoreGlobal
+	OpStoreCaptured
+	OpStoreLocal
+	OpStoreLocal0
+	OpStoreLocal1
+	OpStoreLocal2
+)
+
+const (
+	OpCollGet Opcode = 0x28 + iota
+	OpCollSet
 )
 
 const (
@@ -56,28 +65,25 @@ const (
 )
 
 const (
-	OpBinaryAdd Opcode = 0x30 + iota
-	OpBinarySub
-	OpBinaryMul
-	OpBinaryDiv
-	OpBinaryMod
-	OpBinaryEq
-	OpBinaryNe
-	OpBinaryLt
-	OpBinaryLe
-	OpBinaryGt
-	OpBinaryGe
+	OpCompEq Opcode = 0x30 + iota
+	OpCompNe
+	OpCompLt
+	OpCompLe
+	OpCompGt
+	OpCompGe
 )
 
 const (
-	OpUnaryNeg Opcode = 0x3C + iota
-	OpUnaryNot
+	OpNeg Opcode = 0x38 + iota
+	OpNot
 )
 
 const (
-	OpMakeArray Opcode = 0x40 + iota
-	OpNewArray
-	OpMakeFunc
+	OpAdd Opcode = 0x40 + iota
+	OpSub
+	OpMul
+	OpDiv
+	OpMod
 )
 
 func (opcode Opcode) String() string {

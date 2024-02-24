@@ -10,7 +10,7 @@ func (err NotIndexableError) Error() string {
 	return fmt.Sprintf("not indexable: %s, for key: %s", err.Coll.String(), err.Key.String())
 }
 
-func (o Obj) GetField(key Obj) (Obj, error) {
+func (o Obj) Get(key Obj) (Obj, error) {
 	err := NotIndexableError{o, key}
 
 	var elem Obj
@@ -35,7 +35,7 @@ func (o Obj) GetField(key Obj) (Obj, error) {
 	return elem, nil
 }
 
-func (o Obj) SetField(key Obj, value Obj) error {
+func (o Obj) Set(key Obj, value Obj) error {
 	err := NotIndexableError{o, key}
 
 	switch o.Type {

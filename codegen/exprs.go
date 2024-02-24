@@ -55,27 +55,27 @@ func (g *generator) compileBinaryOp(expr exprs.BinaryOp) {
 
 	switch expr.Operator {
 	case tokens.Plus:
-		g.emitInstr(instrs.OpBinaryAdd)
+		g.emitInstr(instrs.OpAdd)
 	case tokens.Minus:
-		g.emitInstr(instrs.OpBinarySub)
+		g.emitInstr(instrs.OpSub)
 	case tokens.Asterisk:
-		g.emitInstr(instrs.OpBinaryMul)
+		g.emitInstr(instrs.OpMul)
 	case tokens.Slash:
-		g.emitInstr(instrs.OpBinaryDiv)
+		g.emitInstr(instrs.OpDiv)
 	case tokens.Percent:
-		g.emitInstr(instrs.OpBinaryMod)
+		g.emitInstr(instrs.OpMod)
 	case tokens.Equals:
-		g.emitInstr(instrs.OpBinaryEq)
+		g.emitInstr(instrs.OpCompEq)
 	case tokens.NotEquals:
-		g.emitInstr(instrs.OpBinaryNe)
+		g.emitInstr(instrs.OpCompNe)
 	case tokens.Greater:
-		g.emitInstr(instrs.OpBinaryGt)
+		g.emitInstr(instrs.OpCompGt)
 	case tokens.GreaterEquals:
-		g.emitInstr(instrs.OpBinaryGe)
+		g.emitInstr(instrs.OpCompGe)
 	case tokens.Less:
-		g.emitInstr(instrs.OpBinaryLt)
+		g.emitInstr(instrs.OpCompLt)
 	case tokens.LessEquals:
-		g.emitInstr(instrs.OpBinaryLe)
+		g.emitInstr(instrs.OpCompLe)
 	default:
 		panic("unreachable")
 	}
@@ -87,7 +87,7 @@ func (g *generator) compileCollIndex(expr exprs.CollIndex, load bool) {
 	g.compileExpr(expr.Key)
 
 	if load {
-		g.emitInstr(instrs.OpPushCollElem)
+		g.emitInstr(instrs.OpCollGet)
 	}
 }
 
@@ -103,24 +103,24 @@ func (g *generator) compileFuncCall(expr exprs.FuncCall) {
 func (g *generator) compileIdent(expr exprs.Ident) {
 	switch sym := expr.Symbol.(type) {
 	case symbols.Builtin:
-		g.emitInstr(instrs.OpPushBuiltin, int(sym))
+		g.emitInstr(instrs.OpBuiltin, int(sym))
 	case symbols.Var:
 		switch {
 		case sym.Level == 0:
-			g.emitInstr(instrs.OpPushGlobal, sym.Index)
+			g.emitInstr(instrs.OpLoadGlobal, sym.Index)
 		case sym.Level == g.active.level:
 			switch sym.Index {
 			case 0:
-				g.emitInstr(instrs.OpPushLocal0)
+				g.emitInstr(instrs.OpLoadLocal0)
 			case 1:
-				g.emitInstr(instrs.OpPushLocal1)
+				g.emitInstr(instrs.OpLoadLocal1)
 			case 2:
-				g.emitInstr(instrs.OpPushLocal2)
+				g.emitInstr(instrs.OpLoadLocal2)
 			default:
-				g.emitInstr(instrs.OpPushLocal, sym.Index)
+				g.emitInstr(instrs.OpLoadLocal, sym.Index)
 			}
 		default:
-			g.emitInstr(instrs.OpPushCaptured, g.active.level-sym.Level, sym.Index)
+			g.emitInstr(instrs.OpLoadCaptured, g.active.level-sym.Level, sym.Index)
 		}
 	default:
 		panic("unreachable")
@@ -146,9 +146,9 @@ func (g *generator) compileUnaryOp(expr exprs.UnaryOp) {
 
 	switch expr.Operator {
 	case tokens.Bang:
-		g.emitInstr(instrs.OpUnaryNot)
+		g.emitInstr(instrs.OpNot)
 	case tokens.Minus:
-		g.emitInstr(instrs.OpUnaryNeg)
+		g.emitInstr(instrs.OpNeg)
 	default:
 		panic("unreachable")
 	}
@@ -156,26 +156,26 @@ func (g *generator) compileUnaryOp(expr exprs.UnaryOp) {
 
 func (g *generator) compileBoolLiteral(expr exprs.BoolLiteral) {
 	if expr {
-		g.emitInstr(instrs.OpPushTrue)
+		g.emitInstr(instrs.OpConstTrue)
 	} else {
-		g.emitInstr(instrs.OpPushFalse)
+		g.emitInstr(instrs.OpConstFalse)
 	}
 }
 
 func (g *generator) compileIntLiteral(expr exprs.IntLiteral) {
 	switch int(expr) {
 	case 0:
-		g.emitInstr(instrs.OpPush0)
+		g.emitInstr(instrs.OpConst0)
 	case 1:
-		g.emitInstr(instrs.OpPush1)
+		g.emitInstr(instrs.OpConst1)
 	case 2:
-		g.emitInstr(instrs.OpPush2)
+		g.emitInstr(instrs.OpConst2)
 	case 3:
-		g.emitInstr(instrs.OpPush3)
+		g.emitInstr(instrs.OpConst3)
 	case -1:
-		g.emitInstr(instrs.OpPushN1)
+		g.emitInstr(instrs.OpConstN1)
 	default:
-		g.emitInstr(instrs.OpPushInt, int(expr))
+		g.emitInstr(instrs.OpConstInt, int(expr))
 	}
 }
 
@@ -186,11 +186,11 @@ func (g *generator) compileStringLiteral(expr exprs.StringLiteral) {
 		g.stringPool = append(g.stringPool, string(expr))
 	}
 
-	g.emitInstr(instrs.OpPushStr, i)
+	g.emitInstr(instrs.OpConstStr, i)
 }
 
 func (g *generator) compileUndefinedLiteral(_ exprs.UndefinedLiteral) {
-	g.emitInstr(instrs.OpPushUndef)
+	g.emitInstr(instrs.OpConstUndef)
 }
 
 func (g *generator) compileFuncLiteral(expr exprs.FuncLiteral) {
@@ -225,23 +225,23 @@ func (g *generator) compileStore(expr ast.Expr) {
 
 		switch {
 		case v.Level == 0:
-			g.emitInstr(instrs.OpPopGlobal, v.Index)
+			g.emitInstr(instrs.OpStoreGlobal, v.Index)
 		case v.Level == g.active.level:
 			switch v.Index {
 			case 0:
-				g.emitInstr(instrs.OpPopLocal0)
+				g.emitInstr(instrs.OpStoreLocal0)
 			case 1:
-				g.emitInstr(instrs.OpPopLocal1)
+				g.emitInstr(instrs.OpStoreLocal1)
 			case 2:
-				g.emitInstr(instrs.OpPopLocal2)
+				g.emitInstr(instrs.OpStoreLocal2)
 			default:
-				g.emitInstr(instrs.OpPopLocal, v.Index)
+				g.emitInstr(instrs.OpStoreLocal, v.Index)
 			}
 		default:
-			g.emitInstr(instrs.OpPopCaptured, g.active.level-v.Level, v.Index)
+			g.emitInstr(instrs.OpStoreCaptured, g.active.level-v.Level, v.Index)
 		}
 	case exprs.CollIndex:
-		g.emitInstr(instrs.OpPopCollElem)
+		g.emitInstr(instrs.OpCollSet)
 	default:
 		panic("unreachable")
 	}

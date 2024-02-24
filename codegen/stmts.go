@@ -49,7 +49,7 @@ func (g *generator) compileCompoundAssignment(stmt stmts.CompoundAssignment) {
 	case exprs.CollIndex:
 		g.compilePreStore(v)
 		g.emitInstr(instrs.OpDup2)
-		g.emitInstr(instrs.OpPushCollElem)
+		g.emitInstr(instrs.OpCollGet)
 	default:
 		panic("unreachable")
 	}
@@ -57,15 +57,15 @@ func (g *generator) compileCompoundAssignment(stmt stmts.CompoundAssignment) {
 
 	switch stmt.Operator {
 	case tokens.PlusAssign:
-		g.emitInstr(instrs.OpBinaryAdd)
+		g.emitInstr(instrs.OpAdd)
 	case tokens.MinusAssign:
-		g.emitInstr(instrs.OpBinarySub)
+		g.emitInstr(instrs.OpSub)
 	case tokens.AsteriskAssign:
-		g.emitInstr(instrs.OpBinaryMul)
+		g.emitInstr(instrs.OpMul)
 	case tokens.SlashAssign:
-		g.emitInstr(instrs.OpBinaryDiv)
+		g.emitInstr(instrs.OpDiv)
 	case tokens.PercentAssign:
-		g.emitInstr(instrs.OpBinaryMod)
+		g.emitInstr(instrs.OpMod)
 	default:
 		panic("unreachable")
 	}
@@ -100,7 +100,7 @@ func (g *generator) compileFuncDecl(stmt stmts.FuncDecl) {
 	g.compileStmtBlock(stmt.Body)
 
 	if g.active.code[len(g.active.code)-1] != byte(instrs.OpReturn) {
-		g.emitInstr(instrs.OpPushUndef)
+		g.emitInstr(instrs.OpConstUndef)
 		g.emitInstr(instrs.OpReturn)
 	}
 

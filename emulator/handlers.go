@@ -38,63 +38,63 @@ func (e *emulator) handleBranchTrue() {
 	}
 }
 
-func (e *emulator) handlePushBuiltin() {
-	index := e.readOperand(instrs.OpPushBuiltin, 0)
+func (e *emulator) handleBuiltin() {
+	index := e.readOperand(instrs.OpBuiltin, 0)
 	e.opStack.Push(objs.Obj{Type: objs.Builtin, Int: index})
 }
 
-func (e *emulator) handlePushGlobal() {
-	index := e.readOperand(instrs.OpPushGlobal, 0)
+func (e *emulator) handleLoadGlobal() {
+	index := e.readOperand(instrs.OpLoadGlobal, 0)
 	e.opStack.Push(e.opStack.ReadVar(0, index))
 }
 
-func (e *emulator) handlePushLocal() {
-	index := e.readOperand(instrs.OpPushLocal, 0)
+func (e *emulator) handleLoadLocal() {
+	index := e.readOperand(instrs.OpLoadLocal, 0)
 	e.opStack.Push(e.opStack.ReadVar(e.frame.BP, index))
 }
 
-func (e *emulator) handlePushLocal0() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 0)) }
-func (e *emulator) handlePushLocal1() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 1)) }
-func (e *emulator) handlePushLocal2() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 2)) }
+func (e *emulator) handleLoadLocal0() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 0)) }
+func (e *emulator) handleLoadLocal1() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 1)) }
+func (e *emulator) handleLoadLocal2() { e.opStack.Push(e.opStack.ReadVar(e.frame.BP, 2)) }
 
-func (e *emulator) handlePush0()  { e.opStack.Push(objs.MakeInt(0)) }
-func (e *emulator) handlePush1()  { e.opStack.Push(objs.MakeInt(1)) }
-func (e *emulator) handlePush2()  { e.opStack.Push(objs.MakeInt(2)) }
-func (e *emulator) handlePush3()  { e.opStack.Push(objs.MakeInt(3)) }
-func (e *emulator) handlePushN1() { e.opStack.Push(objs.MakeInt(-1)) }
+func (e *emulator) handleConst0()  { e.opStack.Push(objs.MakeInt(0)) }
+func (e *emulator) handleConst1()  { e.opStack.Push(objs.MakeInt(1)) }
+func (e *emulator) handleConst2()  { e.opStack.Push(objs.MakeInt(2)) }
+func (e *emulator) handleConst3()  { e.opStack.Push(objs.MakeInt(3)) }
+func (e *emulator) handleConstN1() { e.opStack.Push(objs.MakeInt(-1)) }
 
-func (e *emulator) handlePushInt() {
-	value := e.readOperand(instrs.OpPushInt, 0)
+func (e *emulator) handleConstInt() {
+	value := e.readOperand(instrs.OpConstInt, 0)
 
 	e.opStack.Push(objs.MakeInt(value))
 }
 
-func (e *emulator) handlePushStr() {
-	index := e.readOperand(instrs.OpPushStr, 0)
+func (e *emulator) handleConstStr() {
+	index := e.readOperand(instrs.OpConstStr, 0)
 	str := e.program.StringPool[index]
 
 	e.opStack.Push(objs.MakeString(str))
 }
 
-func (e *emulator) handlePushTrue()  { e.opStack.Push(objs.MakeBool(true)) }
-func (e *emulator) handlePushFalse() { e.opStack.Push(objs.MakeBool(false)) }
-func (e *emulator) handlePushUndef() { e.opStack.Push(objs.Obj{}) }
+func (e *emulator) handleConstTrue()  { e.opStack.Push(objs.MakeBool(true)) }
+func (e *emulator) handleConstFalse() { e.opStack.Push(objs.MakeBool(false)) }
+func (e *emulator) handleConstUndef() { e.opStack.Push(objs.Obj{}) }
 
 func (e *emulator) handlePop() { e.opStack.Pop() }
 
-func (e *emulator) handlePopGlobal() {
-	index := e.readOperand(instrs.OpPopGlobal, 0)
+func (e *emulator) handleStoreGlobal() {
+	index := e.readOperand(instrs.OpStoreGlobal, 0)
 	e.opStack.WriteVar(0, index, e.opStack.Pop())
 }
 
-func (e *emulator) handlePopLocal() {
-	index := e.readOperand(instrs.OpPopLocal, 0)
+func (e *emulator) handleStoreLocal() {
+	index := e.readOperand(instrs.OpStoreLocal, 0)
 	e.opStack.WriteVar(e.frame.BP, index, e.opStack.Pop())
 }
 
-func (e *emulator) handlePopLocal0() { e.opStack.WriteVar(e.frame.BP, 0, e.opStack.Pop()) }
-func (e *emulator) handlePopLocal1() { e.opStack.WriteVar(e.frame.BP, 1, e.opStack.Pop()) }
-func (e *emulator) handlePopLocal2() { e.opStack.WriteVar(e.frame.BP, 2, e.opStack.Pop()) }
+func (e *emulator) handleStoreLocal0() { e.opStack.WriteVar(e.frame.BP, 0, e.opStack.Pop()) }
+func (e *emulator) handleStoreLocal1() { e.opStack.WriteVar(e.frame.BP, 1, e.opStack.Pop()) }
+func (e *emulator) handleStoreLocal2() { e.opStack.WriteVar(e.frame.BP, 2, e.opStack.Pop()) }
 
 func (e *emulator) handleMakeArray() {
 	size := e.readOperand(instrs.OpMakeArray, 0)
@@ -116,7 +116,7 @@ func (e *emulator) handleNewArray() {
 	e.opStack.Push(objs.MakeArray(arr))
 }
 
-func (e *emulator) handleBinaryAdd() {
+func (e *emulator) handleAdd() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -128,7 +128,7 @@ func (e *emulator) handleBinaryAdd() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleBinarySub() {
+func (e *emulator) handleSub() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -140,7 +140,7 @@ func (e *emulator) handleBinarySub() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleBinaryMul() {
+func (e *emulator) handleMul() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -152,7 +152,7 @@ func (e *emulator) handleBinaryMul() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleBinaryDiv() {
+func (e *emulator) handleDiv() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -164,7 +164,7 @@ func (e *emulator) handleBinaryDiv() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleBinaryMod() {
+func (e *emulator) handleMod() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -176,14 +176,14 @@ func (e *emulator) handleBinaryMod() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleBinaryEq() {
+func (e *emulator) handleCompEq() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
 	e.opStack.Push(objs.MakeBool(left.Equals(right)))
 }
 
-func (e *emulator) handleBinaryNeq() {
+func (e *emulator) handleCompNeq() {
 	right := e.opStack.Pop()
 	left := e.opStack.Pop()
 
@@ -238,7 +238,7 @@ func (e *emulator) handleCompGe() {
 	e.opStack.Push(objs.MakeBool(result >= 0))
 }
 
-func (e *emulator) handleUnaryNeg() {
+func (e *emulator) handleNeg() {
 	operand := e.opStack.Pop()
 
 	result, err := unaryops.NegOperator.Eval(operand)
@@ -249,7 +249,7 @@ func (e *emulator) handleUnaryNeg() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleUnaryNot() {
+func (e *emulator) handleNot() {
 	operand := e.opStack.Pop()
 
 	result, err := unaryops.NotOperator.Eval(operand)
@@ -333,11 +333,11 @@ func (_ *emulator) handleHalt() {
 	panic(struct{}{})
 }
 
-func (e *emulator) handlePushCollElem() {
+func (e *emulator) handleCollGet() {
 	key := e.opStack.Pop()
 	coll := e.opStack.Pop()
 
-	elem, err := coll.GetField(key)
+	elem, err := coll.Get(key)
 	if err != nil {
 		panic(err)
 	}
@@ -345,12 +345,12 @@ func (e *emulator) handlePushCollElem() {
 	e.opStack.Push(elem)
 }
 
-func (e *emulator) handlePopCollElem() {
+func (e *emulator) handleCollSet() {
 	value := e.opStack.Pop()
 	key := e.opStack.Pop()
 	coll := e.opStack.Pop()
 
-	err := coll.SetField(key, value)
+	err := coll.Set(key, value)
 	if err != nil {
 		panic(err)
 	}
