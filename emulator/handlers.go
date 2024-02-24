@@ -40,7 +40,7 @@ func (e *emulator) handleBranchTrue() {
 
 func (e *emulator) handleBuiltin() {
 	index := e.readOperand(instrs.OpBuiltin, 0)
-	e.opStack.Push(objs.Obj{Type: objs.Builtin, Int: index})
+	e.opStack.Push(objs.Make(objs.Builtin, nil, index))
 }
 
 func (e *emulator) handleLoadGlobal() {
@@ -107,11 +107,11 @@ func (e *emulator) handleMakeArray() {
 
 func (e *emulator) handleNewArray() {
 	sizeObj := e.opStack.Pop()
-	if sizeObj.Type != objs.Int {
+	if sizeObj.Type() != objs.Int {
 		// TODO: handle non-integer size
 	}
 
-	arr := make([]objs.Obj, sizeObj.Int)
+	arr := make([]objs.Obj, sizeObj.AsInt())
 
 	e.opStack.Push(objs.MakeArray(arr))
 }
@@ -264,7 +264,7 @@ func (e *emulator) handleMakeFunc() {
 		Captures: captures,
 	}
 
-	e.opStack.Push(objs.Obj{Type: objs.Func, Ptr: unsafe.Pointer(fn)})
+	e.opStack.Push(objs.Make(objs.Func, unsafe.Pointer(fn), 0))
 }
 
 func (e *emulator) handleCall() {
@@ -272,7 +272,7 @@ func (e *emulator) handleCall() {
 
 	funcObj := e.opStack.Pop()
 
-	switch funcObj.Type {
+	switch funcObj.Type() {
 	case objs.Func:
 		fn := (*function.Obj)(funcObj.Ptr)
 		template := &e.program.FuncPool[fn.Index]
@@ -291,7 +291,7 @@ func (e *emulator) handleCall() {
 
 		e.opStack.Grow(template.NumLocals - numArgs)
 	case objs.Builtin:
-		builtinIndex := funcObj.Int
+		builtinIndex := funcObj.AsInt()
 		builtin := &builtins.Funcs[builtinIndex]
 
 		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {

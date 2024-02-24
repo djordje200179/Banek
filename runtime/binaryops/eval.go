@@ -58,7 +58,7 @@ func (err InvalidOperandsError) Error() string {
 func (op BinaryOperator) Eval(left, right objs.Obj) (objs.Obj, error) {
 	err := InvalidOperandsError{op, left, right}
 
-	handler := binaryOps[op][left.Type][right.Type]
+	handler := binaryOps[op][left.Type()][right.Type()]
 	if handler == nil {
 		return objs.Obj{}, err
 	}

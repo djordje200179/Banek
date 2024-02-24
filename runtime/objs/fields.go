@@ -14,17 +14,19 @@ func (o Obj) Get(key Obj) (Obj, error) {
 	err := NotIndexableError{o, key}
 
 	var elem Obj
-	switch o.Type {
+	switch o.Type() {
 	case Array:
-		switch key.Type {
-		case Int:
-			arr := o.AsArray()
+		arr := o.AsArray()
 
-			if key.Int < 0 || key.Int >= len(arr) {
+		switch key.Type() {
+		case Int:
+			key := key.AsInt()
+
+			if key < 0 || key >= len(arr) {
 				return Obj{}, err
 			}
 
-			elem = arr[key.Int]
+			elem = arr[key]
 		default:
 			return Obj{}, err
 		}
@@ -38,17 +40,18 @@ func (o Obj) Get(key Obj) (Obj, error) {
 func (o Obj) Set(key Obj, value Obj) error {
 	err := NotIndexableError{o, key}
 
-	switch o.Type {
+	switch o.Type() {
 	case Array:
-		switch key.Type {
+		arr := o.AsArray()
+		switch key.Type() {
 		case Int:
-			arr := o.AsArray()
+			key := key.AsInt()
 
-			if key.Int < 0 || key.Int >= len(arr) {
+			if key < 0 || key >= len(arr) {
 				return err
 			}
 
-			arr[key.Int] = value
+			arr[key] = value
 		default:
 			return err
 		}

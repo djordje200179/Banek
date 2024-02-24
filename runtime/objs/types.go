@@ -13,3 +13,7 @@ const (
 
 	TypeCount
 )
+
+const TypeBits = 3
+const TypeMask = (1 << TypeBits) - 1
+const IntMask = ^TypeMask

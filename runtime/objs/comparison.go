@@ -6,15 +6,15 @@ import (
 )
 
 func (o Obj) Equals(other Obj) bool {
-	if o.Type != other.Type {
+	if o.Type() != other.Type() {
 		return false
 	}
 
-	switch o.Type {
+	switch o.Type() {
 	case Int:
-		return o.Int == other.Int
+		return o.AsInt() == other.AsInt()
 	case Bool:
-		return o.Int == other.Int
+		return o.AsBool() == other.AsBool()
 	case String:
 		return o.AsString() == other.AsString()
 	case Array:
@@ -39,13 +39,13 @@ func (e NotComparableError) Error() string {
 func (o Obj) Compare(other Obj) (int, error) {
 	err := NotComparableError{o, other}
 
-	if o.Type != other.Type {
+	if o.Type() != other.Type() {
 		return 0, err
 	}
 
-	switch o.Type {
+	switch o.Type() {
 	case Int:
-		return o.Int - other.Int, nil
+		return o.AsInt() - other.AsInt(), nil
 	case String:
 		return strings.Compare(o.AsString(), other.AsString()), nil
 	default:

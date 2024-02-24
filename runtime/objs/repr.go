@@ -6,11 +6,11 @@ import (
 )
 
 func (o Obj) String() string {
-	switch o.Type {
+	switch o.Type() {
 	case Int:
-		return strconv.Itoa(o.Int)
+		return strconv.Itoa(o.AsInt())
 	case Bool:
-		return strconv.FormatBool(o.Int != 0)
+		return strconv.FormatBool(o.AsBool())
 	case String:
 		return o.AsString()
 	case Array:

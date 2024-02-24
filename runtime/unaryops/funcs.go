@@ -3,9 +3,9 @@ package unaryops
 import "banek/runtime/objs"
 
 func negateInt(o objs.Obj) (objs.Obj, bool) {
-	return objs.Obj{Int: -o.Int, Type: objs.Int}, true
+	return objs.MakeInt(-o.AsInt()), true
 }
 
 func invertBool(o objs.Obj) (objs.Obj, bool) {
-	return objs.Obj{Int: ^o.Int, Type: objs.Bool}, true
+	return objs.MakeBool(!o.AsBool()), true
 }

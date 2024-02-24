@@ -6,31 +6,31 @@ import (
 )
 
 func addInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.Obj{Int: left.Int + right.Int, Type: objs.Int}, true
+	return objs.MakeInt(left.AsInt() + right.AsInt()), true
 }
 
 func subInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.Obj{Int: left.Int - right.Int, Type: objs.Int}, true
+	return objs.MakeInt(left.AsInt() - right.AsInt()), true
 }
 
 func mulInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.Obj{Int: left.Int * right.Int, Type: objs.Int}, true
+	return objs.MakeInt(left.AsInt() * right.AsInt()), true
 }
 
 func divInts(left, right objs.Obj) (objs.Obj, bool) {
-	if right.Int == 0 {
+	if right.AsInt() == 0 {
 		return objs.Obj{}, false
 	}
 
-	return objs.Obj{Int: left.Int / right.Int, Type: objs.Int}, true
+	return objs.MakeInt(left.AsInt() / right.AsInt()), true
 }
 
 func modInts(left, right objs.Obj) (objs.Obj, bool) {
-	if right.Int == 0 {
+	if right.AsInt() == 0 {
 		return objs.Obj{}, false
 	}
 
-	return objs.Obj{Int: left.Int % right.Int, Type: objs.Int}, true
+	return objs.MakeInt(left.AsInt() % right.AsInt()), true
 }
 
 func addStrings(left, right objs.Obj) (objs.Obj, bool) {
@@ -42,7 +42,7 @@ func addStrings(left, right objs.Obj) (objs.Obj, bool) {
 
 func repeatStrings(left, right objs.Obj) (objs.Obj, bool) {
 	str := left.AsString()
-	count := right.Int
+	count := right.AsInt()
 
 	if count < 0 {
 		return objs.Obj{}, false
@@ -60,7 +60,7 @@ func concatArrays(left, right objs.Obj) (objs.Obj, bool) {
 
 func repeatArray(left, right objs.Obj) (objs.Obj, bool) {
 	arr := left.AsArray()
-	count := right.Int
+	count := right.AsInt()
 
 	if count < 0 {
 		return objs.Obj{}, false

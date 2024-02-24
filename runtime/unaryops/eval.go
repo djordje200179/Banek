@@ -27,7 +27,7 @@ func (err InvalidOperandError) Error() string {
 func (op UnaryOperator) Eval(o objs.Obj) (objs.Obj, error) {
 	err := InvalidOperandError{op, o}
 
-	handler := unaryOps[op][o.Type]
+	handler := unaryOps[op][o.Type()]
 	if handler == nil {
 		return objs.Obj{}, err
 	}

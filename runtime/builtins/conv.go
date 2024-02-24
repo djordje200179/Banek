@@ -10,26 +10,26 @@ func builtinStr(args []objs.Obj) (objs.Obj, error) {
 }
 
 func builtinInt(args []objs.Obj) (objs.Obj, error) {
-	res := objs.Obj{Type: objs.Int}
-
-	switch args[0].Type {
+	switch args[0].Type() {
 	case objs.Int:
-		res.Int = args[0].Int
+		return objs.MakeInt(args[0].AsInt()), nil
 	case objs.String:
 		val, err := strconv.Atoi(args[0].AsString())
 		if err != nil {
 			return objs.Obj{}, err
 		}
 
-		res.Int = val
+		return objs.MakeInt(val), nil
 	case objs.Bool:
-		res.Int = args[0].Int
+		if args[0].AsBool() {
+			return objs.MakeInt(1), nil
+		} else {
+			return objs.MakeInt(0), nil
+		}
 	default:
 		return objs.Obj{}, InvalidTypeError{
 			ArgIndex: 0,
 			Arg:      args[0],
 		}
 	}
-
-	return res, nil
 }
