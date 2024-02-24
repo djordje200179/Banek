@@ -44,8 +44,7 @@ const (
 )
 
 const (
-	OpPop Opcode = 0x20 + iota
-	OpStoreGlobal
+	OpStoreGlobal Opcode = 0x20 + iota
 	OpStoreCaptured
 	OpStoreLocal
 	OpStoreLocal0
@@ -59,7 +58,8 @@ const (
 )
 
 const (
-	OpDup Opcode = 0x2C + iota
+	OpPop Opcode = 0x2C + iota
+	OpDup
 	OpDup2
 	OpSwap
 )

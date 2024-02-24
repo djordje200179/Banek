@@ -32,7 +32,6 @@ var instrInfos = [...]InstrInfo{
 	OpNewArray:  {"NEW.ARRAY", nil},
 	OpMakeFunc:  {"MAKE.FUNC", []OperandInfo{{2, OperandFunc}}},
 
-	OpPop:           {"POP", nil},
 	OpStoreGlobal:   {"ST.G", []OperandInfo{{2, OperandLiteral}}},
 	OpStoreCaptured: {"ST.C", []OperandInfo{{1, OperandLiteral}, {1, OperandLiteral}}},
 	OpStoreLocal:    {"ST.L", []OperandInfo{{1, OperandLiteral}}},
@@ -43,6 +42,7 @@ var instrInfos = [...]InstrInfo{
 	OpCollGet: {"COLL.GET", nil},
 	OpCollSet: {"COLL.SET", nil},
 
+	OpPop:  {"POP", nil},
 	OpDup:  {"DUP", nil},
 	OpDup2: {"DUP2", nil},
 	OpSwap: {"SWAP", nil},

@@ -39,7 +39,6 @@ var handlers = [...]func(e *emulator){
 	instrs.OpNewArray:  (*emulator).handleNewArray,
 	instrs.OpMakeFunc:  (*emulator).handleMakeFunc,
 
-	instrs.OpPop:           (*emulator).handlePop,
 	instrs.OpStoreGlobal:   (*emulator).handleStoreGlobal,
 	instrs.OpStoreCaptured: nil,
 	instrs.OpStoreLocal:    (*emulator).handleStoreLocal,
@@ -50,6 +49,7 @@ var handlers = [...]func(e *emulator){
 	instrs.OpCollGet: (*emulator).handleCollGet,
 	instrs.OpCollSet: (*emulator).handleCollSet,
 
+	instrs.OpPop:  (*emulator).handlePop,
 	instrs.OpDup:  (*emulator).handleDup,
 	instrs.OpDup2: (*emulator).handleDup2,
 	instrs.OpSwap: (*emulator).handleSwap,
