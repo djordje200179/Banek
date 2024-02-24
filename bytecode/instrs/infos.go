@@ -47,12 +47,12 @@ var instrInfos = [...]InstrInfo{
 	OpDup2: {"DUP2", nil},
 	OpSwap: {"SWAP", nil},
 
-	OpCompEq: {"CMP.EQ", nil},
-	OpCompNe: {"CMP.NE", nil},
-	OpCompGt: {"CMP.GT", nil},
-	OpCompGe: {"CMP.GE", nil},
-	OpCompLt: {"CMP.LT", nil},
-	OpCompLe: {"CMP.LE", nil},
+	OpCompareEq:   {"CMP.EQ", nil},
+	OpCompareNeq:  {"CMP.NE", nil},
+	OpCompareGt:   {"CMP.GT", nil},
+	OpCompareGtEq: {"CMP.GE", nil},
+	OpCompareLt:   {"CMP.LT", nil},
+	OpCompareLtEq: {"CMP.LE", nil},
 
 	OpAdd: {"ADD", nil},
 	OpSub: {"SUB", nil},

@@ -54,12 +54,12 @@ var handlers = [...]func(e *emulator){
 	instrs.OpDup2: (*emulator).handleDup2,
 	instrs.OpSwap: (*emulator).handleSwap,
 
-	instrs.OpCompEq: (*emulator).handleCompEq,
-	instrs.OpCompNe: (*emulator).handleCompNeq,
-	instrs.OpCompLt: (*emulator).handleCompLt,
-	instrs.OpCompLe: (*emulator).handleCompLe,
-	instrs.OpCompGt: (*emulator).handleCompGt,
-	instrs.OpCompGe: (*emulator).handleCompGe,
+	instrs.OpCompareEq:   (*emulator).handleCompareEq,
+	instrs.OpCompareNeq:  (*emulator).handleCompareNeq,
+	instrs.OpCompareLt:   (*emulator).handleCompareLt,
+	instrs.OpCompareLtEq: (*emulator).handleCompareLtEq,
+	instrs.OpCompareGt:   (*emulator).handleCompareGt,
+	instrs.OpCompareGtEq: (*emulator).handleCompareGtEq,
 
 	instrs.OpNeg: (*emulator).handleNeg,
 	instrs.OpNot: (*emulator).handleNot,

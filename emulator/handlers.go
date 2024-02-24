@@ -171,19 +171,19 @@ func (e *emulator) handleMod() {
 	e.opStack.Push(result)
 }
 
-func (e *emulator) handleCompEq() {
+func (e *emulator) handleCompareEq() {
 	left, right := e.opStack.Pop2()
 
 	e.opStack.Push(objs.MakeBool(left.Equals(right)))
 }
 
-func (e *emulator) handleCompNeq() {
+func (e *emulator) handleCompareNeq() {
 	left, right := e.opStack.Pop2()
 
 	e.opStack.Push(objs.MakeBool(!left.Equals(right)))
 }
 
-func (e *emulator) handleCompLt() {
+func (e *emulator) handleCompareLt() {
 	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
@@ -194,7 +194,7 @@ func (e *emulator) handleCompLt() {
 	e.opStack.Push(objs.MakeBool(result < 0))
 }
 
-func (e *emulator) handleCompLe() {
+func (e *emulator) handleCompareLtEq() {
 	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
@@ -205,7 +205,7 @@ func (e *emulator) handleCompLe() {
 	e.opStack.Push(objs.MakeBool(result <= 0))
 }
 
-func (e *emulator) handleCompGt() {
+func (e *emulator) handleCompareGt() {
 	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
@@ -216,7 +216,7 @@ func (e *emulator) handleCompGt() {
 	e.opStack.Push(objs.MakeBool(result > 0))
 }
 
-func (e *emulator) handleCompGe() {
+func (e *emulator) handleCompareGtEq() {
 	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)

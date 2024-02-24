@@ -65,17 +65,17 @@ func (g *generator) compileBinaryOp(expr exprs.BinaryOp) {
 	case tokens.Percent:
 		g.emitInstr(instrs.OpMod)
 	case tokens.Equals:
-		g.emitInstr(instrs.OpCompEq)
+		g.emitInstr(instrs.OpCompareEq)
 	case tokens.NotEquals:
-		g.emitInstr(instrs.OpCompNe)
+		g.emitInstr(instrs.OpCompareNeq)
 	case tokens.Greater:
-		g.emitInstr(instrs.OpCompGt)
+		g.emitInstr(instrs.OpCompareGt)
 	case tokens.GreaterEquals:
-		g.emitInstr(instrs.OpCompGe)
+		g.emitInstr(instrs.OpCompareGtEq)
 	case tokens.Less:
-		g.emitInstr(instrs.OpCompLt)
+		g.emitInstr(instrs.OpCompareLt)
 	case tokens.LessEquals:
-		g.emitInstr(instrs.OpCompLe)
+		g.emitInstr(instrs.OpCompareLtEq)
 	default:
 		panic("unreachable")
 	}

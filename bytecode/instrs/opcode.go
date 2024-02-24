@@ -65,12 +65,12 @@ const (
 )
 
 const (
-	OpCompEq Opcode = 0x30 + iota
-	OpCompNe
-	OpCompLt
-	OpCompLe
-	OpCompGt
-	OpCompGe
+	OpCompareEq Opcode = 0x30 + iota
+	OpCompareNeq
+	OpCompareLt
+	OpCompareLtEq
+	OpCompareGt
+	OpCompareGtEq
 )
 
 const (
