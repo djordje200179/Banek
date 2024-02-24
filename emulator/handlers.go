@@ -117,8 +117,7 @@ func (e *emulator) handleNewArray() {
 }
 
 func (e *emulator) handleAdd() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := binaryops.AddOperator.Eval(left, right)
 	if err != nil {
@@ -129,8 +128,7 @@ func (e *emulator) handleAdd() {
 }
 
 func (e *emulator) handleSub() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := binaryops.SubOperator.Eval(left, right)
 	if err != nil {
@@ -141,8 +139,7 @@ func (e *emulator) handleSub() {
 }
 
 func (e *emulator) handleMul() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := binaryops.MulOperator.Eval(left, right)
 	if err != nil {
@@ -153,8 +150,7 @@ func (e *emulator) handleMul() {
 }
 
 func (e *emulator) handleDiv() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := binaryops.DivOperator.Eval(left, right)
 	if err != nil {
@@ -165,8 +161,7 @@ func (e *emulator) handleDiv() {
 }
 
 func (e *emulator) handleMod() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := binaryops.ModOperator.Eval(left, right)
 	if err != nil {
@@ -177,22 +172,19 @@ func (e *emulator) handleMod() {
 }
 
 func (e *emulator) handleCompEq() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	e.opStack.Push(objs.MakeBool(left.Equals(right)))
 }
 
 func (e *emulator) handleCompNeq() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	e.opStack.Push(objs.MakeBool(!left.Equals(right)))
 }
 
 func (e *emulator) handleCompLt() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
 	if err != nil {
@@ -203,8 +195,7 @@ func (e *emulator) handleCompLt() {
 }
 
 func (e *emulator) handleCompLe() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
 	if err != nil {
@@ -215,8 +206,7 @@ func (e *emulator) handleCompLe() {
 }
 
 func (e *emulator) handleCompGt() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
 	if err != nil {
@@ -227,8 +217,7 @@ func (e *emulator) handleCompGt() {
 }
 
 func (e *emulator) handleCompGe() {
-	right := e.opStack.Pop()
-	left := e.opStack.Pop()
+	left, right := e.opStack.Pop2()
 
 	result, err := left.Compare(right)
 	if err != nil {
@@ -334,8 +323,7 @@ func (_ *emulator) handleHalt() {
 }
 
 func (e *emulator) handleCollGet() {
-	key := e.opStack.Pop()
-	coll := e.opStack.Pop()
+	coll, key := e.opStack.Pop2()
 
 	elem, err := coll.Get(key)
 	if err != nil {
@@ -346,9 +334,7 @@ func (e *emulator) handleCollGet() {
 }
 
 func (e *emulator) handleCollSet() {
-	value := e.opStack.Pop()
-	key := e.opStack.Pop()
-	coll := e.opStack.Pop()
+	coll, key, value := e.opStack.Pop3()
 
 	err := coll.Set(key, value)
 	if err != nil {

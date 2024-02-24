@@ -33,6 +33,32 @@ func (s *Stack) Pop() objs.Obj {
 	return elem
 }
 
+func (s *Stack) Pop2() (objs.Obj, objs.Obj) {
+	s.ptr -= 2
+
+	elem1 := s.arr[s.ptr]
+	elem2 := s.arr[s.ptr+1]
+
+	s.arr[s.ptr] = objs.Obj{}
+	s.arr[s.ptr+1] = objs.Obj{}
+
+	return elem1, elem2
+}
+
+func (s *Stack) Pop3() (objs.Obj, objs.Obj, objs.Obj) {
+	s.ptr -= 3
+
+	elem1 := s.arr[s.ptr]
+	elem2 := s.arr[s.ptr+1]
+	elem3 := s.arr[s.ptr+2]
+
+	s.arr[s.ptr] = objs.Obj{}
+	s.arr[s.ptr+1] = objs.Obj{}
+	s.arr[s.ptr+2] = objs.Obj{}
+
+	return elem1, elem2, elem3
+}
+
 func (s *Stack) PopMany(arr []objs.Obj) {
 	nextPtr := s.ptr - len(arr)
 	copy(arr, s.arr[nextPtr:s.ptr])
