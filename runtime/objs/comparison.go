@@ -36,19 +36,17 @@ func (e NotComparableError) Error() string {
 	return "not comparable: " + e.Left.String() + " and " + e.Right.String()
 }
 
-func (o Obj) Compare(other Obj) (int, error) {
-	err := NotComparableError{o, other}
-
+func (o Obj) Compare(other Obj) int {
 	if o.Type() != other.Type() {
-		return 0, err
+		panic(NotComparableError{o, other})
 	}
 
 	switch o.Type() {
 	case Int:
-		return o.AsInt() - other.AsInt(), nil
+		return o.AsInt() - other.AsInt()
 	case String:
-		return strings.Compare(o.AsString(), other.AsString()), nil
+		return strings.Compare(o.AsString(), other.AsString())
 	default:
-		return 0, err
+		panic(NotComparableError{o, other})
 	}
 }

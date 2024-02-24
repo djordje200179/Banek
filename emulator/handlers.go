@@ -117,58 +117,14 @@ func (e *emulator) handleNewArray() {
 	e.opStack.Push(objs.MakeArray(arr))
 }
 
-func (e *emulator) handleAdd() {
-	left, right := e.opStack.Pop2()
+func (e *emulator) handleAdd() { e.opStack.Push(binaryops.AddOperator.Eval(e.opStack.Pop2())) }
+func (e *emulator) handleSub() { e.opStack.Push(binaryops.SubOperator.Eval(e.opStack.Pop2())) }
+func (e *emulator) handleMul() { e.opStack.Push(binaryops.MulOperator.Eval(e.opStack.Pop2())) }
+func (e *emulator) handleDiv() { e.opStack.Push(binaryops.DivOperator.Eval(e.opStack.Pop2())) }
+func (e *emulator) handleMod() { e.opStack.Push(binaryops.ModOperator.Eval(e.opStack.Pop2())) }
 
-	result, err := binaryops.AddOperator.Eval(left, right)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
-
-func (e *emulator) handleSub() {
-	left, right := e.opStack.Pop2()
-
-	result, err := binaryops.SubOperator.Eval(left, right)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
-
-func (e *emulator) handleMul() {
-	left, right := e.opStack.Pop2()
-
-	result, err := binaryops.MulOperator.Eval(left, right)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
-
-func (e *emulator) handleDiv() {
-	left, right := e.opStack.Pop2()
-
-	result, err := binaryops.DivOperator.Eval(left, right)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
-
-func (e *emulator) handleMod() {
-	result, err := binaryops.ModOperator.Eval(e.opStack.Pop2())
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
+func (e *emulator) handleNeg() { e.opStack.Push(unaryops.NegOperator.Eval(e.opStack.Pop())) }
+func (e *emulator) handleNot() { e.opStack.Push(unaryops.NotOperator.Eval(e.opStack.Pop())) }
 
 func (e *emulator) handleCompareEq() {
 	left, right := e.opStack.Pop2()
@@ -189,67 +145,33 @@ func (e *emulator) handleCompareNeq() {
 func (e *emulator) handleCompareLt() {
 	left, right := e.opStack.Pop2()
 
-	result, err := left.Compare(right)
-	if err != nil {
-		panic(err)
-	}
+	result := left.Compare(right) < 0
 
-	e.opStack.Push(objs.MakeBool(result < 0))
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleCompareLtEq() {
 	left, right := e.opStack.Pop2()
 
-	result, err := left.Compare(right)
-	if err != nil {
-		panic(err)
-	}
+	result := left.Compare(right) <= 0
 
-	e.opStack.Push(objs.MakeBool(result <= 0))
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleCompareGt() {
 	left, right := e.opStack.Pop2()
 
-	result, err := left.Compare(right)
-	if err != nil {
-		panic(err)
-	}
+	result := left.Compare(right) > 0
 
-	e.opStack.Push(objs.MakeBool(result > 0))
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleCompareGtEq() {
 	left, right := e.opStack.Pop2()
 
-	result, err := left.Compare(right)
-	if err != nil {
-		panic(err)
-	}
+	result := left.Compare(right) >= 0
 
-	e.opStack.Push(objs.MakeBool(result >= 0))
-}
-
-func (e *emulator) handleNeg() {
-	operand := e.opStack.Pop()
-
-	result, err := unaryops.NegOperator.Eval(operand)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
-}
-
-func (e *emulator) handleNot() {
-	operand := e.opStack.Pop()
-
-	result, err := unaryops.NotOperator.Eval(operand)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(result)
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleMakeFunc() {
@@ -328,19 +250,11 @@ func (_ *emulator) handleHalt() {
 func (e *emulator) handleCollGet() {
 	coll, key := e.opStack.Pop2()
 
-	elem, err := coll.Get(key)
-	if err != nil {
-		panic(err)
-	}
-
-	e.opStack.Push(elem)
+	e.opStack.Push(coll.Get(key))
 }
 
 func (e *emulator) handleCollSet() {
 	coll, key, value := e.opStack.Pop3()
 
-	err := coll.Set(key, value)
-	if err != nil {
-		panic(err)
-	}
+	coll.Set(key, value)
 }

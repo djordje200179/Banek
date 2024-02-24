@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var binaryOps = [binaryOperatorCount][objs.TypeCount][objs.TypeCount]func(objs.Obj, objs.Obj) (objs.Obj, bool){
+var binaryOps = [binaryOperatorCount][objs.TypeCount][objs.TypeCount]func(objs.Obj, objs.Obj) objs.Obj{
 	AddOperator: {
 		objs.Int: {
 			objs.Int: addInts,
@@ -55,18 +55,11 @@ func (err InvalidOperandsError) Error() string {
 	return fmt.Sprintf("invalid operands for %s: %s and %s", err.Operator.String(), err.Left.String(), err.Right.String())
 }
 
-func (op BinaryOperator) Eval(left, right objs.Obj) (objs.Obj, error) {
-	err := InvalidOperandsError{op, left, right}
-
+func (op BinaryOperator) Eval(left, right objs.Obj) objs.Obj {
 	handler := binaryOps[op][left.Type()][right.Type()]
 	if handler == nil {
-		return objs.Obj{}, err
+		panic(InvalidOperandsError{op, left, right})
 	}
 
-	result, ok := handler(left, right)
-	if !ok {
-		return objs.Obj{}, err
-	}
-
-	return result, nil
+	return handler(left, right)
 }

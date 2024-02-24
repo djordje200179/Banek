@@ -2,10 +2,10 @@ package unaryops
 
 import "banek/runtime/objs"
 
-func negateInt(o objs.Obj) (objs.Obj, bool) {
-	return objs.MakeInt(-o.AsInt()), true
+func negateInt(o objs.Obj) objs.Obj {
+	return objs.MakeInt(-o.AsInt())
 }
 
-func invertBool(o objs.Obj) (objs.Obj, bool) {
-	return objs.MakeBool(!o.AsBool()), true
+func invertBool(o objs.Obj) objs.Obj {
+	return objs.MakeBool(!o.AsBool())
 }

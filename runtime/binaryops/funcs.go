@@ -2,68 +2,68 @@ package binaryops
 
 import (
 	"banek/runtime/objs"
+	"slices"
+	"strconv"
 	"strings"
 )
 
-func addInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.MakeInt(left.AsInt() + right.AsInt()), true
+func addInts(left, right objs.Obj) objs.Obj {
+	return objs.MakeInt(left.AsInt() + right.AsInt())
 }
 
-func subInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.MakeInt(left.AsInt() - right.AsInt()), true
+func subInts(left, right objs.Obj) objs.Obj {
+	return objs.MakeInt(left.AsInt() - right.AsInt())
 }
 
-func mulInts(left, right objs.Obj) (objs.Obj, bool) {
-	return objs.MakeInt(left.AsInt() * right.AsInt()), true
+func mulInts(left, right objs.Obj) objs.Obj {
+	return objs.MakeInt(left.AsInt() * right.AsInt())
 }
 
-func divInts(left, right objs.Obj) (objs.Obj, bool) {
-	if right.AsInt() == 0 {
-		return objs.Obj{}, false
-	}
-
-	return objs.MakeInt(left.AsInt() / right.AsInt()), true
+func divInts(left, right objs.Obj) objs.Obj {
+	return objs.MakeInt(left.AsInt() / right.AsInt())
 }
 
-func modInts(left, right objs.Obj) (objs.Obj, bool) {
-	if right.AsInt() == 0 {
-		return objs.Obj{}, false
-	}
-
-	return objs.MakeInt(left.AsInt() % right.AsInt()), true
+func modInts(left, right objs.Obj) objs.Obj {
+	return objs.MakeInt(left.AsInt() % right.AsInt())
 }
 
-func addStrings(left, right objs.Obj) (objs.Obj, bool) {
+func addStrings(left, right objs.Obj) objs.Obj {
 	str1 := left.AsString()
 	str2 := right.AsString()
 
-	return objs.MakeString(str1 + str2), true
+	return objs.MakeString(str1 + str2)
 }
 
-func repeatStrings(left, right objs.Obj) (objs.Obj, bool) {
+type NegativeRepeatCountError int
+
+func (err NegativeRepeatCountError) Error() string {
+	return "negative repeat count: " + strconv.Itoa(int(err))
+}
+
+func repeatStrings(left, right objs.Obj) objs.Obj {
 	str := left.AsString()
 	count := right.AsInt()
 
 	if count < 0 {
-		return objs.Obj{}, false
+		panic(NegativeRepeatCountError(count))
 	}
 
-	return objs.MakeString(strings.Repeat(str, count)), true
+	return objs.MakeString(strings.Repeat(str, count))
 }
 
-func concatArrays(left, right objs.Obj) (objs.Obj, bool) {
+func concatArrays(left, right objs.Obj) objs.Obj {
 	arr1 := left.AsArray()
 	arr2 := right.AsArray()
 
-	return objs.MakeArray(append(arr1, arr2...)), true
+	return objs.MakeArray(slices.Concat(arr1, arr2))
 }
 
-func repeatArray(left, right objs.Obj) (objs.Obj, bool) {
+func repeatArray(left, right objs.Obj) objs.Obj {
 	arr := left.AsArray()
 	count := right.AsInt()
 
 	if count < 0 {
-		return objs.Obj{}, false
+		panic(NegativeRepeatCountError(count))
 	}
 
 	newArr := make([]objs.Obj, len(arr)*count)
@@ -71,5 +71,5 @@ func repeatArray(left, right objs.Obj) (objs.Obj, bool) {
 		copy(newArr[i*len(arr):], arr)
 	}
 
-	return objs.MakeArray(newArr), true
+	return objs.MakeArray(newArr)
 }

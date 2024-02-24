@@ -10,36 +10,39 @@ func (err NotIndexableError) Error() string {
 	return fmt.Sprintf("not indexable: %s, for key: %s", err.Coll.String(), err.Key.String())
 }
 
-func (o Obj) Get(key Obj) (Obj, error) {
-	err := NotIndexableError{o, key}
+type IndexOutOfBoundsError struct {
+	Arr Obj
 
-	var elem Obj
-	switch o.Type() {
-	case Array:
-		arr := o.AsArray()
-
-		switch key.Type() {
-		case Int:
-			key := key.AsInt()
-
-			if key < 0 || key >= len(arr) {
-				return Obj{}, err
-			}
-
-			elem = arr[key]
-		default:
-			return Obj{}, err
-		}
-	default:
-		return Obj{}, err
-	}
-
-	return elem, nil
+	Index int
 }
 
-func (o Obj) Set(key Obj, value Obj) error {
-	err := NotIndexableError{o, key}
+func (err IndexOutOfBoundsError) Error() string {
+	return fmt.Sprintf("index out of bounds: %s, for index: %d", err.Arr.String(), err.Index)
+}
 
+func (o Obj) Get(key Obj) Obj {
+	switch o.Type() {
+	case Array:
+		arr := o.AsArray()
+
+		switch key.Type() {
+		case Int:
+			key := key.AsInt()
+
+			if key < 0 || key >= len(arr) {
+				panic(IndexOutOfBoundsError{o, key})
+			}
+
+			return arr[key]
+		default:
+			panic(NotIndexableError{o, key})
+		}
+	default:
+		panic(NotIndexableError{o, key})
+	}
+}
+
+func (o Obj) Set(key Obj, value Obj) {
 	switch o.Type() {
 	case Array:
 		arr := o.AsArray()
@@ -48,16 +51,14 @@ func (o Obj) Set(key Obj, value Obj) error {
 			key := key.AsInt()
 
 			if key < 0 || key >= len(arr) {
-				return err
+				panic(IndexOutOfBoundsError{o, key})
 			}
 
 			arr[key] = value
 		default:
-			return err
+			panic(NotIndexableError{o, key})
 		}
 	default:
-		return err
+		panic(NotIndexableError{o, key})
 	}
-
-	return nil
 }

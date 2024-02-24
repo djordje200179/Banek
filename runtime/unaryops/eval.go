@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var unaryOps = [unaryOperatorCount][objs.TypeCount]func(objs.Obj) (objs.Obj, bool){
+var unaryOps = [unaryOperatorCount][objs.TypeCount]func(objs.Obj) objs.Obj{
 	NegOperator: {
 		objs.Int: negateInt,
 	},
@@ -24,18 +24,12 @@ func (err InvalidOperandError) Error() string {
 	return fmt.Sprintf("invalid operand for %s: %s", err.Operator.String(), err.Operand.String())
 }
 
-func (op UnaryOperator) Eval(o objs.Obj) (objs.Obj, error) {
-	err := InvalidOperandError{op, o}
-
+func (op UnaryOperator) Eval(o objs.Obj) objs.Obj {
 	handler := unaryOps[op][o.Type()]
 	if handler == nil {
-		return objs.Obj{}, err
+		panic(InvalidOperandError{op, o})
 	}
 
-	result, ok := handler(o)
-	if !ok {
-		return objs.Obj{}, err
-	}
+	return handler(o)
 
-	return result, nil
 }
