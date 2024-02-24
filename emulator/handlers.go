@@ -40,7 +40,8 @@ func (e *emulator) handleBranchTrue() {
 
 func (e *emulator) handleBuiltin() {
 	index := e.readOperand(instrs.OpBuiltin, 0)
-	e.opStack.Push(objs.Make(objs.Builtin, nil, index))
+	builtin := &builtins.Funcs[index]
+	e.opStack.Push(objs.Make(objs.Builtin, unsafe.Pointer(builtin), 0))
 }
 
 func (e *emulator) handleLoadGlobal() {
@@ -293,15 +294,13 @@ func (e *emulator) handleCall() {
 
 		e.opStack.Grow(template.NumLocals - numArgs)
 	case objs.Builtin:
-		builtinIndex := funcObj.AsInt()
-		builtin := &builtins.Funcs[builtinIndex]
+		builtin := (*builtins.Builtin)(funcObj.Ptr)
 
 		if builtin.NumArgs != -1 && numArgs != builtin.NumArgs {
 			panic(runtime.TooManyArgsError{Expected: builtin.NumArgs, Actual: numArgs})
 		}
 
-		args := make([]objs.Obj, numArgs)
-		e.opStack.PopMany(args)
+		args := e.opStack.PeekMany(numArgs)
 
 		res, err := builtin.Func(args)
 		if err != nil {
@@ -316,7 +315,9 @@ func (e *emulator) handleCall() {
 }
 
 func (e *emulator) handleReturn() {
-	e.opStack.PatchReturn(e.frame.BP)
+	retValue := e.opStack.Pop()
+	e.opStack.Shrink(e.opStack.SP() - e.frame.BP)
+	e.opStack.Push(retValue)
 	e.frame = e.callStack.Pop()
 }
 

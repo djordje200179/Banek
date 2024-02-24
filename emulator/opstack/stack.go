@@ -66,6 +66,15 @@ func (s *Stack) PopMany(arr []objs.Obj) {
 	s.ptr = nextPtr
 }
 
+func (s *Stack) PeekMany(cnt int) []objs.Obj {
+	return s.arr[s.ptr-cnt : s.ptr]
+}
+
+func (s *Stack) Shrink(cnt int) {
+	clear(s.arr[s.ptr-cnt : s.ptr])
+	s.ptr -= cnt
+}
+
 func (s *Stack) Grow(cnt int) {
 	if s.ptr+cnt >= stackSize {
 		panic(ErrStackOverflow)
@@ -88,9 +97,7 @@ func (s *Stack) Dup2() {
 }
 
 func (s *Stack) Swap() {
-	top := s.arr[s.ptr-1]
-	s.arr[s.ptr-1] = s.arr[s.ptr-2]
-	s.arr[s.ptr-2] = top
+	s.arr[s.ptr-1], s.arr[s.ptr-2] = s.arr[s.ptr-2], s.arr[s.ptr-1]
 }
 
 func (s *Stack) ReadVar(bp, index int) objs.Obj {
@@ -99,11 +106,6 @@ func (s *Stack) ReadVar(bp, index int) objs.Obj {
 
 func (s *Stack) WriteVar(bp, index int, obj objs.Obj) {
 	s.arr[bp+index] = obj
-}
-
-func (s *Stack) PatchReturn(bp int) {
-	s.arr[bp] = s.arr[s.ptr-1]
-	s.ptr = bp + 1
 }
 
 func (s *Stack) SP() int {
