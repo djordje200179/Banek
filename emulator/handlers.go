@@ -78,7 +78,7 @@ func (e *emulator) handleConstStr() {
 
 func (e *emulator) handleConstTrue()  { e.opStack.Push(objs.MakeBool(true)) }
 func (e *emulator) handleConstFalse() { e.opStack.Push(objs.MakeBool(false)) }
-func (e *emulator) handleConstUndef() { e.opStack.Push(objs.Obj{}) }
+func (e *emulator) handleConstUndef() { e.opStack.Grow(1) }
 
 func (e *emulator) handlePop() { e.opStack.Pop() }
 
@@ -161,9 +161,7 @@ func (e *emulator) handleDiv() {
 }
 
 func (e *emulator) handleMod() {
-	left, right := e.opStack.Pop2()
-
-	result, err := binaryops.ModOperator.Eval(left, right)
+	result, err := binaryops.ModOperator.Eval(e.opStack.Pop2())
 	if err != nil {
 		panic(err)
 	}
@@ -174,13 +172,17 @@ func (e *emulator) handleMod() {
 func (e *emulator) handleCompareEq() {
 	left, right := e.opStack.Pop2()
 
-	e.opStack.Push(objs.MakeBool(left.Equals(right)))
+	result := left.Equals(right)
+
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleCompareNeq() {
 	left, right := e.opStack.Pop2()
 
-	e.opStack.Push(objs.MakeBool(!left.Equals(right)))
+	result := !left.Equals(right)
+
+	e.opStack.Push(objs.MakeBool(result))
 }
 
 func (e *emulator) handleCompareLt() {

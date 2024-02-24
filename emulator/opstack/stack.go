@@ -67,6 +67,10 @@ func (s *Stack) PopMany(arr []objs.Obj) {
 }
 
 func (s *Stack) Grow(cnt int) {
+	if s.ptr+cnt >= stackSize {
+		panic(ErrStackOverflow)
+	}
+
 	s.ptr += cnt
 }
 
